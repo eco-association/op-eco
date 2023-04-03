@@ -3,9 +3,11 @@ import { Signer, Contract, constants } from 'ethers'
 import { smock, FakeContract, MockContract } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 
+import * as L1CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contracts/L1/messaging/L1CrossDomainMessenger.sol/L1CrossDomainMessenger.json'
+
 import { expect } from './tools/setup'
 import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './tools/constants'
-import { deploy, getContractInterface } from './tools/contracts'
+import { deployFromName, getContractInterface } from './tools/contracts'
 
 // TODO: Maybe we should consider automatically generating these and exporting them?
 const ERROR_STRINGS = {
@@ -34,12 +36,12 @@ describe('L1ECOBridge', () => {
   beforeEach(async () => {
     // Get a new mock L1 messenger
     Fake__L1CrossDomainMessenger = await smock.fake<Contract>(
-      '@eth-optimism/contracts/L1/messaging/L1CrossDomainMessenger.sol:L1CrossDomainMessenger',
+      L1CrossDomainMessenger.abi,
       { address: await l1MessengerImpersonator.getAddress() } // This allows us to use an ethers override {from: Mock__L2CrossDomainMessenger.address} to mock calls
     )
 
     // Deploy the contract under test
-    L1ECOBridge = await deploy('L1ECOBridge')
+    L1ECOBridge = await deployFromName('L1ECOBridge')
     await L1ECOBridge.initialize(
       Fake__L1CrossDomainMessenger.address,
       DUMMY_L2_BRIDGE_ADDRESS

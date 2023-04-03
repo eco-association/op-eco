@@ -3,9 +3,12 @@ import { Contract } from 'ethers'
 import { smock, FakeContract, MockContract } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 
+import * as L2CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contracts/L2/messaging/L2CrossDomainMessenger.sol/L2CrossDomainMessenger.json'
+import * as L2StandardERC20 from '@eth-optimism/contracts/artifacts/contracts/standards/L2StandardERC20.sol/L2StandardERC20.json'
+
 import { expect } from './tools/setup'
 import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './tools/constants'
-import { getContractInterface, deploy } from './tools/contracts'
+import { getContractInterface, deployFromABI, deployFromName } from './tools/contracts'
 
 // TODO: Maybe we should consider automatically generating these and exporting them?
 const ERROR_STRINGS = {
@@ -35,18 +38,18 @@ describe('L2ECOBridge', () => {
   beforeEach(async () => {
     // Get a new mock L2 messenger
     Fake__L2CrossDomainMessenger = await smock.fake<Contract>(
-      '@eth-optimism/contracts/L2/messaging/L2CrossDomainMessenger.sol:L2CrossDomainMessenger',
+      L2CrossDomainMessenger.abi,
       // This allows us to use an ethers override {from: Mock__L2CrossDomainMessenger.address} to mock calls
       { address: await l2MessengerImpersonator.getAddress() }
     )
 
     // Deploy the contract under test
-    L2ECOBridge = await deploy('L2ECOBridge', {
+    L2ECOBridge = await deployFromName('L2ECOBridge', {
       args: [Fake__L2CrossDomainMessenger.address, DUMMY_L1_BRIDGE_ADDRESS],
     })
 
     // Deploy an L2 ERC20
-    L2ECO = await deploy('@eth-optimism/contracts/standards/L2StandardERC20.sol:L2StandardERC20', {
+    L2ECO = await deployFromABI(L2StandardERC20, {
       args: [
         L2ECOBridge.address,
         DUMMY_L1_ERC20_ADDRESS,
@@ -121,7 +124,7 @@ describe('L2ECOBridge', () => {
     beforeEach(async () => {
       // Deploy a smodded gateway so we can give some balances to withdraw
       Mock__L2Token = await (
-        await smock.mock('L2ECO')
+        await smock.mock('L2StandardERC20')
       ).deploy(
         L2ECOBridge.address,
         DUMMY_L1_ERC20_ADDRESS,
