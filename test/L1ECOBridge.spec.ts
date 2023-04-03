@@ -20,7 +20,7 @@ const DUMMY_L2_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const INITIAL_TOTAL_L1_SUPPLY = 5000
 const FINALIZATION_GAS = 1_200_000
 
-describe('L1StandardBridge', () => {
+describe('L1ECOBridge', () => {
   let l1MessengerImpersonator: Signer
   let alice: SignerWithAddress
   let bob: SignerWithAddress
@@ -29,18 +29,18 @@ describe('L1StandardBridge', () => {
   })
 
   let L1ERC20: MockContract<Contract>
-  let L1StandardBridge: Contract
+  let L1ECOBridge: Contract
   let Fake__L1CrossDomainMessenger: FakeContract
   beforeEach(async () => {
     // Get a new mock L1 messenger
     Fake__L1CrossDomainMessenger = await smock.fake<Contract>(
-      'L1CrossDomainMessenger',
+      '@eth-optimism/contracts/L1/messaging/L1CrossDomainMessenger.sol:L1CrossDomainMessenger',
       { address: await l1MessengerImpersonator.getAddress() } // This allows us to use an ethers override {from: Mock__L2CrossDomainMessenger.address} to mock calls
     )
 
     // Deploy the contract under test
-    L1StandardBridge = await deploy('L1StandardBridge')
-    await L1StandardBridge.initialize(
+    L1ECOBridge = await deploy('L1ECOBridge')
+    await L1ECOBridge.initialize(
       Fake__L1CrossDomainMessenger.address,
       DUMMY_L2_BRIDGE_ADDRESS
     )
@@ -57,7 +57,7 @@ describe('L1StandardBridge', () => {
   describe('initialize', () => {
     it('Should only be callable once', async () => {
       await expect(
-        L1StandardBridge.initialize(
+        L1ECOBridge.initialize(
           ethers.constants.AddressZero,
           DUMMY_L2_BRIDGE_ADDRESS
         )
@@ -70,13 +70,13 @@ describe('L1StandardBridge', () => {
 
     beforeEach(async () => {
       await L1ERC20.connect(alice).approve(
-        L1StandardBridge.address,
+        L1ECOBridge.address,
         depositAmount
       )
     })
 
     it('depositERC20() escrows the deposit amount and sends the correct deposit message', async () => {
-      await L1StandardBridge.connect(alice).depositERC20(
+      await L1ECOBridge.connect(alice).depositERC20(
         L1ERC20.address,
         DUMMY_L2_ERC20_ADDRESS,
         depositAmount,
@@ -88,7 +88,7 @@ describe('L1StandardBridge', () => {
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
       ).to.deep.equal([
         DUMMY_L2_BRIDGE_ADDRESS,
-        (await getContractInterface('IL2ERC20Bridge')).encodeFunctionData(
+        (await getContractInterface('IL2ECOBridge')).encodeFunctionData(
           'finalizeDeposit',
           [
             L1ERC20.address,
@@ -106,13 +106,13 @@ describe('L1StandardBridge', () => {
         INITIAL_TOTAL_L1_SUPPLY - depositAmount
       )
 
-      expect(await L1ERC20.balanceOf(L1StandardBridge.address)).to.equal(
+      expect(await L1ERC20.balanceOf(L1ECOBridge.address)).to.equal(
         depositAmount
       )
     })
 
     it('depositERC20To() escrows the deposit amount and sends the correct deposit message', async () => {
-      await L1StandardBridge.connect(alice).depositERC20To(
+      await L1ECOBridge.connect(alice).depositERC20To(
         L1ERC20.address,
         DUMMY_L2_ERC20_ADDRESS,
         bob.address,
@@ -125,7 +125,7 @@ describe('L1StandardBridge', () => {
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
       ).to.deep.equal([
         DUMMY_L2_BRIDGE_ADDRESS,
-        (await getContractInterface('IL2ERC20Bridge')).encodeFunctionData(
+        (await getContractInterface('IL2ECOBridge')).encodeFunctionData(
           'finalizeDeposit',
           [
             L1ERC20.address,
@@ -143,14 +143,14 @@ describe('L1StandardBridge', () => {
         INITIAL_TOTAL_L1_SUPPLY - depositAmount
       )
 
-      expect(await L1ERC20.balanceOf(L1StandardBridge.address)).to.equal(
+      expect(await L1ERC20.balanceOf(L1ECOBridge.address)).to.equal(
         depositAmount
       )
     })
 
     it('cannot depositERC20 from a contract account', async () => {
       expect(
-        L1StandardBridge.depositERC20(
+        L1ECOBridge.depositERC20(
           L1ERC20.address,
           DUMMY_L2_ERC20_ADDRESS,
           depositAmount,
@@ -169,7 +169,7 @@ describe('L1StandardBridge', () => {
 
       it('depositERC20(): will revert if ERC20.transferFrom() reverts', async () => {
         await expect(
-          L1StandardBridge.connect(alice).depositERC20(
+          L1ECOBridge.connect(alice).depositERC20(
             Fake__L1ERC20.address,
             DUMMY_L2_ERC20_ADDRESS,
             depositAmount,
@@ -181,7 +181,7 @@ describe('L1StandardBridge', () => {
 
       it('depositERC20To(): will revert if ERC20.transferFrom() reverts', async () => {
         await expect(
-          L1StandardBridge.connect(alice).depositERC20To(
+          L1ECOBridge.connect(alice).depositERC20To(
             Fake__L1ERC20.address,
             DUMMY_L2_ERC20_ADDRESS,
             bob.address,
@@ -194,7 +194,7 @@ describe('L1StandardBridge', () => {
 
       it('depositERC20To(): will revert if the L1 ERC20 has no code or is zero address', async () => {
         await expect(
-          L1StandardBridge.connect(alice).depositERC20To(
+          L1ECOBridge.connect(alice).depositERC20To(
             ethers.constants.AddressZero,
             DUMMY_L2_ERC20_ADDRESS,
             bob.address,
@@ -215,7 +215,7 @@ describe('L1StandardBridge', () => {
 
       it('deposit(): will revert if ERC20.transferFrom() returns false', async () => {
         await expect(
-          L1StandardBridge.connect(alice).depositERC20(
+          L1ECOBridge.connect(alice).depositERC20(
             Fake__L1ERC20.address,
             DUMMY_L2_ERC20_ADDRESS,
             depositAmount,
@@ -227,7 +227,7 @@ describe('L1StandardBridge', () => {
 
       it('depositTo(): will revert if ERC20.transferFrom() returns false', async () => {
         await expect(
-          L1StandardBridge.depositERC20To(
+          L1ECOBridge.depositERC20To(
             Fake__L1ERC20.address,
             DUMMY_L2_ERC20_ADDRESS,
             bob.address,
@@ -243,7 +243,7 @@ describe('L1StandardBridge', () => {
   describe('ERC20 withdrawals', () => {
     it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L1 account', async () => {
       await expect(
-        L1StandardBridge.connect(alice).finalizeERC20Withdrawal(
+        L1ECOBridge.connect(alice).finalizeERC20Withdrawal(
           L1ERC20.address,
           DUMMY_L2_ERC20_ADDRESS,
           constants.AddressZero,
@@ -260,7 +260,7 @@ describe('L1StandardBridge', () => {
       )
 
       await expect(
-        L1StandardBridge.finalizeERC20Withdrawal(
+        L1ECOBridge.finalizeERC20Withdrawal(
           L1ERC20.address,
           DUMMY_L2_ERC20_ADDRESS,
           constants.AddressZero,
@@ -278,11 +278,11 @@ describe('L1StandardBridge', () => {
       // First Alice will 'donate' some tokens so that there's a balance to be withdrawn
       const withdrawalAmount = 10
       await L1ERC20.connect(alice).approve(
-        L1StandardBridge.address,
+        L1ECOBridge.address,
         withdrawalAmount
       )
 
-      await L1StandardBridge.connect(alice).depositERC20(
+      await L1ECOBridge.connect(alice).depositERC20(
         L1ERC20.address,
         DUMMY_L2_ERC20_ADDRESS,
         withdrawalAmount,
@@ -290,7 +290,7 @@ describe('L1StandardBridge', () => {
         NON_NULL_BYTES32
       )
 
-      expect(await L1ERC20.balanceOf(L1StandardBridge.address)).to.be.equal(
+      expect(await L1ERC20.balanceOf(L1ECOBridge.address)).to.be.equal(
         withdrawalAmount
       )
 
@@ -301,7 +301,7 @@ describe('L1StandardBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS
       )
 
-      await L1StandardBridge.finalizeERC20Withdrawal(
+      await L1ECOBridge.finalizeERC20Withdrawal(
         L1ERC20.address,
         DUMMY_L2_ERC20_ADDRESS,
         NON_ZERO_ADDRESS,
