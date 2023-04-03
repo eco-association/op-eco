@@ -46,11 +46,12 @@ describe('L2ECOBridge', () => {
     })
 
     // Deploy an L2 ERC20
-    L2ECO = await deploy('L2ECO', {
+    L2ECO = await deploy('@eth-optimism/contracts/standards/L2StandardERC20.sol:L2StandardERC20', {
       args: [
         L2ECOBridge.address,
         DUMMY_L1_ERC20_ADDRESS,
         'L2Token',
+        'L2T',
       ],
     })
   })
@@ -124,7 +125,8 @@ describe('L2ECOBridge', () => {
       ).deploy(
         L2ECOBridge.address,
         DUMMY_L1_ERC20_ADDRESS,
-        'L2Token'
+        'L2Token',
+        'L2T',
       )
 
       await Mock__L2Token.setVariable('_totalSupply', INITIAL_TOTAL_SUPPLY)
