@@ -2,16 +2,16 @@
 pragma solidity 0.8.9;
 
 /* Interface Imports */
-import { IL1ECOBridge } from "./IL1ECOBridge.sol";
-import { IL2ECOBridge } from "./IL2ECOBridge.sol";
+import {IL1ECOBridge} from "./IL1ECOBridge.sol";
+import {IL2ECOBridge} from "./IL2ECOBridge.sol";
 
 /* Library Imports */
-import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import { CrossDomainEnabled } from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
-import { Lib_PredeployAddresses } from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
+import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
+import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
 
 /* Contract Imports */
-import { IL2StandardERC20 } from "@eth-optimism/contracts/standards/IL2StandardERC20.sol";
+import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC20.sol";
 
 /**
  * @title L2ECOBridge
@@ -56,7 +56,14 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         uint32 _l1Gas,
         bytes calldata _data
     ) external virtual {
-        _initiateWithdrawal(_l2Token, msg.sender, msg.sender, _amount, _l1Gas, _data);
+        _initiateWithdrawal(
+            _l2Token,
+            msg.sender,
+            msg.sender,
+            _amount,
+            _l1Gas,
+            _data
+        );
     }
 
     /**
@@ -115,7 +122,14 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         sendCrossDomainMessage(l1TokenBridge, _l1Gas, message);
 
         // slither-disable-next-line reentrancy-events
-        emit WithdrawalInitiated(l1Token, _l2Token, msg.sender, _to, _amount, _data);
+        emit WithdrawalInitiated(
+            l1Token,
+            _l2Token,
+            msg.sender,
+            _to,
+            _amount,
+            _data
+        );
     }
 
     /************************************
@@ -145,7 +159,14 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
             // slither-disable-next-line reentrancy-events
             IL2StandardERC20(_l2Token).mint(_to, _amount);
             // slither-disable-next-line reentrancy-events
-            emit DepositFinalized(_l1Token, _l2Token, _from, _to, _amount, _data);
+            emit DepositFinalized(
+                _l1Token,
+                _l2Token,
+                _from,
+                _to,
+                _amount,
+                _data
+            );
         } else {
             // Either the L2 token which is being deposited-into disagrees about the correct address
             // of its L1 token, or does not support the correct interface.

@@ -2,15 +2,15 @@
 pragma solidity 0.8.9;
 
 /* Interface Imports */
-import { IL1ECOBridge } from "./IL1ECOBridge.sol";
-import { IL2ECOBridge } from "./IL2ECOBridge.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IL1ECOBridge} from "./IL1ECOBridge.sol";
+import {IL2ECOBridge} from "./IL2ECOBridge.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /* Library Imports */
-import { CrossDomainEnabled } from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
-import { Lib_PredeployAddresses } from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
+import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title L1ECOBridge
@@ -48,7 +48,10 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
      */
     // slither-disable-next-line external-function
     function initialize(address _l1messenger, address _l2TokenBridge) public {
-        require(messenger == address(0), "Contract has already been initialized.");
+        require(
+            messenger == address(0),
+            "Contract has already been initialized."
+        );
         messenger = _l1messenger;
         l2TokenBridge = _l2TokenBridge;
     }
@@ -76,7 +79,15 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         uint32 _l2Gas,
         bytes calldata _data
     ) external virtual onlyEOA {
-        _initiateERC20Deposit(_l1Token, _l2Token, msg.sender, msg.sender, _amount, _l2Gas, _data);
+        _initiateERC20Deposit(
+            _l1Token,
+            _l2Token,
+            msg.sender,
+            msg.sender,
+            _amount,
+            _l2Gas,
+            _data
+        );
     }
 
     /**
@@ -90,7 +101,15 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         uint32 _l2Gas,
         bytes calldata _data
     ) external virtual {
-        _initiateERC20Deposit(_l1Token, _l2Token, msg.sender, _to, _amount, _l2Gas, _data);
+        _initiateERC20Deposit(
+            _l1Token,
+            _l2Token,
+            msg.sender,
+            _to,
+            _amount,
+            _l2Gas,
+            _data
+        );
     }
 
     /**
@@ -141,7 +160,14 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         deposits[_l1Token][_l2Token] = deposits[_l1Token][_l2Token] + _amount;
 
         // slither-disable-next-line reentrancy-events
-        emit ERC20DepositInitiated(_l1Token, _l2Token, _from, _to, _amount, _data);
+        emit ERC20DepositInitiated(
+            _l1Token,
+            _l2Token,
+            _from,
+            _to,
+            _amount,
+            _data
+        );
     }
 
     /*************************
@@ -166,7 +192,14 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         IERC20(_l1Token).safeTransfer(_to, _amount);
 
         // slither-disable-next-line reentrancy-events
-        emit ERC20WithdrawalFinalized(_l1Token, _l2Token, _from, _to, _amount, _data);
+        emit ERC20WithdrawalFinalized(
+            _l1Token,
+            _l2Token,
+            _from,
+            _to,
+            _amount,
+            _data
+        );
     }
 
     /*****************************
