@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import {L2StandardERC20} from "@eth-optimism/contracts/standards/L2StandardERC20.sol";
+import {ERC20Pausable} from "@helix-foundation/currency/contracts/currency/ERC20Pausable.sol";
+import {DelegatePermit} from "@helix-foundation/currency/contracts/currency/DelegatePermit.sol";
 
 /**
  * @title L2ECO
  */
-contract L2ECO is L2StandardERC20 {
-    constructor(address _l2Bridge, address _l1Token)
-        L2StandardERC20(_l2Bridge, _l1Token, "Optimism ECO", "OP-ECO")
-    {}
+contract L2ECO is ERC20Pausable, DelegatePermit {
+    constructor(
+        address _l2Bridge,
+        address _l1Token,
+        address admin,
+        address _initialPauser
+    ) ERC20Pausable("Optimism ECO", "OP-ECO", admin, _initialPauser) {}
 }
