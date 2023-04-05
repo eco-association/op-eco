@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.19;
 
 import {ERC20Pausable} from "@helix-foundation/currency/contracts/currency/ERC20Pausable.sol";
 import {DelegatePermit} from "@helix-foundation/currency/contracts/currency/DelegatePermit.sol";
