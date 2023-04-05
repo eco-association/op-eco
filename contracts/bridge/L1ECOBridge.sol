@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.19;
 
 /* Interface Imports */
-import {IL1ECOBridge} from "./IL1ECOBridge.sol";
-import {IL2ECOBridge} from "./IL2ECOBridge.sol";
+import {IL1ECOBridge} from "../interfaces/bridge/IL1ECOBridge.sol";
+import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
+import {IL2ERC20Bridge} from "@eth-optimism/contracts/L2/messaging/IL2ERC20Bridge.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /* Library Imports */
@@ -143,7 +144,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
 
         // Construct calldata for _l2Token.finalizeDeposit(_to, _amount)
         bytes memory message = abi.encodeWithSelector(
-            IL2ECOBridge.finalizeDeposit.selector,
+            //call parent interface of IL2ECOBridge to get the selector
+            IL2ERC20Bridge.finalizeDeposit.selector,
             _l1Token,
             _l2Token,
             _from,

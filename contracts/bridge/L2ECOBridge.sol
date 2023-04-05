@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.19;
 
 /* Interface Imports */
-import {IL1ECOBridge} from "./IL1ECOBridge.sol";
-import {IL2ECOBridge} from "./IL2ECOBridge.sol";
-
+import {IL1ECOBridge} from "../interfaces/bridge/IL1ECOBridge.sol";
+import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
+import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
 /* Library Imports */
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
@@ -108,7 +108,8 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         // slither-disable-next-line reentrancy-events
         address l1Token = IL2StandardERC20(_l2Token).l1Token();
         bytes memory message = abi.encodeWithSelector(
-            IL1ECOBridge.finalizeERC20Withdrawal.selector,
+            //call parent interface of IL1ECOBridge to get the selector
+            IL1ERC20Bridge.finalizeERC20Withdrawal.selector,
             l1Token,
             _l2Token,
             _from,
@@ -177,7 +178,8 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
             // There is no way to prevent malicious token contracts altogether, but this does limit
             // user error and mitigate some forms of malicious contract behavior.
             bytes memory message = abi.encodeWithSelector(
-                IL1ECOBridge.finalizeERC20Withdrawal.selector,
+                //call parent interface of IL1ECOBridge to get the selector
+                IL1ERC20Bridge.finalizeERC20Withdrawal.selector,
                 _l1Token,
                 _l2Token,
                 _to, // switched the _to and _from here to bounce back the deposit to the sender
