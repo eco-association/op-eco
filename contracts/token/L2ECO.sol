@@ -11,4 +11,6 @@ contract L2ECO is L2StandardERC20, IL2ECO {
     constructor(address _l2Bridge, address _l1Token)
         L2StandardERC20(_l2Bridge, _l1Token, "Optimism ECO", "OP-ECO")
     {}
+
+    function rebase(uint256 _inflationMultiplier) external virtual {}
 }

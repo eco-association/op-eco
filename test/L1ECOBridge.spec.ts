@@ -71,10 +71,7 @@ describe('L1ECOBridge', () => {
     const depositAmount = 1_000
 
     beforeEach(async () => {
-      await L1ERC20.connect(alice).approve(
-        L1ECOBridge.address,
-        depositAmount
-      )
+      await L1ERC20.connect(alice).approve(L1ECOBridge.address, depositAmount)
     })
 
     it('depositERC20() escrows the deposit amount and sends the correct deposit message', async () => {

@@ -30,13 +30,17 @@ export const deployFromABI = async (
     signer?: any
   }
 ): Promise<ethers.Contract> => {
-  const factory = await hre.ethers.getContractFactory(artifact.abi, artifact.bytecode, opts?.signer)
+  const factory = await hre.ethers.getContractFactory(
+    artifact.abi,
+    artifact.bytecode,
+    opts?.signer
+  )
   return factory.deploy(...(opts?.args || []))
 }
 
 export const getContractInterface = async (
-  contractName: string,
+  contractName: string
 ): Promise<ethers.utils.Interface> => {
-  const artifact = await hre.artifacts.readArtifact(contractName);
+  const artifact = await hre.artifacts.readArtifact(contractName)
   return new hre.ethers.utils.Interface(artifact.abi)
 }

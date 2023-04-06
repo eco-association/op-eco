@@ -8,7 +8,11 @@ import * as L2StandardERC20 from '@eth-optimism/contracts/artifacts/contracts/st
 
 import { expect } from './tools/setup'
 import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './tools/constants'
-import { getContractInterface, deployFromABI, deployFromName } from './tools/contracts'
+import {
+  getContractInterface,
+  deployFromABI,
+  deployFromName,
+} from './tools/contracts'
 
 // TODO: Maybe we should consider automatically generating these and exporting them?
 const ERROR_STRINGS = {
@@ -43,19 +47,14 @@ describe('L2ECOBridge', () => {
       { address: await l2MessengerImpersonator.getAddress() }
     )
 
-    // Deploy the contract under test
-    L2ECOBridge = await deployFromName('L2ECOBridge', {
-      args: [Fake__L2CrossDomainMessenger.address, DUMMY_L1_BRIDGE_ADDRESS],
-    })
-
     // Deploy an L2 ERC20
     L2ECO = await deployFromABI(L2StandardERC20, {
-      args: [
-        L2ECOBridge.address,
-        DUMMY_L1_ERC20_ADDRESS,
-        'L2Token',
-        'L2T',
-      ],
+      args: [L2ECOBridge.address, DUMMY_L1_ERC20_ADDRESS, 'L2Token', 'L2T'],
+    })
+
+    // Deploy the contract under test
+    L2ECOBridge = await deployFromName('L2ECOBridge', {
+      args: [Fake__L2CrossDomainMessenger.address, DUMMY_L1_BRIDGE_ADDRESS, L2ECO.address],
     })
   })
 
@@ -125,12 +124,7 @@ describe('L2ECOBridge', () => {
       // Deploy a smodded gateway so we can give some balances to withdraw
       Mock__L2Token = await (
         await smock.mock('L2StandardERC20')
-      ).deploy(
-        L2ECOBridge.address,
-        DUMMY_L1_ERC20_ADDRESS,
-        'L2Token',
-        'L2T',
-      )
+      ).deploy(L2ECOBridge.address, DUMMY_L1_ERC20_ADDRESS, 'L2Token', 'L2T')
 
       await Mock__L2Token.setVariable('_totalSupply', INITIAL_TOTAL_SUPPLY)
       await Mock__L2Token.setVariable('_balances', {
@@ -214,5 +208,4 @@ describe('L2ECOBridge', () => {
       )
     })
   })
-
 })
