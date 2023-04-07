@@ -29,7 +29,7 @@ describe('L2ECOBridge', () => {
     // Deploy an L2 ERC20
     L2ECO = await deployFromName('L2ECO', {
       args: [
-        l2BridgeImpersonator.address,
+        bob.address,
       ],
     })
 
