@@ -58,6 +58,104 @@ describe('L2ECOBridge', () => {
     })
   })
 
+  describe('minting', () => {
+    const mintAmount = 1000
+
+    it('reverts if unauthed', async () => {
+      await expect(
+        L2ECO.connect(alice).mint(alice.address, mintAmount)
+      ).to.be.revertedWith(ERROR_STRINGS.INVALID_MINTER)
+    })
+    
+    it('increases balance', async () => {
+      expect((await L2ECO.balanceOf(alice.address)) == 0).to.be.true
+      await L2ECO.connect(l2BridgeImpersonator).mint(alice.address, mintAmount)
+      expect((await L2ECO.balanceOf(alice.address)) == mintAmount).to.be.true
+    })
+  })
+
+  describe('burning', () => {
+    const burnAmount = 1000
+
+    it('reverts if unauthed', async () => {
+      await expect(
+        L2ECO.connect(bob).burn(alice.address, burnAmount)
+      ).to.be.revertedWith(ERROR_STRINGS.INVALID_BURNER)
+    })
+    
+    describe('decreases balance', () => {
+      beforeEach(async () => {
+        await L2ECO.connect(l2BridgeImpersonator).mint(alice.address, burnAmount)
+        expect((await L2ECO.balanceOf(alice.address)) == burnAmount).to.be.true
+      })
+
+      it('on self call', async () => {
+        expect((await L2ECO.balanceOf(alice.address)) == burnAmount).to.be.true
+        await L2ECO.connect(alice).burn(alice.address, burnAmount)
+        expect((await L2ECO.balanceOf(alice.address)) == 0).to.be.true
+      })
+
+      it('on admin call', async () => {
+        expect((await L2ECO.balanceOf(alice.address)) == burnAmount).to.be.true
+        await L2ECO.connect(l2BridgeImpersonator).burn(alice.address, burnAmount)
+        expect((await L2ECO.balanceOf(alice.address)) == 0).to.be.true
+      })
+    })
+  })
+
+  describe('rebasing', () => {
+    const newInflationMult = ethers.utils.parseEther('.5')
+    
+
+    it('reverts if unauthed', async () => {
+      await expect(
+        L2ECO.connect(bob).rebase(newInflationMult)
+      ).to.be.revertedWith(ERROR_STRINGS.INVALID_REBASER)
+    })
+
+    describe('on rebase', () => {
+      const aliceBalance = 1000
+
+      beforeEach(async () => {
+        await L2ECO.connect(l2BridgeImpersonator).mint(alice.address, aliceBalance)
+        expect((await L2ECO.balanceOf(alice.address)) == aliceBalance).to.be.true
+      })
+
+      it('emits an event', async () => {
+        await expect(
+          L2ECO.connect(l2BridgeImpersonator).rebase(newInflationMult)
+        ).to.emit(L2ECO, 'NewInflationMultiplier').withArgs(newInflationMult)
+      })
+
+      it('changes balance', async () => {
+        expect((await L2ECO.balanceOf(alice.address)) == aliceBalance).to.be.true
+
+        await L2ECO.connect(l2BridgeImpersonator).rebase(newInflationMult)
+
+        expect((await L2ECO.balanceOf(alice.address)) == 2*aliceBalance).to.be.true
+      })
+    })
+  })
+
+  describe('transfers', () => {
+    const initialAliceBalance = 1000
+
+    beforeEach(async () => {
+      await L2ECO.connect(l2BridgeImpersonator).mint(alice.address, initialAliceBalance)
+      expect((await L2ECO.balanceOf(alice.address)) == initialAliceBalance).to.be.true
+    })
+
+    it('emits base value event', async () => {
+      await expect(
+        L2ECO.connect(alice).transfer(bob.address, initialAliceBalance)
+      ).to.emit(L2ECO, 'BaseValueTransfer').withArgs(
+        alice.address,
+        bob.address,
+        ethers.utils.parseEther('1000')
+      )
+    })
+  })
+
   // test role logic
   describe('role management', () => {
     describe('reverts', () => {
