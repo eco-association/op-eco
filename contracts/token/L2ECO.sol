@@ -40,6 +40,7 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     address _l2Bridge,
     address _initialPauser
   ) public {
+    require(_linearInflationMultiplier == 0, "Contract has already been initialized.");
     _linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
     minters[_l2Bridge] = true;
     burners[_l2Bridge] = true;
@@ -52,8 +53,8 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     _;
   }
 
-  modifier onlyBurnerRole() {
-    require(burners[msg.sender], "not authorized to burn");
+  modifier onlyBurnerRoleOrSelf(address _from) {
+    require(_from == msg.sender || burners[msg.sender], "not authorized to burn");
     _;
   }
 
@@ -97,7 +98,7 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     _mint(_to, _value);
   }
 
-  function burn(address _from, uint256 _value) external onlyBurnerRole {
+  function burn(address _from, uint256 _value) external onlyBurnerRoleOrSelf(_from) {
     _burn(_from, _value);
   }
 
@@ -107,6 +108,7 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
 
   function _rebase(uint256 _newLinearInflationMultiplier) internal {
     _linearInflationMultiplier = _newLinearInflationMultiplier;
+    emit NewInflationMultiplier(_newLinearInflationMultiplier);
   }
 
   function updateMinters(address _key, bool _value) public onlyRoleAdmin {
