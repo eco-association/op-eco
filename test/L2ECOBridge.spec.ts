@@ -6,13 +6,13 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import * as L2CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contracts/L2/messaging/L2CrossDomainMessenger.sol/L2CrossDomainMessenger.json'
 import * as L2StandardERC20 from '@eth-optimism/contracts/artifacts/contracts/standards/L2StandardERC20.sol/L2StandardERC20.json'
 
-import { expect } from './tools/setup'
-import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './tools/constants'
+import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './utils/constants'
 import {
   getContractInterface,
   deployFromABI,
   deployFromName,
-} from './tools/contracts'
+} from './utils/contracts'
+import { expect } from 'chai'
 
 // TODO: Maybe we should consider automatically generating these and exporting them?
 const ERROR_STRINGS = {
