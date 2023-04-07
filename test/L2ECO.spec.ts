@@ -1,13 +1,10 @@
 import { ethers } from 'hardhat'
 import { Contract } from 'ethers'
-import { smock, FakeContract, MockContract } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 
-import * as L2CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contracts/L2/messaging/L2CrossDomainMessenger.sol/L2CrossDomainMessenger.json'
-
 import { expect } from './tools/setup'
-import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './tools/constants'
-import { getContractInterface, deployFromABI, deployFromName } from './tools/contracts'
+import { NON_ZERO_ADDRESS } from './tools/constants'
+import { deployFromName } from './tools/contracts'
 
 const ERROR_STRINGS = {
   ALREADY_INITIALIZED: 'Contract has already been initialized.',
@@ -17,19 +14,12 @@ const ERROR_STRINGS = {
   INVALID_TOKEN_ROLE_ADMIN: 'not authorized to edit roles',
 }
 
-const DUMMY_L1_ERC20_ADDRESS = '0xaBBAABbaaBbAABbaABbAABbAABbaAbbaaBbaaBBa'
-const DUMMY_L1_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
-const DUMMY_L2_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
-
 describe('L2ECOBridge', () => {
-  const INITIAL_TOTAL_SUPPLY = 100_000
-  const ALICE_INITIAL_BALANCE = 50_000
 
   let alice: SignerWithAddress
   let bob: SignerWithAddress
   let l2BridgeImpersonator: SignerWithAddress
   before(async () => {
-    // Create a special signer which will enable us to send messages from the L2Messenger contract
     ;[alice, bob, l2BridgeImpersonator] = await ethers.getSigners()
   })
 
@@ -290,44 +280,11 @@ describe('L2ECOBridge', () => {
 
         await L2ECO.connect(l2BridgeImpersonator).updateTokenRoleAdmin(alice.address)
 
+        // can no longer edit roles
         await expect(
           L2ECO.connect(l2BridgeImpersonator).updateMinters(alice.address, false)
         ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
       })
     })
   })
-
-  // describe('withdrawals', () => {
-  //   const withdrawAmount = 1_000
-
-  //   let Mock__L2Token: MockContract<Contract>
-  //   beforeEach(async () => {
-  //     // Deploy a smodded gateway so we can give some balances to withdraw
-  //     Mock__L2Token = await (
-  //       await smock.mock('L2StandardERC20')
-  //     ).deploy(
-  //       L2ECOBridge.address,
-  //       DUMMY_L1_ERC20_ADDRESS,
-  //       'L2Token',
-  //       'L2T',
-  //     )
-
-  //     await Mock__L2Token.setVariable('_totalSupply', INITIAL_TOTAL_SUPPLY)
-  //     await Mock__L2Token.setVariable('_balances', {
-  //       [alice.address]: ALICE_INITIAL_BALANCE,
-  //     })
-  //     await Mock__L2Token.setVariable('l2Bridge', L2ECOBridge.address)
-  //   })
-
-  //     // Assert Alice's balance went down
-  //     expect(await Mock__L2Token.balanceOf(alice.address)).to.deep.equal(
-  //       ethers.BigNumber.from(ALICE_INITIAL_BALANCE - withdrawAmount)
-  //     )
-
-  //     // Assert totalSupply went down
-  //     expect(await Mock__L2Token.totalSupply()).to.deep.equal(
-  //       ethers.BigNumber.from(INITIAL_TOTAL_SUPPLY - withdrawAmount)
-  //     )
-  //   })
-
 })
