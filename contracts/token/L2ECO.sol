@@ -13,6 +13,8 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
 
   uint256 internal _linearInflationMultiplier;
 
+  address public tokenRoleAdmin;
+
   // additional roles to be managed by roleAdmin from ERC20Pausable
   mapping(address => bool) public minters;
   mapping(address => bool) public burners;
@@ -45,6 +47,7 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     minters[_l2Bridge] = true;
     burners[_l2Bridge] = true;
     rebasers[_l2Bridge] = true;
+    tokenRoleAdmin = _l2Bridge;
     pauser = _initialPauser;
   }
 
@@ -63,8 +66,8 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     _;
   }
 
-  modifier onlyRoleAdmin() {
-    require(msg.sender == roleAdmin, "not authorized to edit roles");
+  modifier onlyTokenRoleAdmin() {
+    require(msg.sender == tokenRoleAdmin, "not authorized to edit roles");
     _;
   }
 
@@ -111,20 +114,19 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     emit NewInflationMultiplier(_newLinearInflationMultiplier);
   }
 
-  function updateMinters(address _key, bool _value) public onlyRoleAdmin {
+  function updateMinters(address _key, bool _value) public onlyTokenRoleAdmin {
     minters[_key] = _value;
   }
 
-  function updateBurners(address _key, bool _value) public onlyRoleAdmin {
+  function updateBurners(address _key, bool _value) public onlyTokenRoleAdmin {
     burners[_key] = _value;
   }
 
-  function updateRebasers(address _key, bool _value) public onlyRoleAdmin {
+  function updateRebasers(address _key, bool _value) public onlyTokenRoleAdmin {
     rebasers[_key] = _value;
   }
 
-  // requires change to inherited contract
-  // function updateRoleAdmin(address _newAdmin) public onlyRoleAdmin {
-  //   roleAdmin = _newAdmin;
-  // }
+  function updateTokenRoleAdmin(address _newAdmin) public onlyTokenRoleAdmin {
+    tokenRoleAdmin = _newAdmin;
+  }
 }
