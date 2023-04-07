@@ -14,7 +14,7 @@ const ERROR_STRINGS = {
   INVALID_MINTER: 'not authorized to mint',
   INVALID_BURNER: 'not authorized to burn',
   INVALID_REBASER: 'not authorized to rebase',
-  INVALID_ROLE_ADMIN: 'not authorized to edit roles',
+  INVALID_TOKEN_ROLE_ADMIN: 'not authorized to edit roles',
 }
 
 const DUMMY_L1_ERC20_ADDRESS = '0xaBBAABbaaBbAABbaABbAABbAABbaAbbaaBbaaBBa'
@@ -64,26 +64,37 @@ describe('L2ECOBridge', () => {
       it('reverts on unauthed minter change', async () => {
         await expect(
           L2ECO.updateMinters(alice.address, true)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_ROLE_ADMIN)
+        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
       })
       
       it('reverts on unauthed burner change', async () => {
         await expect(
           L2ECO.updateBurners(alice.address, true)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_ROLE_ADMIN)
+        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
       })
 
       it('reverts on unauthed rebaser change', async () => {
         await expect(
           L2ECO.updateRebasers(alice.address, true)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_ROLE_ADMIN)
+        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
       })
 
-      // it('reverts on unauthed role admin change', async () => {
-      //   await expect(
-      //     L2ECO.updateRoleAdmin(alice.address)
-      //   ).to.be.revertedWith(ERROR_STRINGS.INVALID_ROLE_ADMIN)
-      // })
+      it('reverts on unauthed role admin change', async () => {
+        await expect(
+          L2ECO.updateTokenRoleAdmin(alice.address)
+        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
+      })
+
+      it('can change admin', async () => {
+        // can edit roles
+        await L2ECO.connect(l2BridgeImpersonator).updateMinters(alice.address, true)
+
+        await L2ECO.connect(l2BridgeImpersonator).updateTokenRoleAdmin(alice.address)
+
+        await expect(
+          L2ECO.connect(l2BridgeImpersonator).updateMinters(alice.address, false)
+        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
+      })
     })
 
     describe('minting', () => {
