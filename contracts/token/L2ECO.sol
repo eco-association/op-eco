@@ -33,24 +33,6 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     */
   event NewInflationMultiplier(uint256 inflationMultiplier);
 
-  // when admin becomes mutable, we put it in the initialize function
-  constructor(
-      address admin
-  ) ERC20Pausable("Optimism ECO", "OP-ECO", admin, address(0)) {}
-
-  function initialize(
-    address _l2Bridge,
-    address _initialPauser
-  ) public {
-    require(_linearInflationMultiplier == 0, "Contract has already been initialized.");
-    _linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
-    minters[_l2Bridge] = true;
-    burners[_l2Bridge] = true;
-    rebasers[_l2Bridge] = true;
-    tokenRoleAdmin = _l2Bridge;
-    pauser = _initialPauser;
-  }
-
   modifier onlyMinterRole() {
     require(minters[msg.sender], "not authorized to mint");
     _;
@@ -71,18 +53,22 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     _;
   }
 
-  // this function converts to gons for the sake of transferring
-  function _beforeTokenTransfer(
-      address from,
-      address to,
-      uint256 amount
-  ) internal virtual override returns (uint256) {
-      amount = super._beforeTokenTransfer(from, to, amount);
-      uint256 gonsAmount = amount * _linearInflationMultiplier;
+  // when admin becomes mutable, we put it in the initialize function
+  constructor(
+      address admin
+  ) ERC20Pausable("Optimism ECO", "OP-ECO", admin, address(0)) {}
 
-      emit BaseValueTransfer(from, to, gonsAmount);
-
-      return gonsAmount;
+  function initialize(
+    address _l2Bridge,
+    address _initialPauser
+  ) public {
+    require(_linearInflationMultiplier == 0, "Contract has already been initialized.");
+    _linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
+    minters[_l2Bridge] = true;
+    burners[_l2Bridge] = true;
+    rebasers[_l2Bridge] = true;
+    tokenRoleAdmin = _l2Bridge;
+    pauser = _initialPauser;
   }
 
   /** Access function to determine the token balance held by some address.
@@ -95,6 +81,22 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     */
   function totalSupply() public view override returns (uint256) {
       return _totalSupply / _linearInflationMultiplier;
+  }
+
+  function updateMinters(address _key, bool _value) public onlyTokenRoleAdmin {
+    minters[_key] = _value;
+  }
+
+  function updateBurners(address _key, bool _value) public onlyTokenRoleAdmin {
+    burners[_key] = _value;
+  }
+
+  function updateRebasers(address _key, bool _value) public onlyTokenRoleAdmin {
+    rebasers[_key] = _value;
+  }
+
+  function updateTokenRoleAdmin(address _newAdmin) public onlyTokenRoleAdmin {
+    tokenRoleAdmin = _newAdmin;
   }
 
   function mint(address _to, uint256 _value) external onlyMinterRole {
@@ -114,19 +116,17 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     emit NewInflationMultiplier(_newLinearInflationMultiplier);
   }
 
-  function updateMinters(address _key, bool _value) public onlyTokenRoleAdmin {
-    minters[_key] = _value;
-  }
+  // this function converts to gons for the sake of transferring
+  function _beforeTokenTransfer(
+      address from,
+      address to,
+      uint256 amount
+  ) internal virtual override returns (uint256) {
+      amount = super._beforeTokenTransfer(from, to, amount);
+      uint256 gonsAmount = amount * _linearInflationMultiplier;
 
-  function updateBurners(address _key, bool _value) public onlyTokenRoleAdmin {
-    burners[_key] = _value;
-  }
+      emit BaseValueTransfer(from, to, gonsAmount);
 
-  function updateRebasers(address _key, bool _value) public onlyTokenRoleAdmin {
-    rebasers[_key] = _value;
-  }
-
-  function updateTokenRoleAdmin(address _newAdmin) public onlyTokenRoleAdmin {
-    tokenRoleAdmin = _newAdmin;
+      return gonsAmount;
   }
 }
