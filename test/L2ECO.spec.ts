@@ -84,17 +84,6 @@ describe('L2ECOBridge', () => {
           L2ECO.updateTokenRoleAdmin(alice.address)
         ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
       })
-
-      it('can change admin', async () => {
-        // can edit roles
-        await L2ECO.connect(l2BridgeImpersonator).updateMinters(alice.address, true)
-
-        await L2ECO.connect(l2BridgeImpersonator).updateTokenRoleAdmin(alice.address)
-
-        await expect(
-          L2ECO.connect(l2BridgeImpersonator).updateMinters(alice.address, false)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
-      })
     })
 
     describe('minting', () => {
@@ -193,6 +182,19 @@ describe('L2ECOBridge', () => {
         await expect(
           L2ECO.connect(l2BridgeImpersonator).rebase(newInflationMult)
         ).to.be.revertedWith(ERROR_STRINGS.INVALID_REBASER)
+      })
+    })
+
+    describe('admin', () => {
+      it('can change admin', async () => {
+        // can edit roles
+        await L2ECO.connect(l2BridgeImpersonator).updateMinters(alice.address, true)
+
+        await L2ECO.connect(l2BridgeImpersonator).updateTokenRoleAdmin(alice.address)
+
+        await expect(
+          L2ECO.connect(l2BridgeImpersonator).updateMinters(alice.address, false)
+        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
       })
     })
   })
