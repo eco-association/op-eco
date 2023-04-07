@@ -48,7 +48,6 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
      ***************/
 
     /**
-     * @inheritdoc IL2ECOBridge
      */
     function withdraw(
         address _l2Token,
@@ -67,7 +66,6 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
     }
 
     /**
-     * @inheritdoc IL2ECOBridge
      */
     function withdrawTo(
         address _l2Token,
@@ -138,7 +136,6 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
      ************************************/
 
     /**
-     * @inheritdoc IL2ECOBridge
      */
     function finalizeDeposit(
         address _l1Token,
