@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {IL1ECOBridge} from "../interfaces/bridge/IL1ECOBridge.sol";
 import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
-import {IL2ECO} from "../interfaces/token/IL2ECO.sol";
+import {L2ECO} from "../token/L2ECO.sol";
 import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
@@ -25,7 +25,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
     /**
      * @dev L2 token address
      */
-    IL2ECO public l2EcoToken;
+    L2ECO public l2EcoToken;
 
     /**
      * @dev Modifier to check that the L2 token is the same as the one set in the constructor
@@ -51,7 +51,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         address _l2EcoToken
     ) CrossDomainEnabled(_l2CrossDomainMessenger) {
         l1TokenBridge = _l1TokenBridge;
-        l2EcoToken = IL2ECO(_l2EcoToken);
+        l2EcoToken = L2ECO(_l2EcoToken);
     }
 
     /**
@@ -104,52 +104,10 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         onlyFromCrossDomainAccount(l1TokenBridge)
         isL2EcoToken(_l2Token)
     {
-        // Check the target token is compliant and
-        // verify the deposited token on L1 matches the L2 deposited token representation here
-        if (
-            // slither-disable-next-line reentrancy-events
-            ERC165Checker.supportsInterface(_l2Token, 0xa152a60e) &&
-            _l1Token == IL2ECO(_l2Token).l1Token()
-        ) {
-            // When a deposit is finalized, we credit the account on L2 with the same amount of
-            // tokens.
-            // slither-disable-next-line reentrancy-events
-            IL2ECO(_l2Token).mint(_to, _amount);
-            // slither-disable-next-line reentrancy-events
-            emit DepositFinalized(
-                _l1Token,
-                _l2Token,
-                _from,
-                _to,
-                _amount,
-                _data
-            );
-        } else {
-            // Either the L2 token which is being deposited-into disagrees about the correct address
-            // of its L1 token, or does not support the correct interface.
-            // This should only happen if there is a  malicious L2 token, or if a user somehow
-            // specified the wrong L2 token address to deposit into.
-            // In either case, we stop the process here and construct a withdrawal
-            // message so that users can get their funds out in some cases.
-            // There is no way to prevent malicious token contracts altogether, but this does limit
-            // user error and mitigate some forms of malicious contract behavior.
-            bytes memory message = abi.encodeWithSelector(
-                //call parent interface of IL1ECOBridge to get the selector
-                IL1ERC20Bridge.finalizeERC20Withdrawal.selector,
-                _l1Token,
-                _l2Token,
-                _to, // switched the _to and _from here to bounce back the deposit to the sender
-                _from,
-                _amount,
-                _data
-            );
-
-            // Send message up to L1 bridge
-            // slither-disable-next-line reentrancy-events
-            sendCrossDomainMessage(l1TokenBridge, 0, message);
-            // slither-disable-next-line reentrancy-events
-            emit DepositFailed(_l1Token, _l2Token, _from, _to, _amount, _data);
-        }
+        // When a deposit is finalized, we credit the account on L2 with the same amount of
+        // tokens.
+        L2ECO(_l2Token).mint(_to, _amount);
+        emit DepositFinalized(_l1Token, _l2Token, _from, _to, _amount, _data);
     }
 
     /**

@@ -14,7 +14,7 @@ const ERROR_STRINGS = {
   INVALID_TOKEN_ROLE_ADMIN: 'not authorized to edit roles',
 }
 
-describe('L2ECO tests', () => {
+describe.only('L2ECO tests', () => {
 
   let alice: SignerWithAddress
   let bob: SignerWithAddress
