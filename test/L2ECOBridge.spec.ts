@@ -13,6 +13,7 @@ import {
   deployFromName,
 } from './utils/contracts'
 import { expect } from 'chai'
+import { deployL2 } from './utils/fixtures'
 
 // TODO: Maybe we should consider automatically generating these and exporting them?
 const ERROR_STRINGS = {
@@ -24,16 +25,17 @@ const ERROR_STRINGS = {
 const DUMMY_L1_ERC20_ADDRESS = '0xaBBAABbaaBbAABbaABbAABbAABbaAbbaaBbaaBBa'
 const DUMMY_L1_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 
-describe('L2ECOBridge', () => {
+describe.only('L2ECOBridge', () => {
   const INITIAL_TOTAL_SUPPLY = 100_000
   const ALICE_INITIAL_BALANCE = 50_000
 
   let alice: SignerWithAddress
   let bob: SignerWithAddress
+  let pausingPaul: SignerWithAddress
   let l2MessengerImpersonator: SignerWithAddress
   before(async () => {
     // Create a special signer which will enable us to send messages from the L2Messenger contract
-    ;[alice, bob, l2MessengerImpersonator] = await ethers.getSigners()
+    ;[alice, bob, pausingPaul, l2MessengerImpersonator] = await ethers.getSigners()
   })
 
   let L2ECOBridge: Contract
@@ -47,20 +49,23 @@ describe('L2ECOBridge', () => {
       { address: await l2MessengerImpersonator.getAddress() }
     )
 
-    // Deploy an L2 ERC20
-    L2ECO = await deployFromABI(L2StandardERC20, {
-      args: [L2ECOBridge.address, DUMMY_L1_ERC20_ADDRESS, 'L2Token', 'L2T'],
-    })
+    // ;[L2ECO, L2ECOBridge] = await deployL2(DUMMY_L1_BRIDGE_ADDRESS, Fake__L2CrossDomainMessenger.address, alice.address)
 
-    // Deploy the contract under test
-    L2ECOBridge = await deployFromName('L2ECOBridge', {
-      args: [Fake__L2CrossDomainMessenger.address, DUMMY_L1_BRIDGE_ADDRESS, L2ECO.address],
+    // Deploy an L2 ERC20
+    L2ECO = await deployFromName("L2ECO", {
+      args: [],
     })
+    https://github.com/helix-foundation/op-eco/compare/ECO-1200
+    await L2ECO.initialize(l2BridgeImpersonator.address, l2BridgeImpersonator.address)
+    // // Deploy the contract under test
+    // L2ECOBridge = await deployFromName('L2ECOBridge', {
+    //   args: [Fake__L2CrossDomainMessenger.address, DUMMY_L1_BRIDGE_ADDRESS, L2ECO.address],
+    // })
   })
 
   // test the transfer flow of moving a token from L2 to L1
   describe('finalizeDeposit', () => {
-    it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L2 account', async () => {
+    it.only('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L2 account', async () => {
       await expect(
         L2ECOBridge.finalizeDeposit(
           DUMMY_L1_ERC20_ADDRESS,

@@ -11,21 +11,21 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
  * 
  * @returns Returns the L2ECO and L2ECOBridge contracts.
  */
-export async function deployL2(l1Bridge: SignerWithAddress, l2CrossDomainMessenger: SignerWithAddress, initialPauser: SignerWithAddress): Promise<[L2ECO, L2ECOBridge]> {
+export async function deployL2(l1Bridge: Address, l2CrossDomainMessenger: Address, initialPauser: Address): Promise<[L2ECO, L2ECOBridge]> {
 
-    const L2EcoContract = await ethers.getContractFactory("L2Eco")
+    const L2EcoContract = await ethers.getContractFactory("L2ECO")
     const l2EcoProxyInitial = await upgrades.deployProxy(L2EcoContract, [AddressZero, AddressZero], {
         initializer: "initialize",
     })
     await l2EcoProxyInitial.deployed()
 
     const L2ECOBridgeContract = await ethers.getContractFactory("L2ECOBridge")
-    const l2Bridge = await L2ECOBridgeContract.deploy(l2CrossDomainMessenger.address, l1Bridge.address, l2EcoProxyInitial.address)
+    const l2Bridge = await L2ECOBridgeContract.deploy(l2CrossDomainMessenger, l1Bridge, l2EcoProxyInitial.address)
     await l2Bridge.deployed()
 
 
     const l2EcoProxyFinal = await upgrades.upgradeProxy(l2EcoProxyInitial.address, L2EcoContract, {
-        call: { fn: "initialize", args: [l2Bridge.address, initialPauser.address] },
+        call: { fn: "initialize", args: [l2Bridge.address, initialPauser] },
     })
 
     // @ts-ignore
