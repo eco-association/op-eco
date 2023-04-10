@@ -40,6 +40,28 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
     }
 
     /**
+     * @dev Modifier to check that the L1 token is the same as the L2 token's L1 token address
+     */
+    modifier tokensMatch(address _l1Token) {
+        require(
+            _l1Token == l2EcoToken.l1Token(),
+            "L2ECOBridge: Invalid L1 token address"
+        );
+        _;
+    }
+
+    /**
+     * @dev Modifier to check that the inflation multiplier is non-zero
+     */
+    modifier validRebaseMultiplier(uint256 _inflationMutiplier) {
+        require(
+            _inflationMutiplier > 0,
+            "L2ECOBridge: Invalid inflation multiplier"
+        );
+        _;
+    }
+
+    /**
      * @dev Constructor that sets the L2 messanger to use, L1 bridge address and the L2 token address
      * @param _l2CrossDomainMessenger Cross-domain messenger used by this contract on L2
      * @param _l1TokenBridge Address of the L1 bridge deployed to L1 chain
@@ -103,6 +125,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
         isL2EcoToken(_l2Token)
+        tokensMatch(_l1Token)
     {
         // When a deposit is finalized, we credit the account on L2 with the same amount of
         // tokens.
@@ -118,8 +141,10 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         external
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
+        validRebaseMultiplier(_inflationMultiplier)
     {
         l2EcoToken.rebase(_inflationMultiplier);
+        emit RebaseInitiated(_inflationMultiplier);
     }
 
     /**

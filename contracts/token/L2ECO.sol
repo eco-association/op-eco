@@ -63,7 +63,11 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
         ERC20Pausable("Optimism ECO", "OP-ECO", admin, address(0))
     {}
 
-    function initialize(address _l2Bridge, address _initialPauser) public {
+    function initialize(
+        address _l1Token,
+        address _l2Bridge,
+        address _initialPauser
+    ) public {
         require(
             linearInflationMultiplier == 0,
             "Contract has already been initialized."
@@ -72,6 +76,7 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
         minters[_l2Bridge] = true;
         burners[_l2Bridge] = true;
         rebasers[_l2Bridge] = true;
+        l1Token = _l1Token;
         tokenRoleAdmin = _l2Bridge;
         pauser = _initialPauser;
     }

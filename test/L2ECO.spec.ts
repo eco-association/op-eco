@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { Contract } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-
+import { AddressZero } from "@ethersproject/constants"
 import { expect } from './utils/setup'
 import { NON_ZERO_ADDRESS } from './utils/constants'
 import { deployFromName } from './utils/contracts'
@@ -14,7 +14,7 @@ const ERROR_STRINGS = {
   INVALID_TOKEN_ROLE_ADMIN: 'not authorized to edit roles',
 }
 
-describe.only('L2ECO tests', () => {
+describe('L2ECO tests', () => {
 
   let alice: SignerWithAddress
   let bob: SignerWithAddress
@@ -33,7 +33,7 @@ describe.only('L2ECO tests', () => {
       ],
     })
 
-    await L2ECO.initialize(l2BridgeImpersonator.address, l2BridgeImpersonator.address)
+    await L2ECO.initialize(AddressZero, l2BridgeImpersonator.address, l2BridgeImpersonator.address)
   })
 
   // test initialize reverting
@@ -41,6 +41,7 @@ describe.only('L2ECO tests', () => {
     it('Should only be callable once', async () => {
       await expect(
         L2ECO.initialize(
+          AddressZero,
           NON_ZERO_ADDRESS, // this is cuz a zero address could trigger a different revert
           ethers.constants.AddressZero,
         )

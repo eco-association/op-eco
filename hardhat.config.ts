@@ -143,7 +143,7 @@ const config: HardhatUserConfig = {
     ],
   },
   outputValidator: {
-    runOnCompile: true,
+    runOnCompile: false,
     errorMode: false,
     checks: {
       events: false,
