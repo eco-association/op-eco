@@ -71,7 +71,6 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
     }
 
     /**
-     * @inheritdoc IL1ECOBridge
      */
     function depositERC20(
         address _l1Token,
@@ -92,7 +91,6 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
     }
 
     /**
-     * @inheritdoc IL1ECOBridge
      */
     function depositERC20To(
         address _l1Token,
@@ -177,7 +175,6 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
      *************************/
 
     /**
-     * @inheritdoc IL1ECOBridge
      */
     function finalizeERC20Withdrawal(
         address _l1Token,
