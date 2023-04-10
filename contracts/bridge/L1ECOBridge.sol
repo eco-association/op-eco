@@ -5,6 +5,7 @@ pragma solidity 0.8.19;
 import {IL1ECOBridge} from "../interfaces/bridge/IL1ECOBridge.sol";
 import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
 import {IL2ERC20Bridge} from "@eth-optimism/contracts/L2/messaging/IL2ERC20Bridge.sol";
+import {L2ECOBridge} from "../bridge/L2ECOBridge.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /* Library Imports */
@@ -60,7 +61,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
      * @param _l2TokenBridge L2 standard bridge address.
      */
     // slither-disable-next-line external-function
-    function initialize(address _l1messenger, address _l2TokenBridge, address _ecoAddress) public {
+    function initialize(address _l1messenger, address _l2TokenBridge, address _ecoAddress, address _upgrader) public {
         require(
             messenger == address(0),
             "Contract has already been initialized."
@@ -68,7 +69,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         messenger = _l1messenger;
         l2TokenBridge = _l2TokenBridge;
         ecoAddress = _ecoAddress;
-
+        upgrader = _upgrader;
     }
 
     /**************
@@ -85,12 +86,18 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
     }
 
     modifier onlyUpgrader() {
-        require(msg.sender == upgrader, "not authorized to upgrade L2 contracts");
+        require(msg.sender == upgrader, "Caller not authorized to upgrade L2 contracts.");
         _;
     }
 
-    function upgradeL2(address newImpl) external onlyUpgrader {
-        bytes memory message = abi.encodePacked(newImpl);
+    function upgradeL2(address _impl, uint32 _l2Gas) external onlyUpgrader {
+        bytes memory message = abi.encodeWithSelector(
+            L2ECOBridge.upgradeImpl.selector,
+            // IL2ERC20Bridge.finalizeDeposit.selector,
+            _impl
+        );
+
+        sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
     }
 
     /**
