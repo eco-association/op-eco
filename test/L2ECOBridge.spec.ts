@@ -29,7 +29,7 @@ const ERROR_STRINGS = {
 const DUMMY_L1_ERC20_ADDRESS = NON_ZERO_ADDRESS
 const DUMMY_L1_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 
-describe.only('L2ECOBridge tests', () => {
+describe('L2ECOBridge tests', () => {
   const INITIAL_TOTAL_SUPPLY = 100000
   const ALICE_INITIAL_BALANCE = 50000
 
