@@ -70,6 +70,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         l2TokenBridge = _l2TokenBridge;
         ecoAddress = _ecoAddress;
         upgrader = _upgrader;
+        inflationMultiplier = ECO(_ecoAddress).getPastLinearInflation(block.number);
+        
     }
 
     /**************
