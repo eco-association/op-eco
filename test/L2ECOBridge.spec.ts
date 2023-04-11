@@ -5,26 +5,14 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { AddressZero } from "@ethersproject/constants"
 
 import * as L2CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contracts/L2/messaging/L2CrossDomainMessenger.sol/L2CrossDomainMessenger.json'
-import * as L2StandardERC20 from '@eth-optimism/contracts/artifacts/contracts/standards/L2StandardERC20.sol/L2StandardERC20.json'
 
 import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './utils/constants'
 import {
   getContractInterface,
-  deployFromABI,
   deployFromName,
 } from './utils/contracts'
 import { expect } from 'chai'
-import { deployL2 } from './utils/fixtures'
-
-// TODO: Maybe we should consider automatically generating these and exporting them?
-const ERROR_STRINGS = {
-  INVALID_MESSENGER: 'OVM_XCHAIN: messenger contract unauthenticated',
-  INVALID_X_DOMAIN_MSG_SENDER:
-    'OVM_XCHAIN: wrong sender of cross-domain message',
-  INVALID_L2ECO_ADDRESS: "L2ECOBridge: Invalid L2ECO token address",
-  INVALID_L1_ADDRESS: "L2ECOBridge: Invalid L1 token address",
-  INVALID_INFLATION_MULTIPLIER: "L2ECOBridge: Invalid inflation multiplier"
-}
+import { ERROR_STRINGS } from './utils/errors'
 
 const DUMMY_L1_ERC20_ADDRESS = NON_ZERO_ADDRESS
 const DUMMY_L1_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
@@ -78,7 +66,7 @@ describe('L2ECOBridge tests', () => {
           0,
           NON_NULL_BYTES32
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_MESSENGER)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_MESSENGER)
     })
 
     it('onlyFromCrossDomainAccount: should revert on calls from the right crossDomainMessenger, but wrong xDomainMessageSender (ie. not the L1ECOBridge)', async () => {
@@ -98,7 +86,7 @@ describe('L2ECOBridge tests', () => {
             from: Fake__L2CrossDomainMessenger.address,
           }
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_X_DOMAIN_MSG_SENDER)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
     })
 
     it('should only allow L2ECO token to be deposited', async () => {
@@ -118,7 +106,7 @@ describe('L2ECOBridge tests', () => {
             from: Fake__L2CrossDomainMessenger.address,
           }
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_L2ECO_ADDRESS)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_L2ECO_ADDRESS)
     })
 
     it('should validate the L2 and L1 tokens match', async () => {
@@ -138,7 +126,7 @@ describe('L2ECOBridge tests', () => {
             from: Fake__L2CrossDomainMessenger.address,
           }
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_L1_ADDRESS)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_L1_ADDRESS)
     })
 
     it('should credit funds to the depositor', async () => {
@@ -181,7 +169,7 @@ describe('L2ECOBridge tests', () => {
       })
     })
 
-    it('withdraw reverts on tokens that are not our preset L2Eco', async () => {
+    it('withdraw reverts on tokens that are not our preset L2ECO', async () => {
       await expect(
         L2ECOBridge.connect(alice).withdraw(
           bob.address,
@@ -189,7 +177,7 @@ describe('L2ECOBridge tests', () => {
           0,
           NON_NULL_BYTES32
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_L2ECO_ADDRESS)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_L2ECO_ADDRESS)
     })
 
     it('withdraw() burns and sends the correct withdrawal message', async () => {
@@ -275,7 +263,7 @@ describe('L2ECOBridge tests', () => {
         L2ECOBridge.rebase(
           2
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_MESSENGER)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_MESSENGER)
     })
 
     it('onlyFromCrossDomainAccount: should revert on calls from the right crossDomainMessenger, but wrong xDomainMessageSender (ie. not the L1ECOBridge)', async () => {
@@ -287,7 +275,22 @@ describe('L2ECOBridge tests', () => {
         L2ECOBridge.connect(l2MessengerImpersonator).rebase(
           2
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_X_DOMAIN_MSG_SENDER)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
+    })
+
+    it('should reject unauthorized rebase', async () => {
+      await MOCK_L2ECO.setVariable('rebasers', {
+        [L2ECOBridge.address]: false,
+      })
+
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        DUMMY_L1_BRIDGE_ADDRESS
+      )
+      await expect(
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(
+          2
+        )
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_REBASER)
     })
 
     it('should validate the L2ECO inflation multiple', async () => {
@@ -298,7 +301,7 @@ describe('L2ECOBridge tests', () => {
         L2ECOBridge.connect(l2MessengerImpersonator).rebase(
           0
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_INFLATION_MULTIPLIER)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_INFLATION_MULTIPLIER)
     })
 
     it('should set the L2ECO inflation multiple', async () => {

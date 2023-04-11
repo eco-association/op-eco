@@ -5,14 +5,7 @@ import { AddressZero } from "@ethersproject/constants"
 import { expect } from './utils/setup'
 import { NON_ZERO_ADDRESS } from './utils/constants'
 import { deployFromName } from './utils/contracts'
-
-const ERROR_STRINGS = {
-  ALREADY_INITIALIZED: 'Contract has already been initialized.',
-  INVALID_MINTER: 'not authorized to mint',
-  INVALID_BURNER: 'not authorized to burn',
-  INVALID_REBASER: 'not authorized to rebase',
-  INVALID_TOKEN_ROLE_ADMIN: 'not authorized to edit roles',
-}
+import { ERROR_STRINGS } from './utils/errors'
 
 describe('L2ECO tests', () => {
 
@@ -45,7 +38,7 @@ describe('L2ECO tests', () => {
           NON_ZERO_ADDRESS, // this is cuz a zero address could trigger a different revert
           ethers.constants.AddressZero,
         )
-      ).to.be.revertedWith(ERROR_STRINGS.ALREADY_INITIALIZED)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECO.ALREADY_INITIALIZED)
     })
   })
 
@@ -55,7 +48,7 @@ describe('L2ECO tests', () => {
     it('reverts if unauthed', async () => {
       await expect(
         L2ECO.connect(alice).mint(alice.address, mintAmount)
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_MINTER)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_MINTER)
     })
     
     it('increases balance', async () => {
@@ -71,7 +64,7 @@ describe('L2ECO tests', () => {
     it('reverts if unauthed', async () => {
       await expect(
         L2ECO.connect(bob).burn(alice.address, burnAmount)
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_BURNER)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_BURNER)
     })
     
     describe('decreases balance', () => {
@@ -101,7 +94,7 @@ describe('L2ECO tests', () => {
     it('reverts if unauthed', async () => {
       await expect(
         L2ECO.connect(bob).rebase(newInflationMult)
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_REBASER)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_REBASER)
     })
 
     describe('on rebase', () => {
@@ -153,25 +146,25 @@ describe('L2ECO tests', () => {
       it('reverts on unauthed minter change', async () => {
         await expect(
           L2ECO.updateMinters(alice.address, true)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN)
       })
       
       it('reverts on unauthed burner change', async () => {
         await expect(
           L2ECO.updateBurners(alice.address, true)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN)
       })
 
       it('reverts on unauthed rebaser change', async () => {
         await expect(
           L2ECO.updateRebasers(alice.address, true)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN)
       })
 
       it('reverts on unauthed role admin change', async () => {
         await expect(
           L2ECO.updateTokenRoleAdmin(alice.address)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN)
       })
     })
 
@@ -183,7 +176,7 @@ describe('L2ECO tests', () => {
 
         await expect(
           L2ECO.connect(alice).mint(alice.address, mintAmount)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_MINTER)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_MINTER)
 
         await L2ECO.connect(l2BridgeImpersonator).updateMinters(alice.address, true)
 
@@ -200,7 +193,7 @@ describe('L2ECO tests', () => {
 
         await expect(
           L2ECO.connect(l2BridgeImpersonator).mint(alice.address, mintAmount)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_MINTER)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_MINTER)
       })
     })
 
@@ -217,7 +210,7 @@ describe('L2ECO tests', () => {
 
         await expect(
           L2ECO.connect(bob).burn(alice.address, burnAmount)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_BURNER)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_BURNER)
 
         await L2ECO.connect(l2BridgeImpersonator).updateBurners(bob.address, true)
 
@@ -235,7 +228,7 @@ describe('L2ECO tests', () => {
 
         await expect(
           L2ECO.connect(l2BridgeImpersonator).burn(alice.address, burnAmount)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_BURNER)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_BURNER)
       })
     })
 
@@ -253,7 +246,7 @@ describe('L2ECO tests', () => {
 
         await expect(
           L2ECO.connect(alice).rebase(newInflationMult)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_REBASER)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_REBASER)
 
         await L2ECO.connect(l2BridgeImpersonator).updateRebasers(alice.address, true)
 
@@ -270,7 +263,7 @@ describe('L2ECO tests', () => {
 
         await expect(
           L2ECO.connect(l2BridgeImpersonator).rebase(newInflationMult)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_REBASER)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_REBASER)
       })
     })
 
@@ -284,7 +277,7 @@ describe('L2ECO tests', () => {
         // can no longer edit roles
         await expect(
           L2ECO.connect(l2BridgeImpersonator).updateMinters(alice.address, false)
-        ).to.be.revertedWith(ERROR_STRINGS.INVALID_TOKEN_ROLE_ADMIN)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN)
       })
     })
   })

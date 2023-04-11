@@ -35,43 +35,50 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
      */
     event NewInflationMultiplier(uint256 inflationMultiplier);
 
+    modifier uninitialized() {
+        require(
+            linearInflationMultiplier == 0,
+            "L2ECO: contract has already been initialized"
+        );
+        _;
+    }
+
     modifier onlyMinterRole() {
-        require(minters[msg.sender], "not authorized to mint");
+        require(minters[msg.sender], "L2ECO: not authorized to mint");
         _;
     }
 
     modifier onlyBurnerRoleOrSelf(address _from) {
         require(
             _from == msg.sender || burners[msg.sender],
-            "not authorized to burn"
+            "L2ECO: not authorized to burn"
         );
         _;
     }
 
     modifier onlyRebaserRole() {
-        require(rebasers[msg.sender], "not authorized to rebase");
+        require(rebasers[msg.sender], "L2ECO: not authorized to rebase");
         _;
     }
 
     modifier onlyTokenRoleAdmin() {
-        require(msg.sender == tokenRoleAdmin, "not authorized to edit roles");
+        require(
+            msg.sender == tokenRoleAdmin,
+            "L2ECO: not authorized to edit roles"
+        );
         _;
     }
 
     // when admin becomes mutable, we put it in the initialize function
-    constructor(address admin)
-        ERC20Pausable("Optimism ECO", "OP-ECO", admin, address(0))
-    {}
+    constructor(
+        address admin
+    ) ERC20Pausable("Optimism ECO", "OP-ECO", admin, address(0)) {}
 
     function initialize(
         address _l1Token,
         address _l2Bridge,
         address _initialPauser
-    ) public {
-        require(
-            linearInflationMultiplier == 0,
-            "Contract has already been initialized."
-        );
+    ) public uninitialized {
         linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
         minters[_l2Bridge] = true;
         burners[_l2Bridge] = true;
@@ -93,24 +100,24 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
         return _totalSupply / linearInflationMultiplier;
     }
 
-    function updateMinters(address _key, bool _value)
-        public
-        onlyTokenRoleAdmin
-    {
+    function updateMinters(
+        address _key,
+        bool _value
+    ) public onlyTokenRoleAdmin {
         minters[_key] = _value;
     }
 
-    function updateBurners(address _key, bool _value)
-        public
-        onlyTokenRoleAdmin
-    {
+    function updateBurners(
+        address _key,
+        bool _value
+    ) public onlyTokenRoleAdmin {
         burners[_key] = _value;
     }
 
-    function updateRebasers(address _key, bool _value)
-        public
-        onlyTokenRoleAdmin
-    {
+    function updateRebasers(
+        address _key,
+        bool _value
+    ) public onlyTokenRoleAdmin {
         rebasers[_key] = _value;
     }
 
@@ -122,17 +129,16 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
         _mint(_to, _value);
     }
 
-    function burn(address _from, uint256 _value)
-        external
-        onlyBurnerRoleOrSelf(_from)
-    {
+    function burn(
+        address _from,
+        uint256 _value
+    ) external onlyBurnerRoleOrSelf(_from) {
         _burn(_from, _value);
     }
 
-    function rebase(uint256 _newLinearInflationMultiplier)
-        external
-        onlyRebaserRole
-    {
+    function rebase(
+        uint256 _newLinearInflationMultiplier
+    ) external onlyRebaserRole {
         _rebase(_newLinearInflationMultiplier);
     }
 

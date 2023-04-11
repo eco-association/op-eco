@@ -34,7 +34,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
     modifier isL2EcoToken(address _l2Token) {
         require(
             _l2Token == address(l2EcoToken),
-            "L2ECOBridge: Invalid L2ECO token address"
+            "L2ECOBridge: invalid L2ECO token address"
         );
         _;
     }
@@ -45,7 +45,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
     modifier tokensMatch(address _l1Token) {
         require(
             _l1Token == l2EcoToken.l1Token(),
-            "L2ECOBridge: Invalid L1 token address"
+            "L2ECOBridge: invalid L1 token address"
         );
         _;
     }
@@ -56,7 +56,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
     modifier validRebaseMultiplier(uint256 _inflationMutiplier) {
         require(
             _inflationMutiplier > 0,
-            "L2ECOBridge: Invalid inflation multiplier"
+            "L2ECOBridge: invalid inflation multiplier"
         );
         _;
     }

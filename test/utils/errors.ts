@@ -1,0 +1,23 @@
+/**
+ * @notice Contains all error strings used in the contracts. 
+ * Should be exported in package
+ */
+export const ERROR_STRINGS = {
+    OVM: {
+        INVALID_MESSENGER: 'OVM_XCHAIN: messenger contract unauthenticated',
+        INVALID_X_DOMAIN_MSG_SENDER:
+            'OVM_XCHAIN: wrong sender of cross-domain message',
+    },
+    L2ECOBridge: {
+        INVALID_L2ECO_ADDRESS: "L2ECOBridge: invalid L2ECO token address",
+        INVALID_L1_ADDRESS: "L2ECOBridge: invalid L1 token address",
+        INVALID_INFLATION_MULTIPLIER: "L2ECOBridge: invalid inflation multiplier",
+    },
+    L2ECO: {
+        ALREADY_INITIALIZED: "L2ECO: contract has already been initialized",
+        UNAUTHORIZED_MINTER: "L2ECO: not authorized to mint",
+        UNAUTHORIZED_BURNER: "L2ECO: not authorized to burn",
+        UNAUTHORIZED_REBASER: "L2ECO: not authorized to rebase",
+        UNAUTHORIZED_TOKEN_ROLE_ADMIN: "L2ECO: not authorized to edit roles",
+    }
+}
