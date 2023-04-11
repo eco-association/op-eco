@@ -14,6 +14,7 @@ contract ConfigureNotifierL2Rebase is Policy, Proposal {
     bytes32 public constant NOTIFIER_ID = keccak256("Notifier");
 
     // The encoded function signature of the rebase function
+    // after Nishaad finishes setting up this function, I can put the value in a comment here
     bytes public rebaseFunctionData;
 
     // The L1Bridge address for passing rebase data
