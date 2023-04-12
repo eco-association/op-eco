@@ -36,14 +36,14 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
     // L1 ECO address
     address public ecoAddress;
 
-    // Balance of gons deposited
-    uint256 public deposits;
+    // L2 upgrader role
+    address public upgrader;
 
     // Current inflation multiplier
     uint256 public inflationMultiplier;
 
-    // L2 upgrader role
-    address public upgrader;
+    // Balance of gons deposited
+    uint256 public deposits;
 
     /***************
      * Constructor *
