@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { ethers } from 'hardhat'
 import { Signer, Contract, constants, BigNumber } from 'ethers'
 import { smock, FakeContract, MockContract } from '@defi-wonderland/smock'
@@ -8,7 +9,6 @@ import * as L1CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contr
 import { expect } from './tools/setup'
 import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './tools/constants'
 import { deployFromName, getContractInterface } from './tools/contracts'
-import { BlockList } from 'net'
 
 // TODO: Maybe we should consider automatically generating these and exporting them?
 const ERROR_STRINGS = {
@@ -25,7 +25,7 @@ const DUMMY_L1_ERC20_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const DUMMY_UPGRADER_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const INITIAL_INFLATION_MULTIPLIER = BigNumber.from('1000000000000000000')
 // 2e18
-const INITIAL_TOTAL_L1_SUPPLY =      BigNumber.from("2000000000000000000")
+const INITIAL_TOTAL_L1_SUPPLY = BigNumber.from('2000000000000000000')
 const FINALIZATION_GAS = 1_200_000
 
 const REGISTRY_DEPLOY_TX =
@@ -35,11 +35,9 @@ describe('L1ECOBridge', () => {
   let l1MessengerImpersonator: Signer
   let alice: SignerWithAddress
   let bob: SignerWithAddress
-  let upgraderImpersonator: SignerWithAddress
-  // let ECO: M<
-  let policy: MockContract<Contract>
+
   before(async () => {
-    ;[l1MessengerImpersonator, alice, bob, upgraderImpersonator] = await ethers.getSigners()
+    ;[l1MessengerImpersonator, alice, bob] = await ethers.getSigners()
     await (
       await alice.sendTransaction({
         to: '0xa990077c3205cbDf861e17Fa532eeB069cE9fF96',
@@ -47,7 +45,7 @@ describe('L1ECOBridge', () => {
       })
     ).wait()
     if (alice.provider) {
-      await (await alice.provider.sendTransaction(REGISTRY_DEPLOY_TX)).wait() 
+      await (await alice.provider.sendTransaction(REGISTRY_DEPLOY_TX)).wait()
     }
   })
 
@@ -65,10 +63,16 @@ describe('L1ECOBridge', () => {
     //   await smock.mock('@helix-foundation/currency/')
     // ).deploy(DUMMY_L1_ERC20_ADDRESS, alice.address, 1000, alice.address)
 
-
     L1ERC20 = await (
-      await smock.mock('@helix-foundation/currency/contracts/currency/ECO.sol:ECO')
-    ).deploy(DUMMY_L1_ERC20_ADDRESS, alice.address, ethers.utils.parseEther('10000'), alice.address)
+      await smock.mock(
+        '@helix-foundation/currency/contracts/currency/ECO.sol:ECO'
+      )
+    ).deploy(
+      DUMMY_L1_ERC20_ADDRESS,
+      alice.address,
+      ethers.utils.parseEther('10000'),
+      alice.address
+    )
     // L1ERC20 = await (
     //   await smock.mock('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20')
     // ).deploy('L1ERC20', 'ERC')
@@ -76,15 +80,17 @@ describe('L1ECOBridge', () => {
     // await L1ERC20.setVariable('_totalSupply', INITIAL_TOTAL_L1_SUPPLY)
     // await L1ERC20.setVariable('INITIAL_INFLATION_MULTIPLIER', INITIAL_INFLATION_MULTIPLIER)
     await L1ERC20.setVariable('_balances', {
-      [alice.address]: INITIAL_TOTAL_L1_SUPPLY.mul(INITIAL_INFLATION_MULTIPLIER),
+      [alice.address]: INITIAL_TOTAL_L1_SUPPLY.mul(
+        INITIAL_INFLATION_MULTIPLIER
+      ),
     })
     await L1ERC20.setVariable('checkpoints', {
-      [alice.address] : [
+      [alice.address]: [
         {
           fromBlock: 0,
           value: INITIAL_TOTAL_L1_SUPPLY.mul(INITIAL_INFLATION_MULTIPLIER),
-        }
-      ]
+        },
+      ],
     })
 
     // Deploy the contract under test
@@ -115,10 +121,7 @@ describe('L1ECOBridge', () => {
     const depositAmount = INITIAL_TOTAL_L1_SUPPLY.div(4)
 
     beforeEach(async () => {
-      await L1ERC20.connect(alice).approve(
-        L1ECOBridge.address,
-        depositAmount
-      )
+      await L1ERC20.connect(alice).approve(L1ECOBridge.address, depositAmount)
     })
 
     it('depositERC20() escrows the deposit amount and sends the correct deposit message', async () => {
@@ -290,9 +293,11 @@ describe('L1ECOBridge', () => {
 
   describe('upgrades to L2 contract', async () => {
     it('should only work if caller is upgrader', async () => {
-
       await expect(
-        L1ECOBridge.connect(alice).upgradeL2(DUMMY_L2_ERC20_ADDRESS, FINALIZATION_GAS)
+        L1ECOBridge.connect(alice).upgradeL2(
+          DUMMY_L2_ERC20_ADDRESS,
+          FINALIZATION_GAS
+        )
       ).to.not.be.revertedWith(ERROR_STRINGS.NOT_UPGRADER)
 
       expect(
@@ -301,9 +306,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS,
         (await getContractInterface('L2ECOBridge')).encodeFunctionData(
           'upgradeImpl',
-          [
-            DUMMY_L2_ERC20_ADDRESS,
-          ]
+          [DUMMY_L2_ERC20_ADDRESS]
         ),
         FINALIZATION_GAS,
       ])

@@ -14,6 +14,7 @@ import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constant
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IGenerationIncrease} from "@helix-foundation/currency/contracts/governance/IGenerationIncrease.sol";
 import {ECO} from "@helix-foundation/currency/contracts/currency/ECO.sol";
+
 // import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
@@ -29,7 +30,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
     /********************************
      * External Contract References *
      ********************************/
-    
+
     // L2 side of the bridge
     address public l2TokenBridge;
 
@@ -61,7 +62,12 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
      * @param _l2TokenBridge L2 standard bridge address.
      */
     // slither-disable-next-line external-function
-    function initialize(address _l1messenger, address _l2TokenBridge, address _ecoAddress, address _upgrader) public {
+    function initialize(
+        address _l1messenger,
+        address _l2TokenBridge,
+        address _ecoAddress,
+        address _upgrader
+    ) public {
         require(
             messenger == address(0),
             "Contract has already been initialized."
@@ -70,8 +76,9 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         l2TokenBridge = _l2TokenBridge;
         ecoAddress = _ecoAddress;
         upgrader = _upgrader;
-        inflationMultiplier = ECO(_ecoAddress).getPastLinearInflation(block.number);
-        
+        inflationMultiplier = ECO(_ecoAddress).getPastLinearInflation(
+            block.number
+        );
     }
 
     /**************
@@ -88,7 +95,10 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
     }
 
     modifier onlyUpgrader() {
-        require(msg.sender == upgrader, "Caller not authorized to upgrade L2 contracts.");
+        require(
+            msg.sender == upgrader,
+            "Caller not authorized to upgrade L2 contracts."
+        );
         _;
     }
 
@@ -238,8 +248,11 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         );
     }
 
-    function notifyGenerationIncrease() external {
-        inflationMultiplier = ECO(ecoAddress).getPastLinearInflation(block.number);
+    function fetchNewInflationMultiplier() external {
+        inflationMultiplier = ECO(ecoAddress).getPastLinearInflation(
+            block.number
+        );
+        
     }
 
     /*****************************
