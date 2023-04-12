@@ -31,6 +31,8 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
 
     bool public upgraded;
 
+    bool public rebased;
+
     /***************
      * Constructor *
      ***************/
@@ -45,8 +47,16 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         l1TokenBridge = _l1TokenBridge;
     }
 
-    function upgradeImpl(address _impl) public {
-        upgraded = !upgraded;   
+    function upgradeECO(address _impl) public {
+        upgraded = !upgraded;
+    }
+
+    function rebase(uint256 _inflationMultiplier) public {
+        rebased = !rebased;
+    }
+
+    function fetchNewInflationMultiplier(uint256 multiplier) public {
+
     }
 
     /***************

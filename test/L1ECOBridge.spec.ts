@@ -9,6 +9,7 @@ import * as L1CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contr
 import { expect } from './tools/setup'
 import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './tools/constants'
 import { deployFromName, getContractInterface } from './tools/contracts'
+import { Console } from 'console'
 
 // TODO: Maybe we should consider automatically generating these and exporting them?
 const ERROR_STRINGS = {
@@ -291,10 +292,10 @@ describe('L1ECOBridge', () => {
     })
   })
 
-  describe('upgrades to L2 contract', async () => {
+  describe('upgrades to L2 contract', () => {
     it('should only work if caller is upgrader', async () => {
       await expect(
-        L1ECOBridge.connect(alice).upgradeL2(
+        L1ECOBridge.connect(alice).upgradeECO(
           DUMMY_L2_ERC20_ADDRESS,
           FINALIZATION_GAS
         )
@@ -305,8 +306,41 @@ describe('L1ECOBridge', () => {
       ).to.deep.equal([
         DUMMY_L2_BRIDGE_ADDRESS,
         (await getContractInterface('L2ECOBridge')).encodeFunctionData(
-          'upgradeImpl',
+          'upgradeECO',
           [DUMMY_L2_ERC20_ADDRESS]
+        ),
+        FINALIZATION_GAS,
+      ])
+    })
+  })
+
+  describe('does a rebase', () => {
+    it('should fetch the inflation multiplier', async () => {
+      let goofECO: Contract = await deployFromName('GoofECO', {
+        args: [INITIAL_INFLATION_MULTIPLIER]
+      })
+
+      let anotherL1Bridge: Contract = await deployFromName('L1ECOBridge')
+      await anotherL1Bridge.connect(alice).initialize(
+        Fake__L1CrossDomainMessenger.address,
+        DUMMY_L2_BRIDGE_ADDRESS,
+        goofECO.address,
+        alice.address
+      )    
+      expect(await anotherL1Bridge.inflationMultiplier()).to.eq(INITIAL_INFLATION_MULTIPLIER)
+
+      const newInflationMultiplier = INITIAL_INFLATION_MULTIPLIER.div(2)
+      await goofECO.connect(alice).setMultiplier(newInflationMultiplier)
+      await anotherL1Bridge.connect(alice).rebase(FINALIZATION_GAS)
+      expect(await anotherL1Bridge.inflationMultiplier()).to.eq(newInflationMultiplier)
+
+      expect(
+        Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
+      ).to.deep.equal([
+        DUMMY_L2_BRIDGE_ADDRESS,
+        (await getContractInterface('L2ECOBridge')).encodeFunctionData(
+          'rebase',
+          [newInflationMultiplier]
         ),
         FINALIZATION_GAS,
       ])

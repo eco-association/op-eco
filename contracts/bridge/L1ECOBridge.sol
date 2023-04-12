@@ -102,10 +102,9 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         _;
     }
 
-    function upgradeL2(address _impl, uint32 _l2Gas) external onlyUpgrader {
+    function upgradeECO(address _impl, uint32 _l2Gas) external onlyUpgrader {
         bytes memory message = abi.encodeWithSelector(
-            L2ECOBridge.upgradeImpl.selector,
-            // IL2ERC20Bridge.finalizeDeposit.selector,
+            L2ECOBridge.upgradeECO.selector,
             _impl
         );
 
@@ -248,11 +247,15 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         );
     }
 
-    function fetchNewInflationMultiplier() external {
-        inflationMultiplier = ECO(ecoAddress).getPastLinearInflation(
-            block.number
-        );
+    function rebase(uint32 _l2Gas) external {
+        inflationMultiplier = ECO(ecoAddress).getPastLinearInflation(block.number);
         
+        bytes memory message = abi.encodeWithSelector(
+            L2ECOBridge.rebase.selector,
+            inflationMultiplier
+        );
+
+        sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
     }
 
     /*****************************
