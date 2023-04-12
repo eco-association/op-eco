@@ -25,7 +25,7 @@ const DUMMY_L1_ERC20_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const DUMMY_UPGRADER_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const INITIAL_INFLATION_MULTIPLIER = BigNumber.from('1000000000000000000')
 // 2e18
-const INITIAL_TOTAL_L1_SUPPLY = BigNumber.from("2000000000000000000")
+const INITIAL_TOTAL_L1_SUPPLY =      BigNumber.from("2000000000000000000")
 const FINALIZATION_GAS = 1_200_000
 
 const REGISTRY_DEPLOY_TX =
@@ -111,7 +111,7 @@ describe('L1ECOBridge', () => {
   })
 
   describe('ERC20 deposits', () => {
-    // 1 thousand e18
+    //  .5e18
     const depositAmount = INITIAL_TOTAL_L1_SUPPLY.div(4)
 
     beforeEach(async () => {
@@ -122,20 +122,9 @@ describe('L1ECOBridge', () => {
     })
 
     it('depositERC20() escrows the deposit amount and sends the correct deposit message', async () => {
-
-      // expect((await L1ERC20.checkpoints(alice.address, 0)[1])).to.eq(INITIAL_TOTAL_L1_SUPPLY.mul(INITIAL_INFLATION_MULTIPLIER))
-      // console.log(`alice old checkpoints: ${await L1ERC20.checkpoints(alice.address, 0)}`)
-
-      // console.log(`inflationMult:  ${await L1ECOBridge.inflationMultiplier()}`)
-      // console.log(`totalsupply:    ${await L1ERC20.totalSupply()}`)
-      // console.log(`alice balance:  ${await L1ERC20.balanceOf(alice.address)}`)
-      // console.log(`deposit amount: ${depositAmount}`)
-
       expect(await L1ERC20.balanceOf(alice.address)).to.equal(
         INITIAL_TOTAL_L1_SUPPLY
       )
-
-      // expect((await L1ERC20.checkpoints(alice.address, 0)[1])).to.eq((INITIAL_TOTAL_L1_SUPPLY.sub(depositAmount)).mul(INITIAL_INFLATION_MULTIPLIER))
 
       await L1ECOBridge.connect(alice).depositERC20(
         L1ERC20.address,
@@ -145,9 +134,6 @@ describe('L1ECOBridge', () => {
         NON_NULL_BYTES32
       )
 
-      // console.log(`alice new checkpoints: ${await L1ERC20.checkpoints(alice.address, 1)}`)
-      // console.log(`bridge checkpoints: ${await L1ERC20.checkpoints(L1ECOBridge.address, 0)}`)
-      
       expect(
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
       ).to.deep.equal([
@@ -223,90 +209,6 @@ describe('L1ECOBridge', () => {
         )
       ).to.be.revertedWith('Account not EOA')
     })
-
-    // describe('Handling ERC20.transferFrom() failures that revert ', () => {
-    //   let Fake__L1ERC20: FakeContract
-    //   before(async () => {
-    //     // Fake__L1ERC20 = await smock.fake<Contract>('ERC20')
-
-    //     Fake__L1ERC20 = await (
-    //       await smock.mock('@helix-foundation/currency/contracts/currency/ECO.sol:ECO')
-    //     ).deploy(DUMMY_L1_ERC20_ADDRESS, alice.address, ethers.utils.parseEther('10000'), alice.address)
-    //     Fake__L1ERC20.transferFrom.reverts()
-    //   })
-
-    //   it('depositERC20(): will revert if ERC20.transferFrom() reverts', async () => {
-    //     await expect(
-    //       await L1ECOBridge.connect(alice).depositERC20(
-    //         Fake__L1ERC20.address,
-    //         DUMMY_L2_ERC20_ADDRESS,
-    //         depositAmount,
-    //         FINALIZATION_GAS,
-    //         NON_NULL_BYTES32
-    //       )
-    //     ).to.be.revertedWith('SafeERC20: low-level call failed')
-    //   })
-
-    //   it('depositERC20To(): will revert if ERC20.transferFrom() reverts', async () => {
-    //     await expect(
-    //       L1ECOBridge.connect(alice).depositERC20To(
-    //         Fake__L1ERC20.address,
-    //         DUMMY_L2_ERC20_ADDRESS,
-    //         bob.address,
-    //         depositAmount,
-    //         FINALIZATION_GAS,
-    //         NON_NULL_BYTES32
-    //       )
-    //     ).to.be.revertedWith('SafeERC20: low-level call failed')
-    //   })
-
-    //   it('depositERC20To(): will revert if the L1 ERC20 has no code or is zero address', async () => {
-    //     console.log('whoop')
-    //     await expect(
-    //       L1ECOBridge.connect(alice).depositERC20To(
-    //         ethers.constants.AddressZero,
-    //         DUMMY_L2_ERC20_ADDRESS,
-    //         bob.address,
-    //         depositAmount,
-    //         FINALIZATION_GAS,
-    //         NON_NULL_BYTES32
-    //       )
-    //     ).to.be.revertedWith('Address: call to non-contract')
-    //   })
-    // })
-
-    // describe('Handling ERC20.transferFrom failures that return false', () => {
-    //   let Fake__L1ERC20: FakeContract
-    //   before(async () => {
-    //     Fake__L1ERC20 = await smock.fake('@helix-foundation/currency/contracts/currency/ECO.sol:ECO')
-    //     Fake__L1ERC20.transferFrom.returns(false)
-    //   })
-
-    //   it('deposit(): will revert if ERC20.transferFrom() returns false', async () => {
-    //     await expect(
-    //       L1ECOBridge.connect(alice).depositERC20(
-    //         Fake__L1ERC20.address,
-    //         DUMMY_L2_ERC20_ADDRESS,
-    //         depositAmount,
-    //         FINALIZATION_GAS,
-    //         NON_NULL_BYTES32
-    //       )
-    //     ).to.be.revertedWith('SafeERC20: ERC20 operation did not succeed')
-    //   })
-
-    //   it('depositTo(): will revert if ERC20.transferFrom() returns false', async () => {
-    //     await expect(
-    //       L1ECOBridge.depositERC20To(
-    //         Fake__L1ERC20.address,
-    //         DUMMY_L2_ERC20_ADDRESS,
-    //         bob.address,
-    //         depositAmount,
-    //         FINALIZATION_GAS,
-    //         NON_NULL_BYTES32
-    //       )
-    //     ).to.be.revertedWith('SafeERC20: ERC20 operation did not succeed')
-    //   })
-    // })
   })
 
   describe('ERC20 withdrawals', () => {
@@ -388,10 +290,6 @@ describe('L1ECOBridge', () => {
 
   describe('upgrades to L2 contract', async () => {
     it('should only work if caller is upgrader', async () => {
-
-      // Fake__L1CrossDomainMessenger.xDomainMessageSender.returns(
-      //   DUMMY_L2_BRIDGE_ADDRESS
-      // )
 
       await expect(
         L1ECOBridge.connect(alice).upgradeL2(DUMMY_L2_ERC20_ADDRESS, FINALIZATION_GAS)
