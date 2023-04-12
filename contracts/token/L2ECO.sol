@@ -10,7 +10,7 @@ import {DelegatePermit} from "@helix-foundation/currency/contracts/currency/Dele
 contract L2ECO is ERC20Pausable, DelegatePermit {
     uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1e18;
 
-    uint256 internal linearInflationMultiplier;
+    uint256 public linearInflationMultiplier;
 
     address public tokenRoleAdmin;
 

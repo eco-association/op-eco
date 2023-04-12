@@ -20,12 +20,12 @@ import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constant
  */
 contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
     // L1 bridge contract. This is the only address that can call `finalizeDeposit` on this contract.
-    address public l1TokenBridge;
+    address public immutable l1TokenBridge;
 
     /**
      * @dev L2 token address
      */
-    L2ECO public l2EcoToken;
+    L2ECO public immutable l2EcoToken;
 
     /**
      * @dev Modifier to check that the L2 token is the same as the one set in the constructor
