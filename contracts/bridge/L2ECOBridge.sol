@@ -55,10 +55,6 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         rebased = !rebased;
     }
 
-    function fetchNewInflationMultiplier(uint256 multiplier) public {
-
-    }
-
     /***************
      * Withdrawing *
      ***************/

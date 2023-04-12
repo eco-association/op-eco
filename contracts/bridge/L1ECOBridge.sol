@@ -248,8 +248,10 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
     }
 
     function rebase(uint32 _l2Gas) external {
-        inflationMultiplier = ECO(ecoAddress).getPastLinearInflation(block.number);
-        
+        inflationMultiplier = ECO(ecoAddress).getPastLinearInflation(
+            block.number
+        );
+
         bytes memory message = abi.encodeWithSelector(
             L2ECOBridge.rebase.selector,
             inflationMultiplier
