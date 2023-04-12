@@ -1,10 +1,10 @@
 import { ethers } from 'hardhat'
 import { Contract } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-
-import { expect } from './tools/setup'
-import { NON_ZERO_ADDRESS } from './tools/constants'
-import { deployFromName } from './tools/contracts'
+import { AddressZero } from "@ethersproject/constants"
+import { expect } from './utils/setup'
+import { NON_ZERO_ADDRESS } from './utils/constants'
+import { deployFromName } from './utils/contracts'
 
 const ERROR_STRINGS = {
   ALREADY_INITIALIZED: 'Contract has already been initialized.',
@@ -14,7 +14,7 @@ const ERROR_STRINGS = {
   INVALID_TOKEN_ROLE_ADMIN: 'not authorized to edit roles',
 }
 
-describe('L2ECOBridge', () => {
+describe('L2ECO tests', () => {
 
   let alice: SignerWithAddress
   let bob: SignerWithAddress
@@ -33,7 +33,7 @@ describe('L2ECOBridge', () => {
       ],
     })
 
-    await L2ECO.initialize(l2BridgeImpersonator.address, l2BridgeImpersonator.address)
+    await L2ECO.initialize(AddressZero, l2BridgeImpersonator.address, l2BridgeImpersonator.address)
   })
 
   // test initialize reverting
@@ -41,6 +41,7 @@ describe('L2ECOBridge', () => {
     it('Should only be callable once', async () => {
       await expect(
         L2ECO.initialize(
+          AddressZero,
           NON_ZERO_ADDRESS, // this is cuz a zero address could trigger a different revert
           ethers.constants.AddressZero,
         )

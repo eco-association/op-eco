@@ -5,9 +5,9 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 
 import * as L1CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contracts/L1/messaging/L1CrossDomainMessenger.sol/L1CrossDomainMessenger.json'
 
-import { expect } from './tools/setup'
-import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './tools/constants'
-import { deployFromName, getContractInterface } from './tools/contracts'
+import { expect } from './utils/setup'
+import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './utils/constants'
+import { deployFromName, getContractInterface } from './utils/contracts'
 
 // TODO: Maybe we should consider automatically generating these and exporting them?
 const ERROR_STRINGS = {
@@ -71,10 +71,7 @@ describe('L1ECOBridge', () => {
     const depositAmount = 1_000
 
     beforeEach(async () => {
-      await L1ERC20.connect(alice).approve(
-        L1ECOBridge.address,
-        depositAmount
-      )
+      await L1ERC20.connect(alice).approve(L1ECOBridge.address, depositAmount)
     })
 
     it('depositERC20() escrows the deposit amount and sends the correct deposit message', async () => {
