@@ -1,29 +1,24 @@
+/* eslint-disable camelcase */
 import { ethers } from 'hardhat'
-import { Contract } from 'ethers'
+import { Contract, BigNumber } from 'ethers'
 import { smock, FakeContract, MockContract } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { AddressZero } from "@ethersproject/constants"
+import { AddressZero } from '@ethersproject/constants'
 
 import * as L2CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contracts/L2/messaging/L2CrossDomainMessenger.sol/L2CrossDomainMessenger.json'
-import * as L2StandardERC20 from '@eth-optimism/contracts/artifacts/contracts/standards/L2StandardERC20.sol/L2StandardERC20.json'
 
 import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './utils/constants'
-import {
-  getContractInterface,
-  deployFromABI,
-  deployFromName,
-} from './utils/contracts'
+import { getContractInterface, deployFromName } from './utils/contracts'
 import { expect } from 'chai'
-import { deployL2 } from './utils/fixtures'
 
 // TODO: Maybe we should consider automatically generating these and exporting them?
 const ERROR_STRINGS = {
   INVALID_MESSENGER: 'OVM_XCHAIN: messenger contract unauthenticated',
   INVALID_X_DOMAIN_MSG_SENDER:
     'OVM_XCHAIN: wrong sender of cross-domain message',
-  INVALID_L2ECO_ADDRESS: "L2ECOBridge: Invalid L2ECO token address",
-  INVALID_L1_ADDRESS: "L2ECOBridge: Invalid L1 token address",
-  INVALID_INFLATION_MULTIPLIER: "L2ECOBridge: Invalid inflation multiplier"
+  INVALID_L2ECO_ADDRESS: 'L2ECOBridge: Invalid L2ECO token address',
+  INVALID_L1_ADDRESS: 'L2ECOBridge: Invalid L1 token address',
+  INVALID_INFLATION_MULTIPLIER: 'L2ECOBridge: Invalid inflation multiplier',
 }
 
 const DUMMY_L1_ERC20_ADDRESS = NON_ZERO_ADDRESS
@@ -35,11 +30,13 @@ describe('L2ECOBridge tests', () => {
 
   let alice: SignerWithAddress
   let bob: SignerWithAddress
+  // still have to figure out pausing
   let pausingPaul: SignerWithAddress
   let l2MessengerImpersonator: SignerWithAddress
   before(async () => {
     // Create a special signer which will enable us to send messages from the L2Messenger contract
-    ;[alice, bob, pausingPaul, l2MessengerImpersonator] = await ethers.getSigners()
+    ;[alice, bob, pausingPaul, l2MessengerImpersonator] =
+      await ethers.getSigners()
   })
 
   let L2ECOBridge: Contract
@@ -54,16 +51,22 @@ describe('L2ECOBridge tests', () => {
     )
 
     // Deploy an L2 ERC20
-    MOCK_L2ECO = await (
-      await smock.mock('L2ECO')
-    ).deploy(bob.address)
+    MOCK_L2ECO = await (await smock.mock('L2ECO')).deploy(bob.address)
 
     // Deploy the contract under test
     L2ECOBridge = await deployFromName('L2ECOBridge', {
-      args: [Fake__L2CrossDomainMessenger.address, DUMMY_L1_BRIDGE_ADDRESS, MOCK_L2ECO.address],
+      args: [
+        Fake__L2CrossDomainMessenger.address,
+        DUMMY_L1_BRIDGE_ADDRESS,
+        MOCK_L2ECO.address,
+      ],
     })
 
-    await MOCK_L2ECO.initialize(DUMMY_L1_ERC20_ADDRESS, L2ECOBridge.address, AddressZero)
+    await MOCK_L2ECO.initialize(
+      DUMMY_L1_ERC20_ADDRESS,
+      L2ECOBridge.address,
+      AddressZero
+    )
   })
 
   // test the transfer flow of moving a token from L2 to L1
@@ -148,23 +151,30 @@ describe('L2ECOBridge tests', () => {
         DUMMY_L1_BRIDGE_ADDRESS
       )
 
-      await expect(L2ECOBridge.connect(l2MessengerImpersonator).finalizeDeposit(
-        DUMMY_L1_ERC20_ADDRESS,
-        MOCK_L2ECO.address,
-        alice.address,
-        bob.address,
-        depositAmount,
-        NON_NULL_BYTES32,
-        {
-          from: Fake__L2CrossDomainMessenger.address,
-        }
-      )).to.emit(L2ECOBridge, "DepositFinalized")
-        .withArgs(DUMMY_L1_ERC20_ADDRESS,
+      await expect(
+        L2ECOBridge.connect(l2MessengerImpersonator).finalizeDeposit(
+          DUMMY_L1_ERC20_ADDRESS,
+          MOCK_L2ECO.address,
+          alice.address,
+          bob.address,
+          BigNumber.from(depositAmount).mul(
+            await L2ECOBridge.inflationMultiplier()
+          ),
+          NON_NULL_BYTES32,
+          {
+            from: Fake__L2CrossDomainMessenger.address,
+          }
+        )
+      )
+        .to.emit(L2ECOBridge, 'DepositFinalized')
+        .withArgs(
+          DUMMY_L1_ERC20_ADDRESS,
           MOCK_L2ECO.address,
           alice.address,
           bob.address,
           depositAmount,
-          NON_NULL_BYTES32)
+          NON_NULL_BYTES32
+        )
 
       expect(await MOCK_L2ECO.balanceOf(bob.address)).to.equal(depositAmount)
     })
@@ -211,7 +221,9 @@ describe('L2ECOBridge tests', () => {
             MOCK_L2ECO.address,
             alice.address,
             alice.address,
-            withdrawAmount,
+            BigNumber.from(withdrawAmount).mul(
+              await L2ECOBridge.inflationMultiplier()
+            ),
             NON_NULL_BYTES32,
           ]
         ),
@@ -249,7 +261,9 @@ describe('L2ECOBridge tests', () => {
             MOCK_L2ECO.address,
             alice.address,
             bob.address,
-            withdrawAmount,
+            BigNumber.from(withdrawAmount).mul(
+              await L2ECOBridge.inflationMultiplier()
+            ),
             NON_NULL_BYTES32,
           ]
         ),
@@ -269,13 +283,10 @@ describe('L2ECOBridge tests', () => {
   })
 
   describe('rebase', () => {
-
     it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L2 account', async () => {
-      await expect(
-        L2ECOBridge.rebase(
-          2
-        )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_MESSENGER)
+      await expect(L2ECOBridge.rebase(2)).to.be.revertedWith(
+        ERROR_STRINGS.INVALID_MESSENGER
+      )
     })
 
     it('onlyFromCrossDomainAccount: should revert on calls from the right crossDomainMessenger, but wrong xDomainMessageSender (ie. not the L1ECOBridge)', async () => {
@@ -284,9 +295,7 @@ describe('L2ECOBridge tests', () => {
       )
 
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(
-          2
-        )
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(2)
       ).to.be.revertedWith(ERROR_STRINGS.INVALID_X_DOMAIN_MSG_SENDER)
     })
 
@@ -295,9 +304,7 @@ describe('L2ECOBridge tests', () => {
         DUMMY_L1_BRIDGE_ADDRESS
       )
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(
-          0
-        )
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(0)
       ).to.be.revertedWith(ERROR_STRINGS.INVALID_INFLATION_MULTIPLIER)
     })
 
@@ -308,13 +315,10 @@ describe('L2ECOBridge tests', () => {
       )
 
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(
-          inflationMultiplier
-        )
-      ).to.emit(L2ECOBridge, "RebaseInitiated")
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(inflationMultiplier)
+      )
+        .to.emit(L2ECOBridge, 'RebaseInitiated')
         .withArgs(inflationMultiplier)
     })
   })
-
-
 })
