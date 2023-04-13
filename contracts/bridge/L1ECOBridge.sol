@@ -113,7 +113,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         bytes calldata _data
     ) external virtual onlyEOA {
         _initiateERC20Deposit(
-            _l1Token,
+            ecoAddress,
             _l2Token,
             msg.sender,
             msg.sender,
@@ -134,7 +134,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         bytes calldata _data
     ) external virtual {
         _initiateERC20Deposit(
-            _l1Token,
+            ecoAddress,
             _l2Token,
             msg.sender,
             _to,
@@ -168,11 +168,10 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         bytes calldata _data
     ) internal {
         // When a deposit is initiated on L1, the L1 Bridge transfers the funds to itself for future
-        // withdrawals. The use of safeTransferFrom enables support of "broken tokens" which do not
-        // return a boolean value.
+        // withdrawals.
 
         ECO(_l1Token).transferFrom(_from, address(this), _amount);
-        // convert eco to gons value
+        // gons move across the bridge, with inflation multipliers on either side to correctly scale balances
         _amount = _amount * inflationMultiplier;
 
         // Construct calldata for _l2Token.finalizeDeposit(_to, _amount)
@@ -221,7 +220,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         ECO(_l1Token).transfer(_to, _amount);
 
         emit ERC20WithdrawalFinalized(
-            _l1Token,
+            ecoAddress,
             _l2Token,
             _from,
             _to,

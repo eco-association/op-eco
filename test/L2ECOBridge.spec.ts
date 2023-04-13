@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { ethers } from 'hardhat'
-import { Contract } from 'ethers'
+import { Contract, BigNumber } from 'ethers'
 import { smock, FakeContract, MockContract } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { AddressZero } from "@ethersproject/constants"
@@ -29,6 +29,7 @@ const ERROR_STRINGS = {
 
 const DUMMY_L1_ERC20_ADDRESS = NON_ZERO_ADDRESS
 const DUMMY_L1_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
+const INITIAL_INFLATION_MULTIPLIER = BigNumber.from('1000000000000000000')
 
 describe('L2ECOBridge tests', () => {
   const INITIAL_TOTAL_SUPPLY = 100000
@@ -154,7 +155,7 @@ describe('L2ECOBridge tests', () => {
         MOCK_L2ECO.address,
         alice.address,
         bob.address,
-        depositAmount,
+        BigNumber.from(depositAmount).mul(await L2ECOBridge.inflationMultiplier()),
         NON_NULL_BYTES32,
         {
           from: Fake__L2CrossDomainMessenger.address,
@@ -212,7 +213,7 @@ describe('L2ECOBridge tests', () => {
             MOCK_L2ECO.address,
             alice.address,
             alice.address,
-            withdrawAmount,
+            BigNumber.from(withdrawAmount).mul(await L2ECOBridge.inflationMultiplier()),
             NON_NULL_BYTES32,
           ]
         ),
@@ -250,7 +251,7 @@ describe('L2ECOBridge tests', () => {
             MOCK_L2ECO.address,
             alice.address,
             bob.address,
-            withdrawAmount,
+            BigNumber.from(withdrawAmount).mul(await L2ECOBridge.inflationMultiplier()),
             NON_NULL_BYTES32,
           ]
         ),

@@ -301,65 +301,17 @@ describe('L1ECOBridge', () => {
 
   describe('does a rebase', () => {
     it('should fetch the inflation multiplier', async () => {
-      const goofECO: Contract = await deployFromName('GoofECO', {
-        args: [INITIAL_INFLATION_MULTIPLIER],
-      })
-
-      const anotherL1Bridge: Contract = await deployFromName('L1ECOBridge')
-      await anotherL1Bridge
-        .connect(alice)
-        .initialize(
-          Fake__L1CrossDomainMessenger.address,
-          DUMMY_L2_BRIDGE_ADDRESS,
-          goofECO.address,
-          alice.address
-        )
-      expect(await anotherL1Bridge.inflationMultiplier()).to.eq(
-        INITIAL_INFLATION_MULTIPLIER
-      )
-
-      const newInflationMultiplier = INITIAL_INFLATION_MULTIPLIER.div(2)
-      await goofECO.connect(alice).setMultiplier(newInflationMultiplier)
-      await anotherL1Bridge.connect(alice).rebase(FINALIZATION_GAS)
-      expect(await anotherL1Bridge.inflationMultiplier()).to.eq(
-        newInflationMultiplier
-      )
-
-      expect(
-        Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
-      ).to.deep.equal([
-        DUMMY_L2_BRIDGE_ADDRESS,
-        (await getContractInterface('L2ECOBridge')).encodeFunctionData(
-          'rebase',
-          [newInflationMultiplier]
-        ),
-        FINALIZATION_GAS,
-      ])
-    })
-    it.only('does it right this time', async () => {
-      // const goofECO: Contract = await deployFromName('GoofECO', {
-      //   args: [INITIAL_INFLATION_MULTIPLIER],
-      // })
-
-      // const anotherL1Bridge: Contract = await deployFromName('L1ECOBridge')
-      // await anotherL1Bridge
-      //   .connect(alice)
-      //   .initialize(
-      //     Fake__L1CrossDomainMessenger.address,
-      //     DUMMY_L2_BRIDGE_ADDRESS,
-      //     goofECO.address,
-      //     alice.address
-      //   )
       expect(await L1ECOBridge.inflationMultiplier()).to.eq(
         INITIAL_INFLATION_MULTIPLIER
       )
 
       const newInflationMultiplier = INITIAL_INFLATION_MULTIPLIER.div(2)
+
       if (alice.provider) {
-        await L1ERC20.setVariable('checkpoints', 
+        await L1ERC20.setVariable('_linearInflationCheckpoints', 
           [{
-            fromBlock: await alice.provider.getBlock('latest'),
-            value: INITIAL_TOTAL_L1_SUPPLY.mul(INITIAL_INFLATION_MULTIPLIER),
+            fromBlock: (await alice.provider.getBlock('latest')).number,
+            value: newInflationMultiplier,
           }]
         )
       }
