@@ -10,9 +10,12 @@ import {DelegatePermit} from "@helix-foundation/currency/contracts/currency/Dele
 contract L2ECO is ERC20Pausable, DelegatePermit {
     uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1e18;
 
-    uint256 internal _linearInflationMultiplier;
+    uint256 public linearInflationMultiplier;
 
     address public tokenRoleAdmin;
+
+    // address of the L1 token contract
+    address public l1Token;
 
     // additional roles to be managed by roleAdmin from ERC20Pausable
     mapping(address => bool) public minters;
@@ -60,15 +63,20 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
         ERC20Pausable("Optimism ECO", "OP-ECO", admin, address(0))
     {}
 
-    function initialize(address _l2Bridge, address _initialPauser) public {
+    function initialize(
+        address _l1Token,
+        address _l2Bridge,
+        address _initialPauser
+    ) public {
         require(
-            _linearInflationMultiplier == 0,
+            linearInflationMultiplier == 0,
             "Contract has already been initialized."
         );
-        _linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
+        linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
         minters[_l2Bridge] = true;
         burners[_l2Bridge] = true;
         rebasers[_l2Bridge] = true;
+        l1Token = _l1Token;
         tokenRoleAdmin = _l2Bridge;
         pauser = _initialPauser;
     }
@@ -76,13 +84,13 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     /** Access function to determine the token balance held by some address.
      */
     function balanceOf(address _owner) public view override returns (uint256) {
-        return _balances[_owner] / _linearInflationMultiplier;
+        return _balances[_owner] / linearInflationMultiplier;
     }
 
     /** Returns the total (inflation corrected) token supply
      */
     function totalSupply() public view override returns (uint256) {
-        return _totalSupply / _linearInflationMultiplier;
+        return _totalSupply / linearInflationMultiplier;
     }
 
     function updateMinters(address _key, bool _value)
@@ -129,7 +137,7 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     }
 
     function _rebase(uint256 _newLinearInflationMultiplier) internal {
-        _linearInflationMultiplier = _newLinearInflationMultiplier;
+        linearInflationMultiplier = _newLinearInflationMultiplier;
         emit NewInflationMultiplier(_newLinearInflationMultiplier);
     }
 
@@ -140,7 +148,7 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
         uint256 amount
     ) internal virtual override returns (uint256) {
         amount = super._beforeTokenTransfer(from, to, amount);
-        uint256 gonsAmount = amount * _linearInflationMultiplier;
+        uint256 gonsAmount = amount * linearInflationMultiplier;
 
         emit BaseValueTransfer(from, to, gonsAmount);
 

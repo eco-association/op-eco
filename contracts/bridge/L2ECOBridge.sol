@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-/* Interface Imports */
 import {IL1ECOBridge} from "../interfaces/bridge/IL1ECOBridge.sol";
 import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
+import {L2ECO} from "../token/L2ECO.sol";
 import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
-/* Library Imports */
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
 import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
-
-/* Contract Imports */
-import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC20.sol";
 
 /**
  * @title L2ECOBridge
@@ -23,61 +19,86 @@ import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC
  * bridge to release L1 funds.
  */
 contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
-    /********************************
-     * External Contract References *
-     ********************************/
-
-    address public l1TokenBridge;
-
-    bool public upgraded;
-
-    bool public rebased;
-
-    /***************
-     * Constructor *
-     ***************/
+    // L1 bridge contract. This is the only address that can call `finalizeDeposit` on this contract.
+    address public immutable l1TokenBridge;
 
     /**
-     * @param _l2CrossDomainMessenger Cross-domain messenger used by this contract.
-     * @param _l1TokenBridge Address of the L1 bridge deployed to the main chain.
+     * @dev L2 token address
      */
-    constructor(address _l2CrossDomainMessenger, address _l1TokenBridge)
-        CrossDomainEnabled(_l2CrossDomainMessenger)
-    {
-        l1TokenBridge = _l1TokenBridge;
-    }
-
-    function upgradeECO(address _impl) public {
-        upgraded = !upgraded;
-    }
-
-    function rebase(uint256 _inflationMultiplier) public {
-        rebased = !rebased;
-    }
-
-    /***************
-     * Withdrawing *
-     ***************/
+    L2ECO public immutable l2EcoToken;
 
     /**
+     * @dev Modifier to check that the L2 token is the same as the one set in the constructor
+     * @param _l2Token L2 token address to check
+     */
+    modifier isL2EcoToken(address _l2Token) {
+        require(
+            _l2Token == address(l2EcoToken),
+            "L2ECOBridge: Invalid L2ECO token address"
+        );
+        _;
+    }
+
+    /**
+     * @dev Modifier to check that the L1 token is the same as the L2 token's L1 token address
+     */
+    modifier tokensMatch(address _l1Token) {
+        require(
+            _l1Token == l2EcoToken.l1Token(),
+            "L2ECOBridge: Invalid L1 token address"
+        );
+        _;
+    }
+
+    /**
+     * @dev Modifier to check that the inflation multiplier is non-zero
+     */
+    modifier validRebaseMultiplier(uint256 _inflationMutiplier) {
+        require(
+            _inflationMutiplier > 0,
+            "L2ECOBridge: Invalid inflation multiplier"
+        );
+        _;
+    }
+
+    /**
+     * @dev Constructor that sets the L2 messanger to use, L1 bridge address and the L2 token address
+     * @param _l2CrossDomainMessenger Cross-domain messenger used by this contract on L2
+     * @param _l1TokenBridge Address of the L1 bridge deployed to L1 chain
+     * @param _l2EcoToken Address of the L2 ECO token deployed to L2 chain
+     */
+    constructor(
+        address _l2CrossDomainMessenger,
+        address _l1TokenBridge,
+        address _l2EcoToken
+    ) CrossDomainEnabled(_l2CrossDomainMessenger) {
+        l1TokenBridge = _l1TokenBridge;
+        l2EcoToken = L2ECO(_l2EcoToken);
+    }
+
+    /**
+     * @dev Withdraws tokens from L2 to L1 for the caller
+     * @param _l2Token L2 token address to withdraw
+     * @param _amount Amount of tokens to withdraw
+     * @param _l1Gas Gas limit for the L1 transaction
+     * @param _data Optional data to include when calling the L1 bridge
      */
     function withdraw(
         address _l2Token,
         uint256 _amount,
         uint32 _l1Gas,
         bytes calldata _data
-    ) external virtual {
-        _initiateWithdrawal(
-            _l2Token,
-            msg.sender,
-            msg.sender,
-            _amount,
-            _l1Gas,
-            _data
-        );
+    ) external virtual isL2EcoToken(_l2Token) {
+        _initiateWithdrawal(msg.sender, msg.sender, _amount, _l1Gas, _data);
     }
 
     /**
+     * @dev Withdraws tokens from L2 to L1 to the address the caller specifies
+     * @param _l2Token L2 token address to withdraw
+     * @param _to Address to send the tokens to on L1
+     * @param _amount Amount of tokens to withdraw
+     * @param _l1Gas Gas limit for the L1 transaction
+     * @param _data Optional data to include when calling the L1 bridge
      */
     function withdrawTo(
         address _l2Token,
@@ -85,14 +106,63 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         uint256 _amount,
         uint32 _l1Gas,
         bytes calldata _data
-    ) external virtual {
-        _initiateWithdrawal(_l2Token, msg.sender, _to, _amount, _l1Gas, _data);
+    ) external virtual isL2EcoToken(_l2Token) {
+        _initiateWithdrawal(msg.sender, _to, _amount, _l1Gas, _data);
+    }
+
+    /**
+     * @dev Finallizes a deposit by minting the correct amount of L2 tokens to the recipient's address
+     */
+    function finalizeDeposit(
+        address _l1Token,
+        address _l2Token,
+        address _from,
+        address _to,
+        uint256 _amount,
+        bytes calldata _data
+    )
+        external
+        virtual
+        onlyFromCrossDomainAccount(l1TokenBridge)
+        isL2EcoToken(_l2Token)
+        tokensMatch(_l1Token)
+    {
+        // When a deposit is finalized, we credit the account on L2 with the same amount of
+        // tokens.
+        L2ECO(_l2Token).mint(_to, _amount);
+        emit DepositFinalized(_l1Token, _l2Token, _from, _to, _amount, _data);
+    }
+
+    /**
+     * @dev Notifies the L2 token that the inflation multiplier has changed.
+     * @param _inflationMultiplier The new inflation multiplier.
+     */
+    function rebase(
+        uint256 _inflationMultiplier
+    )
+        external
+        virtual
+        onlyFromCrossDomainAccount(l1TokenBridge)
+        validRebaseMultiplier(_inflationMultiplier)
+    {
+        l2EcoToken.rebase(_inflationMultiplier);
+        emit RebaseInitiated(_inflationMultiplier);
+    }
+
+    /**
+     * @dev Upgrades the L2ECO token implementation address.
+     * @param _newEco The new L2ECO implementation address.
+     */
+    function upgradeECO(
+        address _newEco
+    ) external virtual onlyFromCrossDomainAccount(l1TokenBridge) {
+        //todo
+        emit UpgradeECOInitiated(_newEco);
     }
 
     /**
      * @dev Performs the logic for withdrawals by burning the token and informing
      *      the L1 token Gateway of the withdrawal.
-     * @param _l2Token Address of L2 token where withdrawal is initiated.
      * @param _from Account to pull the withdrawal from on L2.
      * @param _to Account to give the withdrawal to on L1.
      * @param _amount Amount of the token to withdraw.
@@ -102,26 +172,22 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
      *        length, these contracts provide no guarantees about its content.
      */
     function _initiateWithdrawal(
-        address _l2Token,
         address _from,
         address _to,
         uint256 _amount,
         uint32 _l1Gas,
         bytes calldata _data
     ) internal {
-        // When a withdrawal is initiated, we burn the withdrawer's funds to prevent subsequent L2
-        // usage
-        // slither-disable-next-line reentrancy-events
-        IL2StandardERC20(_l2Token).burn(msg.sender, _amount);
+        // Burn the withdrawn tokens from L2
+        l2EcoToken.burn(msg.sender, _amount);
 
         // Construct calldata for l1TokenBridge.finalizeERC20Withdrawal(_to, _amount)
-        // slither-disable-next-line reentrancy-events
-        address l1Token = IL2StandardERC20(_l2Token).l1Token();
+        address l1Token = l2EcoToken.l1Token();
         bytes memory message = abi.encodeWithSelector(
             //call parent interface of IL1ECOBridge to get the selector
             IL1ERC20Bridge.finalizeERC20Withdrawal.selector,
             l1Token,
-            _l2Token,
+            l2EcoToken,
             _from,
             _to,
             _amount,
@@ -129,79 +195,16 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         );
 
         // Send message up to L1 bridge
-        // slither-disable-next-line reentrancy-events
         sendCrossDomainMessage(l1TokenBridge, _l1Gas, message);
 
-        // slither-disable-next-line reentrancy-events
+        // Emit event to notify L2 of withdrawal
         emit WithdrawalInitiated(
             l1Token,
-            _l2Token,
+            address(l2EcoToken),
             msg.sender,
             _to,
             _amount,
             _data
         );
-    }
-
-    /************************************
-     * Cross-chain Function: Depositing *
-     ************************************/
-
-    /**
-     */
-    function finalizeDeposit(
-        address _l1Token,
-        address _l2Token,
-        address _from,
-        address _to,
-        uint256 _amount,
-        bytes calldata _data
-    ) external virtual onlyFromCrossDomainAccount(l1TokenBridge) {
-        // Check the target token is compliant and
-        // verify the deposited token on L1 matches the L2 deposited token representation here
-        if (
-            // slither-disable-next-line reentrancy-events
-            ERC165Checker.supportsInterface(_l2Token, 0x1d1d8b63) &&
-            _l1Token == IL2StandardERC20(_l2Token).l1Token()
-        ) {
-            // When a deposit is finalized, we credit the account on L2 with the same amount of
-            // tokens.
-            // slither-disable-next-line reentrancy-events
-            IL2StandardERC20(_l2Token).mint(_to, _amount);
-            // slither-disable-next-line reentrancy-events
-            emit DepositFinalized(
-                _l1Token,
-                _l2Token,
-                _from,
-                _to,
-                _amount,
-                _data
-            );
-        } else {
-            // Either the L2 token which is being deposited-into disagrees about the correct address
-            // of its L1 token, or does not support the correct interface.
-            // This should only happen if there is a  malicious L2 token, or if a user somehow
-            // specified the wrong L2 token address to deposit into.
-            // In either case, we stop the process here and construct a withdrawal
-            // message so that users can get their funds out in some cases.
-            // There is no way to prevent malicious token contracts altogether, but this does limit
-            // user error and mitigate some forms of malicious contract behavior.
-            bytes memory message = abi.encodeWithSelector(
-                //call parent interface of IL1ECOBridge to get the selector
-                IL1ERC20Bridge.finalizeERC20Withdrawal.selector,
-                _l1Token,
-                _l2Token,
-                _to, // switched the _to and _from here to bounce back the deposit to the sender
-                _from,
-                _amount,
-                _data
-            );
-
-            // Send message up to L1 bridge
-            // slither-disable-next-line reentrancy-events
-            sendCrossDomainMessage(l1TokenBridge, 0, message);
-            // slither-disable-next-line reentrancy-events
-            emit DepositFailed(_l1Token, _l2Token, _from, _to, _amount, _data);
-        }
     }
 }
