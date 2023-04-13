@@ -12,10 +12,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
 import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {IGenerationIncrease} from "@helix-foundation/currency/contracts/governance/IGenerationIncrease.sol";
 import {ECO} from "@helix-foundation/currency/contracts/currency/ECO.sol";
-
-// import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title L1ECOBridge
@@ -25,7 +22,6 @@ import {ECO} from "@helix-foundation/currency/contracts/currency/ECO.sol";
  *
  */
 contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
-    // using SafeERC20 for IERC20;
 
     /********************************
      * External Contract References *
@@ -43,9 +39,6 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
     // Current inflation multiplier
     uint256 public inflationMultiplier;
 
-    // Balance of gons deposited
-    uint256 public deposits;
-
     /***************
      * Constructor *
      ***************/
@@ -61,7 +54,6 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
      * @param _l1messenger L1 Messenger address being used for cross-chain communications.
      * @param _l2TokenBridge L2 standard bridge address.
      */
-    // slither-disable-next-line external-function
     function initialize(
         address _l1messenger,
         address _l2TokenBridge,
@@ -179,7 +171,6 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         // withdrawals. The use of safeTransferFrom enables support of "broken tokens" which do not
         // return a boolean value.
 
-        // slither-disable-next-line reentrancy-events, reentrancy-benign
         ECO(_l1Token).transferFrom(_from, address(this), _amount);
         // convert eco to gons value
         _amount = _amount * inflationMultiplier;
@@ -197,13 +188,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         );
 
         // Send calldata into L2
-        // slither-disable-next-line reentrancy-events, reentrancy-benign
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
 
-        // slither-disable-next-line reentrancy-benign
-        deposits += _amount;
-
-        // slither-disable-next-line reentrancy-events
         emit ERC20DepositInitiated(
             _l1Token,
             _l2Token,
@@ -228,15 +214,12 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         uint256 _amount,
         bytes calldata _data
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
-        deposits -= _amount;
 
         _amount = _amount / inflationMultiplier;
 
         // When a withdrawal is finalized on L1, the L1 Bridge transfers the funds to the withdrawer
-        // slither-disable-next-line reentrancy-events
         ECO(_l1Token).transfer(_to, _amount);
 
-        // slither-disable-next-line reentrancy-events
         emit ERC20WithdrawalFinalized(
             _l1Token,
             _l2Token,
