@@ -22,7 +22,6 @@ import {ECO} from "@helix-foundation/currency/contracts/currency/ECO.sol";
  *
  */
 contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
-
     /********************************
      * External Contract References *
      ********************************/
@@ -213,7 +212,6 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         uint256 _amount,
         bytes calldata _data
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
-
         _amount = _amount / inflationMultiplier;
 
         // When a withdrawal is finalized on L1, the L1 Bridge transfers the funds to the withdrawer

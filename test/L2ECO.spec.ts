@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { Contract } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { AddressZero } from "@ethersproject/constants"
+import { AddressZero } from '@ethersproject/constants'
 import { expect } from './utils/setup'
 import { NON_ZERO_ADDRESS } from './utils/constants'
 import { deployFromName } from './utils/contracts'
@@ -15,7 +15,6 @@ const ERROR_STRINGS = {
 }
 
 describe('L2ECO tests', () => {
-
   let alice: SignerWithAddress
   let bob: SignerWithAddress
   let l2BridgeImpersonator: SignerWithAddress
@@ -30,7 +29,11 @@ describe('L2ECO tests', () => {
       args: [bob.address],
     })
 
-    await L2ECO.initialize(AddressZero, l2BridgeImpersonator.address, l2BridgeImpersonator.address)
+    await L2ECO.initialize(
+      AddressZero,
+      l2BridgeImpersonator.address,
+      l2BridgeImpersonator.address
+    )
   })
 
   // test initialize reverting

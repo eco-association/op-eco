@@ -5,7 +5,12 @@ import { smock, FakeContract, MockContract } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import * as L1CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contracts/L1/messaging/L1CrossDomainMessenger.sol/L1CrossDomainMessenger.json'
 import { expect } from 'chai'
-import { REGISTRY_DEPLOY_TX, REGISTRY_DEPLOYER_ADDRESS, NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './utils/constants'
+import {
+  REGISTRY_DEPLOY_TX,
+  REGISTRY_DEPLOYER_ADDRESS,
+  NON_NULL_BYTES32,
+  NON_ZERO_ADDRESS,
+} from './utils/constants'
 import { deployFromName, getContractInterface } from './utils/contracts'
 
 // TODO: Maybe we should consider automatically generating these and exporting them?
@@ -308,12 +313,12 @@ describe('L1ECOBridge', () => {
       const newInflationMultiplier = INITIAL_INFLATION_MULTIPLIER.div(2)
 
       if (alice.provider) {
-        await L1ERC20.setVariable('_linearInflationCheckpoints', 
-          [{
+        await L1ERC20.setVariable('_linearInflationCheckpoints', [
+          {
             fromBlock: (await alice.provider.getBlock('latest')).number,
             value: newInflationMultiplier,
-          }]
-        )
+          },
+        ])
       }
       await L1ECOBridge.connect(alice).rebase(FINALIZATION_GAS)
       expect(await L1ECOBridge.inflationMultiplier()).to.eq(
