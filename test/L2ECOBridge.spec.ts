@@ -45,14 +45,18 @@ describe('L2ECOBridge tests', () => {
     // Deploy an L2 ERC20
     MOCK_L2ECO = await (
       await smock.mock('L2ECO')
-    ).deploy(bob.address)
+    ).deploy()
+
 
     // Deploy the contract under test
     L2ECOBridge = await deployFromName('L2ECOBridge', {
       args: [Fake__L2CrossDomainMessenger.address, DUMMY_L1_BRIDGE_ADDRESS, MOCK_L2ECO.address],
     })
 
+    await MOCK_L2ECO.setVariable('_initializing', false)
     await MOCK_L2ECO.initialize(DUMMY_L1_ERC20_ADDRESS, L2ECOBridge.address, AddressZero)
+    //set rebase to 1 so our numbers arent crazy big
+    await MOCK_L2ECO.setVariable('linearInflationMultiplier', 1)
   })
 
   // test the transfer flow of moving a token from L2 to L1
@@ -325,7 +329,7 @@ describe('L2ECOBridge tests', () => {
       // await deployL2(Fake__L2CrossDomainMessenger.address, DUMMY_L1_BRIDGE_ADDRESS, AddressZero, MOCK_L2ECO.address)
     })
 
-    it.only('should', async () => {
+    it('should', async () => {
     })
   })
 

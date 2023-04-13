@@ -4,9 +4,6 @@ pragma solidity 0.8.19;
 import {ERC20PausableUpgradeable} from "./ERC20PausableUpgradeable.sol";
 import {DelegatePermitUpgradeable} from "../cryptography/DelegatePermitUpgradeable.sol";
 
-/**
- * @title L2ECO
- */
 contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable {
     uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1e18;
 
@@ -69,11 +66,6 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable {
         _;
     }
 
-    // // when admin becomes mutable, we put it in the initialize function
-    // constructor(
-    //     address admin
-    // ) ERC20Pausable("Optimism ECO", "OP-ECO", admin, address(0)) {}
-
     /**
      * Disable the implementation contract
      */
@@ -102,6 +94,9 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable {
         pauser = _initialPauser;
     }
 
+    // function mint(address to, uint256 amount) public {
+    //     _mint(to, amount);
+    // }
     /** Access function to determine the token balance held by some address.
      */
     function balanceOf(address _owner) public view override returns (uint256) {
@@ -173,4 +168,10 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable {
 
         emit BaseValueTransfer(from, to, gonsAmount);
     }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override {}
 }

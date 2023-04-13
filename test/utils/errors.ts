@@ -14,10 +14,12 @@ export const ERROR_STRINGS = {
         INVALID_INFLATION_MULTIPLIER: "L2ECOBridge: invalid inflation multiplier",
     },
     L2ECO: {
-        ALREADY_INITIALIZED: "L2ECO: contract has already been initialized",
         UNAUTHORIZED_MINTER: "L2ECO: not authorized to mint",
         UNAUTHORIZED_BURNER: "L2ECO: not authorized to burn",
         UNAUTHORIZED_REBASER: "L2ECO: not authorized to rebase",
         UNAUTHORIZED_TOKEN_ROLE_ADMIN: "L2ECO: not authorized to edit roles",
+    },
+    UPGRADES:{
+        ALREADY_INITIALIZED: "Initializable: contract is already initialized",
     }
 }
