@@ -4,10 +4,10 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { AddressZero } from "@ethersproject/constants"
 import { expect } from './utils/setup'
 import { NON_ZERO_ADDRESS } from './utils/constants'
-import { deployFromName } from './utils/contracts'
+import { deployFromName, deployProxyByName } from './utils/contracts'
 import { ERROR_STRINGS } from './utils/errors'
 
-describe('L2ECO tests', () => {
+describe.only('L2ECO tests', () => {
 
   let alice: SignerWithAddress
   let bob: SignerWithAddress
@@ -20,13 +20,23 @@ describe('L2ECO tests', () => {
   beforeEach(async () => {
 
     // Deploy an L2 ERC20
-    L2ECO = await deployFromName('L2ECO', {
-      args: [
-        bob.address,
-      ],
-    })
+    // L2ECO = await deployFromName('L2ECO')
+    // L2ECO = await ethers.getContractFactory("L2ECO")
+    // L2ECO = await L2ECO.deploy()
+    // await L2ECO.initialize(AddressZero, l2BridgeImpersonator.address, l2BridgeImpersonator.address)
 
-    await L2ECO.initialize(AddressZero, l2BridgeImpersonator.address, l2BridgeImpersonator.address)
+    // const L2EcoContract = await ethers.getContractFactory("L2ECO")
+    // const l2EcoProxyInitial = await upgrades.deployProxy(L2EcoContract, [//pass dummy values for the constructor until the L2ECOBridge is deployed
+    //     AddressZero,
+    //     AddressZero,
+    //     AddressZero
+    // ] as L2EcoContract, {
+    //     initializer: "initialize",
+    //     constructorArgs: [NON_ZERO_ADDRESS],
+    //     // unsafeAllow: ['constructor', 'state-variable-immutable', 'state-variable-assignment']
+    // })
+    L2ECO = await deployProxyByName('L2ECO', [AddressZero, l2BridgeImpersonator.address, l2BridgeImpersonator.address],  {initializer: "initialize"})
+    // L2ECO = await deployProxyByName('L2ECO', [AddressZero, l2BridgeImpersonator.address, l2BridgeImpersonator.address])
   })
 
   // test initialize reverting

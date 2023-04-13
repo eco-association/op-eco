@@ -328,10 +328,10 @@
     bufio "^1.0.7"
     chai "^4.3.4"
 
-"@eth-optimism/hardhat-deploy-config@^0.2.5":
-  version "0.2.5"
-  resolved "https://registry.npmjs.org/@eth-optimism/hardhat-deploy-config/-/hardhat-deploy-config-0.2.5.tgz"
-  integrity sha512-zmuevtOiXWX463dK7jsi2ysWfUnphHkXa8xin6M6V8lyJPur2Eoe6UpP5DiXzQ1H0s2mt1ziEweFVWtQiEoTtw==
+"@eth-optimism/hardhat-deploy-config@^0.2.6":
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/hardhat-deploy-config/-/hardhat-deploy-config-0.2.6.tgz#92400f68e61c59d7d6b89fee9c4596b4ede0b792"
+  integrity sha512-pN7utyI0FcGmBL6jYiQkjU3C8j4z6795k9dSXTwmBiZlS4xi96kSltYwNUfxgoonKYcveoV+wJTILjUrPyqhlQ==
 
 "@ethereum-waffle/chai@^3.4.4":
   version "3.4.4"
@@ -1147,12 +1147,12 @@
   resolved "https://registry.npmjs.org/@nomiclabs/hardhat-waffle/-/hardhat-waffle-2.0.5.tgz"
   integrity sha512-U1RH9OQ1mWYQfb+moX5aTgGjpVVlOcpiFI47wwnaGG4kLhcTy90cNiapoqZenxcRAITVbr0/+QSduINL5EsUIQ==
 
-"@openzeppelin/contracts-upgradeable@4.7.1":
-  version "4.7.1"
-  resolved "https://registry.npmjs.org/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.7.1.tgz"
-  integrity sha512-5EFiZld3DYFd8aTL8eeMnhnaWh1/oXLXFNuFMrgF3b1DNPshF3LCyO7VR6lc+gac2URJ0BlVcZoCfkk/3MoEfg==
+"@openzeppelin/contracts-upgradeable@^4.8.2":
+  version "4.8.2"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.8.2.tgz#edef522bdbc46d478481391553bababdd2199e27"
+  integrity sha512-zIggnBwemUmmt9IS73qxi+tumALxCY4QEs3zLCII78k0Gfse2hAOdAkuAeLUzvWUpneMUfFE5sGHzEUSTvn4Ag==
 
-"@openzeppelin/contracts@^4.6.0":
+"@openzeppelin/contracts@^4.6.0", "@openzeppelin/contracts@^4.8.2":
   version "4.8.2"
   resolved "https://registry.npmjs.org/@openzeppelin/contracts/-/contracts-4.8.2.tgz"
   integrity sha512-kEUOgPQszC0fSYWpbh2kT94ltOJwj1qfT2DWo+zVttmGmf97JZ99LspePNaeeaLhCImaHVeBbjaQFZQn7+Zc5g==
@@ -3231,7 +3231,7 @@ chai-as-promised@^7.1.1:
   dependencies:
     check-error "^1.0.2"
 
-chai@4.3.6, chai@^4.3.4:
+chai@^4.3.4:
   version "4.3.6"
   resolved "https://registry.npmjs.org/chai/-/chai-4.3.6.tgz"
   integrity sha512-bbcp3YfHCUzMOvKqsztczerVgBKSsEijCySNlHHbX3VG1nskvqjz5Rfso1gGwD6w6oOV3eI60pKuMOV5MV7p3Q==
@@ -3239,6 +3239,19 @@ chai@4.3.6, chai@^4.3.4:
     assertion-error "^1.1.0"
     check-error "^1.0.2"
     deep-eql "^3.0.1"
+    get-func-name "^2.0.0"
+    loupe "^2.3.1"
+    pathval "^1.1.1"
+    type-detect "^4.0.5"
+
+chai@^4.3.7:
+  version "4.3.7"
+  resolved "https://registry.yarnpkg.com/chai/-/chai-4.3.7.tgz#ec63f6df01829088e8bf55fca839bcd464a8ec51"
+  integrity sha512-HLnAzZ2iupm25PlN0xFreAlBA5zaBSv3og0DdeGA4Ar6h6rJ3A0rolRUKJhSF2V10GZKDgWF/VmAEsNWjCRB+A==
+  dependencies:
+    assertion-error "^1.1.0"
+    check-error "^1.0.2"
+    deep-eql "^4.1.2"
     get-func-name "^2.0.0"
     loupe "^2.3.1"
     pathval "^1.1.1"
@@ -3960,7 +3973,7 @@ deep-eql@^3.0.1:
   dependencies:
     type-detect "^4.0.0"
 
-deep-eql@^4.0.1:
+deep-eql@^4.0.1, deep-eql@^4.1.2:
   version "4.1.3"
   resolved "https://registry.npmjs.org/deep-eql/-/deep-eql-4.1.3.tgz"
   integrity sha512-WaEtAOpRA1MQ0eohqZjpGD8zdI0Ovsm8mmFhaDN8dvDZzyoUMcYDnf5Y6iu7HTXxf8JDS23qWa4a+hKCDyOPzw==
@@ -4906,6 +4919,14 @@ eth-sig-util@3.0.0:
     tweetnacl "^1.0.0"
     tweetnacl-util "^0.15.0"
 
+eth-sig-util@^1.4.2:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/eth-sig-util/-/eth-sig-util-1.4.2.tgz#8d958202c7edbaae839707fba6f09ff327606210"
+  integrity sha512-iNZ576iTOGcfllftB73cPB5AN+XUQAT/T8xzsILsghXC1o8gJUqe3RHlcDqagu+biFpYQ61KQrZZJza8eRSYqw==
+  dependencies:
+    ethereumjs-abi "git+https://github.com/ethereumjs/ethereumjs-abi.git"
+    ethereumjs-util "^5.1.1"
+
 eth-tx-summary@^3.1.2:
   version "3.2.4"
   resolved "https://registry.npmjs.org/eth-tx-summary/-/eth-tx-summary-3.2.4.tgz"
@@ -5003,6 +5024,13 @@ ethereumjs-abi@0.6.8, ethereumjs-abi@^0.6.8:
   version "0.6.8"
   resolved "https://registry.npmjs.org/ethereumjs-abi/-/ethereumjs-abi-0.6.8.tgz"
   integrity sha512-Tx0r/iXI6r+lRsdvkFDlut0N08jWMnKRZ6Gkq+Nmw75lZe4e6o3EkSnkaBP5NF6+m5PTGAr9JP43N3LyeoglsA==
+  dependencies:
+    bn.js "^4.11.8"
+    ethereumjs-util "^6.0.0"
+
+"ethereumjs-abi@git+https://github.com/ethereumjs/ethereumjs-abi.git":
+  version "0.6.8"
+  resolved "git+https://github.com/ethereumjs/ethereumjs-abi.git#ee3994657fa7a427238e6ba92a84d0b529bbcde0"
   dependencies:
     bn.js "^4.11.8"
     ethereumjs-util "^6.0.0"
@@ -5685,10 +5713,10 @@ form-data@~2.3.2:
     combined-stream "^1.0.6"
     mime-types "^2.1.12"
 
-forwarded@~0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/forwarded/-/forwarded-0.1.2.tgz#98c23dab1175657b8c0573e8ceccd91b0ff18c84"
-  integrity sha512-Ua9xNhH0b8pwE3yRbFfXJvfdWF0UHNCdeyb2sbi9Ul/M+r3PTdrz7Cv4SCfZRMjmzEM9PhraqfZFbGTIg3OMyA==
+forwarded@0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/forwarded/-/forwarded-0.2.0.tgz#2269936428aad4c15c7ebe9779a84bf0b2a81811"
+  integrity sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==
 
 fp-ts@1.19.3, fp-ts@^1.0.0:
   version "1.19.3"

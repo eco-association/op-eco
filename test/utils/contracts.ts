@@ -1,5 +1,4 @@
-import hre from 'hardhat'
-import { ethers } from 'ethers'
+import { ethers, upgrades } from "hardhat"
 
 interface FactoryABI {
   abi: any[]
@@ -7,9 +6,9 @@ interface FactoryABI {
 }
 
 export const randomAddress = () => {
-  const bytes = hre.ethers.utils.randomBytes(20)
-  const string = hre.ethers.utils.hexlify(bytes)
-  return hre.ethers.utils.getAddress(string)
+  const bytes = ethers.utils.randomBytes(20)
+  const string = ethers.utils.hexlify(bytes)
+  return ethers.utils.getAddress(string)
 }
 
 export const deployFromName = async (
@@ -19,8 +18,20 @@ export const deployFromName = async (
     signer?: any
   }
 ): Promise<ethers.Contract> => {
-  const factory = await hre.ethers.getContractFactory(name, opts?.signer)
+  const factory = await ethers.getContractFactory(name, opts?.signer)
   return factory.deploy(...(opts?.args || []))
+}
+
+export async function deployProxyByName(
+  name: string,
+  args: any[] = [],
+  opts: {}
+): Promise<ethers.Contract> {
+  const contract = await ethers.getContractFactory(name)
+
+  // return await upgrades.deployProxy(contract, ...(opts?.args || []), opts?.opts || {})
+  // console.log(opts?.args)
+  return await upgrades.deployProxy(contract, args, opts)
 }
 
 export const deployFromABI = async (
@@ -30,7 +41,7 @@ export const deployFromABI = async (
     signer?: any
   }
 ): Promise<ethers.Contract> => {
-  const factory = await hre.ethers.getContractFactory(
+  const factory = await ethers.getContractFactory(
     artifact.abi,
     artifact.bytecode,
     opts?.signer
@@ -41,6 +52,6 @@ export const deployFromABI = async (
 export const getContractInterface = async (
   contractName: string
 ): Promise<ethers.utils.Interface> => {
-  const artifact = await hre.artifacts.readArtifact(contractName)
-  return new hre.ethers.utils.Interface(artifact.abi)
+  const artifact = await artifacts.readArtifact(contractName)
+  return new ethers.utils.Interface(artifact.abi)
 }

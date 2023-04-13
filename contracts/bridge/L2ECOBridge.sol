@@ -137,9 +137,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
      * @dev Notifies the L2 token that the inflation multiplier has changed.
      * @param _inflationMultiplier The new inflation multiplier.
      */
-    function rebase(
-        uint256 _inflationMultiplier
-    )
+    function rebase(uint256 _inflationMultiplier)
         external
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
@@ -153,9 +151,11 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
      * @dev Upgrades the L2ECO token implementation address.
      * @param _newEco The new L2ECO implementation address.
      */
-    function upgradeECO(
-        address _newEco
-    ) external virtual onlyFromCrossDomainAccount(l1TokenBridge) {
+    function upgradeECO(address _newEco)
+        external
+        virtual
+        onlyFromCrossDomainAccount(l1TokenBridge)
+    {
         //todo
         emit UpgradeECOInitiated(_newEco);
     }

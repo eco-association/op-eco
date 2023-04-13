@@ -13,6 +13,7 @@ import {
 } from './utils/contracts'
 import { expect } from 'chai'
 import { ERROR_STRINGS } from './utils/errors'
+import { deployL2 } from './utils/fixtures'
 
 const DUMMY_L1_ERC20_ADDRESS = NON_ZERO_ADDRESS
 const DUMMY_L1_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
@@ -316,6 +317,15 @@ describe('L2ECOBridge tests', () => {
         )
       ).to.emit(L2ECOBridge, "RebaseInitiated")
         .withArgs(inflationMultiplier)
+    })
+  })
+
+  describe('upgradeEco', () => {
+    beforeEach(async () => {
+      // await deployL2(Fake__L2CrossDomainMessenger.address, DUMMY_L1_BRIDGE_ADDRESS, AddressZero, MOCK_L2ECO.address)
+    })
+
+    it.only('should', async () => {
     })
   })
 
