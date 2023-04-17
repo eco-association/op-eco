@@ -24,6 +24,9 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
     // L1 bridge contract. This is the only address that can call `finalizeDeposit` on this contract.
     address public immutable l1TokenBridge;
 
+    // current inflation multiplier
+    uint256 public inflationMultiplier;
+
     /**
      * @dev L2 token address
      */
@@ -84,6 +87,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         l1TokenBridge = _l1TokenBridge;
         l2EcoToken = L2ECO(_l2EcoToken);
         l2ProxyAdmin = ProxyAdmin(_l2ProxyAdmin);
+        inflationMultiplier = l2EcoToken.INITIAL_INFLATION_MULTIPLIER();
     }
 
     /**
@@ -137,8 +141,9 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         isL2EcoToken(_l2Token)
         tokensMatch(_l1Token)
     {
-        // When a deposit is finalized, we credit the account on L2 with the same amount of
-        // tokens.
+        // When a deposit is finalized, we convert the transferred gons to ECO using the current
+        // inflation multiplier, then we credit the account on L2 with the same amount of tokens.
+        _amount = _amount / inflationMultiplier;
         L2ECO(_l2Token).mint(_to, _amount);
         emit DepositFinalized(_l1Token, _l2Token, _from, _to, _amount, _data);
     }
@@ -153,6 +158,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         onlyFromCrossDomainAccount(l1TokenBridge)
         validRebaseMultiplier(_inflationMultiplier)
     {
+        inflationMultiplier = _inflationMultiplier;
         l2EcoToken.rebase(_inflationMultiplier);
         emit RebaseInitiated(_inflationMultiplier);
     }
@@ -200,6 +206,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
 
         // Construct calldata for l1TokenBridge.finalizeERC20Withdrawal(_to, _amount)
         address l1Token = l2EcoToken.l1Token();
+        _amount = _amount * inflationMultiplier;
         bytes memory message = abi.encodeWithSelector(
             //call parent interface of IL1ECOBridge to get the selector
             IL1ERC20Bridge.finalizeERC20Withdrawal.selector,

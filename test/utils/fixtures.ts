@@ -15,9 +15,9 @@ type L2EcoContract = [
 
 /**
  * Deploys the L2 contracts for testing. It first deploys the upgrades proxy, proxy admin, and the implementation contract for the L2ECO contract.
- * Then it deploys the L2ECOBridge contract with the L2ECO proxy address. Finally it deploys the real L2ECO contract through a implimentatioin 
+ * Then it deploys the L2ECOBridge contract with the L2ECO proxy address. Finally it deploys the real L2ECO contract through a implimentatioin
  * update of the proxy, with the L2ECOBridge address.
- * 
+ *
  * @returns Returns the L2ECO and L2ECOBridge contracts.
  */
 export async function deployL2(l2CrossDomainMessenger: Address, l1Bridge: Address, l1Token: Address, initialPauser: Address, opts: { adminBridge: boolean } = {adminBridge: true}): Promise<[L2ECO, L2ECOBridge, ProxyAdmin]> {
