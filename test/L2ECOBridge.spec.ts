@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-/* eslint-disable camelcase */
 import { ethers } from 'hardhat'
 import { Contract, BigNumber } from 'ethers'
 import { smock, FakeContract, MockContract } from '@defi-wonderland/smock'
