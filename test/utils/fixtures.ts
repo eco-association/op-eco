@@ -1,5 +1,5 @@
 import { ethers, upgrades } from "hardhat"
-import { L2ECO, L2ECOBridge } from "../../dist/types"
+import { L2ECO, L2ECOBridge, ProxyAdmin, TokenInitial__factory } from "../../typechain-types"
 import { AddressZero } from "@ethersproject/constants"
 import { Address } from "@eth-optimism/core-utils"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
@@ -20,43 +20,54 @@ type L2EcoContract = [
  * 
  * @returns Returns the L2ECO and L2ECOBridge contracts.
  */
-export async function deployL2(l2CrossDomainMessenger: Address, l1Bridge: Address, l1Token: Address, initialPauser: Address): Promise<[L2ECO, L2ECOBridge]> {
+export async function deployL2(l2CrossDomainMessenger: Address, l1Bridge: Address, l1Token: Address, initialPauser: Address, opts: { adminBridge: boolean } = {adminBridge: true}): Promise<[L2ECO, L2ECOBridge, ProxyAdmin]> {
+    const [owner] = await ethers.getSigners()
 
-    const L2EcoContract = await ethers.getContractFactory("L2ECO")
-    const l2EcoProxyInitial = await upgrades.deployProxy(L2EcoContract, [//pass dummy values for the constructor until the L2ECOBridge is deployed
-        AddressZero,
-        AddressZero,
-        AddressZero
-    ] as L2EcoContract, {
-        initializer: "initialize",
-        constructorArgs: [NON_ZERO_ADDRESS],
-        // unsafeAllow: ['constructor', 'state-variable-immutable', 'state-variable-assignment']
+    const TokenInitialContract = await ethers.getContractFactory("TokenInitial")
+    const proxyInitial = await upgrades.deployProxy(TokenInitialContract, [], {
+        initializer: "initialize"
     })
 
-    await l2EcoProxyInitial.deployed()
+    await proxyInitial.deployed()
+
+    const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
 
     const L2ECOBridgeContract = await ethers.getContractFactory("L2ECOBridge")
-    const l2Bridge = await L2ECOBridgeContract.deploy(l2CrossDomainMessenger, l1Bridge, l2EcoProxyInitial.address)
+    const l2Bridge = await L2ECOBridgeContract.deploy(l2CrossDomainMessenger, l1Bridge, proxyInitial.address, proxyAdmin.address)
     await l2Bridge.deployed()
 
-
-    const l2EcoProxyFinal = await upgrades.upgradeProxy(l2EcoProxyInitial.address, L2EcoContract, {
-        call: { fn: "initialize", args: [
-            l1Token,
-            l2Bridge.address, 
-            initialPauser
-        ]  as L2EcoContract,
-        opts: {constructorArgs: [NON_ZERO_ADDRESS],}
-        },
+    const L2EcoContract = await ethers.getContractFactory("L2ECO")
+    const l2EcoProxy = await upgrades.upgradeProxy(proxyInitial.address, L2EcoContract, {
+        call: {
+            fn: "initialize", args: [
+                l1Token,
+                l2Bridge.address,
+                initialPauser
+            ] as L2EcoContract
+        }
     })
 
-    console.log("L2ECO proxy admin address: ", await upgrades.admin.getManifestAdmin())
-    console.log("L2ECO proxy address: ", l2EcoProxyFinal.address)
+    //NOTE: ProxyAdmin address never changes for a given deployer id, breaks tests
+    // console.log("L2ECO proxy admin address: ", (await upgrades.admin.getInstance()).address)
 
-    await upgrades.admin.transferProxyAdminOwnership(l2Bridge.address)
+    // console.log("L2ECO proxy address: ", l2EcoProxy.address)
+    // console.log("signer owner address: ", owner.address)
+    // console.log("ProxyAdmin Owner: ", await proxyAdmin.owner())
+    // console.log("ProxyAdmin address: ", proxyAdmin.address)
+    // console.log("l2Bridge.address: ", l2Bridge.address)
 
-    // @ts-ignore
-    return [l2EcoProxyFinal, l2Bridge]
+    if (opts.adminBridge) {
+        transferOwnership(l2Bridge.address) 
+    }
+    // console.log("ProxyAdmin Owner: ", await proxyAdmin.owner())
+
+    return [l2EcoProxy as L2ECO, l2Bridge as L2ECOBridge, proxyAdmin]
+}
+
+export async function transferOwnership(newOwnerAddress: Address): Promise<void> {
+    const [owner] = await ethers.getSigners()
+    const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
+    await proxyAdmin.connect(owner).transferOwnership(newOwnerAddress)
 }
 
 export async function deployByName(name: string, ...args: any[]): Promise<any> {

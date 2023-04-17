@@ -94,9 +94,6 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable {
         pauser = _initialPauser;
     }
 
-    // function mint(address to, uint256 amount) public {
-    //     _mint(to, amount);
-    // }
     /** Access function to determine the token balance held by some address.
      */
     function balanceOf(address _owner) public view override returns (uint256) {

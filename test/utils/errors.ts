@@ -21,5 +21,8 @@ export const ERROR_STRINGS = {
     },
     UPGRADES:{
         ALREADY_INITIALIZED: "Initializable: contract is already initialized",
+    },
+    OWNABLE: {
+        NOT_OWNER: "Ownable: caller is not the owner",
     }
 }

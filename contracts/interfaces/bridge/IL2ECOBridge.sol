@@ -10,8 +10,8 @@ interface IL2ECOBridge is IL2ERC20Bridge {
     // Event for when the inflation multiplier is set in the rebase function
     event RebaseInitiated(uint256 _inflationMultiplier);
 
-    // Event for when the L2ECO token proxy is upgraded
-    event UpgradeECOInitiated(address _newEco);
+    // Event for when the L2ECO token implementation is upgraded
+    event UpgradeECOImplementation(address _newEcoImpl);
 
     /**
      * @dev Passes the inflation multiplier to the L2Eco token.
