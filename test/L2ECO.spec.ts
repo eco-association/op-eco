@@ -1,13 +1,12 @@
 import { ethers, upgrades } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { AddressZero } from "@ethersproject/constants"
+import { AddressZero } from '@ethersproject/constants'
 import { expect } from './utils/setup'
 import { NON_ZERO_ADDRESS } from './utils/constants'
 import { ERROR_STRINGS } from './utils/errors'
-import { L2ECO } from "../typechain-types/contracts/token/L2ECO";
+import { L2ECO } from '../typechain-types/contracts/token/L2ECO'
 
 describe('L2ECO tests', () => {
-
   let alice: SignerWithAddress
   let bob: SignerWithAddress
   let l2BridgeImpersonator: SignerWithAddress
@@ -15,12 +14,16 @@ describe('L2ECO tests', () => {
 
   beforeEach(async () => {
     ;[alice, bob, l2BridgeImpersonator] = await ethers.getSigners()
-    const ecoFactory = await ethers.getContractFactory("L2ECO")
-    eco = (await upgrades.deployProxy(ecoFactory, [AddressZero, l2BridgeImpersonator.address, l2BridgeImpersonator.address], {
-      initializer: "initialize",
-    })) as L2ECO
+    const ecoFactory = await ethers.getContractFactory('L2ECO')
+    eco = (await upgrades.deployProxy(
+      ecoFactory,
+      [AddressZero, l2BridgeImpersonator.address, l2BridgeImpersonator.address],
+      {
+        initializer: 'initialize',
+      }
+    )) as L2ECO
     await eco.deployed()
-    //set rebase to 1 so our numbers arent crazy big
+    // set rebase to 1 so our numbers arent crazy big
     await eco.connect(l2BridgeImpersonator).rebase(1)
   })
 
@@ -31,7 +34,7 @@ describe('L2ECO tests', () => {
         eco.initialize(
           AddressZero,
           NON_ZERO_ADDRESS, // this is cuz a zero address could trigger a different revert
-          ethers.constants.AddressZero,
+          ethers.constants.AddressZero
         )
       ).to.be.revertedWith(ERROR_STRINGS.UPGRADES.ALREADY_INITIALIZED)
     })
@@ -47,14 +50,12 @@ describe('L2ECO tests', () => {
     })
 
     it('increases balance', async () => {
-
       expect(await eco.balanceOf(alice.address)).to.equal(0)
-      await expect(eco.connect(l2BridgeImpersonator).mint(alice.address, mintAmount)
-      ).to.emit(eco, "Transfer")
-        .withArgs(
-          AddressZero,
-          alice.address,
-          mintAmount)
+      await expect(
+        eco.connect(l2BridgeImpersonator).mint(alice.address, mintAmount)
+      )
+        .to.emit(eco, 'Transfer')
+        .withArgs(AddressZero, alice.address, mintAmount)
 
       expect(await eco.balanceOf(alice.address)).to.equal(mintAmount)
     })
@@ -89,7 +90,7 @@ describe('L2ECO tests', () => {
 
   describe('rebasing', () => {
     const newInflationMult = 2
-    const newInflationScale = 1/newInflationMult
+    const newInflationScale = 1 / newInflationMult
 
     it('reverts if unauthed', async () => {
       await expect(
@@ -101,21 +102,25 @@ describe('L2ECO tests', () => {
       const aliceBalance = 1000
 
       beforeEach(async () => {
-        await eco.connect(l2BridgeImpersonator).mint(alice.address, aliceBalance)
+        await eco
+          .connect(l2BridgeImpersonator)
+          .mint(alice.address, aliceBalance)
         expect(await eco.balanceOf(alice.address)).to.eq(aliceBalance)
       })
 
       it('emits an event', async () => {
-        await expect(
-          eco.connect(l2BridgeImpersonator).rebase(newInflationMult)
-        ).to.emit(eco, 'NewInflationMultiplier').withArgs(newInflationMult)
+        await expect(eco.connect(l2BridgeImpersonator).rebase(newInflationMult))
+          .to.emit(eco, 'NewInflationMultiplier')
+          .withArgs(newInflationMult)
       })
 
       it('changes balance', async () => {
         expect(await eco.balanceOf(alice.address)).to.eq(aliceBalance)
         await eco.connect(l2BridgeImpersonator).rebase(newInflationMult)
 
-        expect(await eco.balanceOf(alice.address)).to.eq(newInflationScale * aliceBalance)
+        expect(await eco.balanceOf(alice.address)).to.eq(
+          newInflationScale * aliceBalance
+        )
       })
     })
   })
@@ -124,18 +129,18 @@ describe('L2ECO tests', () => {
     const initialAliceBalance = 1000
 
     beforeEach(async () => {
-      await eco.connect(l2BridgeImpersonator).mint(alice.address, initialAliceBalance)
+      await eco
+        .connect(l2BridgeImpersonator)
+        .mint(alice.address, initialAliceBalance)
       expect(await eco.balanceOf(alice.address)).to.eq(initialAliceBalance)
     })
 
     it('emits base value event', async () => {
       await expect(
         eco.connect(alice).transfer(bob.address, initialAliceBalance)
-      ).to.emit(eco, 'BaseValueTransfer').withArgs(
-        alice.address,
-        bob.address,
-        '1000'
       )
+        .to.emit(eco, 'BaseValueTransfer')
+        .withArgs(alice.address, bob.address, '1000')
     })
   })
 
@@ -143,15 +148,15 @@ describe('L2ECO tests', () => {
   describe('role management', () => {
     describe('reverts', () => {
       it('reverts on unauthed minter change', async () => {
-        await expect(
-          eco.updateMinters(alice.address, true)
-        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN)
+        await expect(eco.updateMinters(alice.address, true)).to.be.revertedWith(
+          ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN
+        )
       })
 
       it('reverts on unauthed burner change', async () => {
-        await expect(
-          eco.updateBurners(alice.address, true)
-        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN)
+        await expect(eco.updateBurners(alice.address, true)).to.be.revertedWith(
+          ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN
+        )
       })
 
       it('reverts on unauthed rebaser change', async () => {
@@ -177,7 +182,9 @@ describe('L2ECO tests', () => {
           eco.connect(alice).mint(alice.address, mintAmount)
         ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_MINTER)
 
-        await eco.connect(l2BridgeImpersonator).updateMinters(alice.address, true)
+        await eco
+          .connect(l2BridgeImpersonator)
+          .updateMinters(alice.address, true)
 
         await eco.connect(alice).mint(alice.address, mintAmount)
         expect(await eco.balanceOf(alice.address)).to.eq(mintAmount)
@@ -188,7 +195,9 @@ describe('L2ECO tests', () => {
         await eco.connect(l2BridgeImpersonator).mint(alice.address, mintAmount)
         expect(await eco.balanceOf(alice.address)).to.eq(mintAmount)
 
-        await eco.connect(l2BridgeImpersonator).updateMinters(l2BridgeImpersonator.address, false)
+        await eco
+          .connect(l2BridgeImpersonator)
+          .updateMinters(l2BridgeImpersonator.address, false)
 
         await expect(
           eco.connect(l2BridgeImpersonator).mint(alice.address, mintAmount)
@@ -217,11 +226,13 @@ describe('L2ECO tests', () => {
 
       it('can remove permission', async () => {
         await eco.connect(l2BridgeImpersonator).mint(alice.address, burnAmount)
-        expect(await eco.balanceOf(alice.address)).to.eq(2* burnAmount)
+        expect(await eco.balanceOf(alice.address)).to.eq(2 * burnAmount)
         await eco.connect(l2BridgeImpersonator).burn(alice.address, burnAmount)
         expect(await eco.balanceOf(alice.address)).to.eq(burnAmount)
 
-        await eco.connect(l2BridgeImpersonator).updateBurners(l2BridgeImpersonator.address, false)
+        await eco
+          .connect(l2BridgeImpersonator)
+          .updateBurners(l2BridgeImpersonator.address, false)
 
         await expect(
           eco.connect(l2BridgeImpersonator).burn(alice.address, burnAmount)
@@ -231,11 +242,13 @@ describe('L2ECO tests', () => {
 
     describe('rebasing', () => {
       const newInflationMult = 2
-      const newInflationScale = 1/newInflationMult
+      const newInflationScale = 1 / newInflationMult
       const aliceBalance = 1000
 
       beforeEach(async () => {
-        await eco.connect(l2BridgeImpersonator).mint(alice.address, aliceBalance)
+        await eco
+          .connect(l2BridgeImpersonator)
+          .mint(alice.address, aliceBalance)
         expect(await eco.balanceOf(alice.address)).to.eq(aliceBalance)
       })
 
@@ -244,17 +257,25 @@ describe('L2ECO tests', () => {
           eco.connect(alice).rebase(newInflationMult)
         ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_REBASER)
 
-        await eco.connect(l2BridgeImpersonator).updateRebasers(alice.address, true)
+        await eco
+          .connect(l2BridgeImpersonator)
+          .updateRebasers(alice.address, true)
 
         await eco.connect(alice).rebase(newInflationMult)
-        expect(await eco.balanceOf(alice.address)).to.eq(newInflationScale * aliceBalance)
+        expect(await eco.balanceOf(alice.address)).to.eq(
+          newInflationScale * aliceBalance
+        )
       })
 
       it('can remove permission', async () => {
         await eco.connect(l2BridgeImpersonator).rebase(newInflationMult)
-        expect(await eco.balanceOf(alice.address)).to.eq(newInflationScale * aliceBalance)
+        expect(await eco.balanceOf(alice.address)).to.eq(
+          newInflationScale * aliceBalance
+        )
 
-        await eco.connect(l2BridgeImpersonator).updateRebasers(l2BridgeImpersonator.address, false)
+        await eco
+          .connect(l2BridgeImpersonator)
+          .updateRebasers(l2BridgeImpersonator.address, false)
 
         await expect(
           eco.connect(l2BridgeImpersonator).rebase(newInflationMult)
@@ -265,9 +286,13 @@ describe('L2ECO tests', () => {
     describe('admin', () => {
       it('can change admin', async () => {
         // can edit roles
-        await eco.connect(l2BridgeImpersonator).updateMinters(alice.address, true)
+        await eco
+          .connect(l2BridgeImpersonator)
+          .updateMinters(alice.address, true)
 
-        await eco.connect(l2BridgeImpersonator).updateTokenRoleAdmin(alice.address)
+        await eco
+          .connect(l2BridgeImpersonator)
+          .updateTokenRoleAdmin(alice.address)
 
         // can no longer edit roles
         await expect(
