@@ -9,7 +9,8 @@ export const ERROR_STRINGS = {
       'OVM_XCHAIN: wrong sender of cross-domain message',
   },
   L1ECOBridge: {
-    UNAUTHORIZED_UPGRADER: 'L1ECOBridge: caller not authorized to upgrade L2 contracts.'
+    UNAUTHORIZED_UPGRADER:
+      'L1ECOBridge: caller not authorized to upgrade L2 contracts.',
   },
   L2ECOBridge: {
     INVALID_L2ECO_ADDRESS: 'L2ECOBridge: invalid L2ECO token address',
@@ -21,7 +22,6 @@ export const ERROR_STRINGS = {
     UNAUTHORIZED_BURNER: 'L2ECO: not authorized to burn',
     UNAUTHORIZED_REBASER: 'L2ECO: not authorized to rebase',
     UNAUTHORIZED_TOKEN_ROLE_ADMIN: 'L2ECO: not authorized to edit roles',
-    
   },
   UPGRADES: {
     ALREADY_INITIALIZED: 'Initializable: contract is already initialized',

@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable camelcase */
 import { ethers } from 'hardhat'
 import { Contract, BigNumber } from 'ethers'
 import { smock, FakeContract, MockContract } from '@defi-wonderland/smock'
@@ -25,10 +26,13 @@ describe('L2ECOBridge tests', () => {
   let alice: SignerWithAddress
   let bob: SignerWithAddress
   // still have to figure out pausing
+  // still have to figure out pausing
   let pausingPaul: SignerWithAddress
   let l2MessengerImpersonator: SignerWithAddress
   before(async () => {
     // Create a special signer which will enable us to send messages from the L2Messenger contract
+    ;[alice, bob, pausingPaul, l2MessengerImpersonator] =
+      await ethers.getSigners()
     ;[alice, bob, pausingPaul, l2MessengerImpersonator] =
       await ethers.getSigners()
   })

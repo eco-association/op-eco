@@ -207,6 +207,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         // Construct calldata for l1TokenBridge.finalizeERC20Withdrawal(_to, _amount)
         address l1Token = l2EcoToken.l1Token();
         _amount = _amount * inflationMultiplier;
+        _amount = _amount * inflationMultiplier;
         bytes memory message = abi.encodeWithSelector(
             //call parent interface of IL1ECOBridge to get the selector
             IL1ERC20Bridge.finalizeERC20Withdrawal.selector,
