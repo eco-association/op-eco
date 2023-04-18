@@ -40,6 +40,18 @@ describe('L2ECO tests', () => {
     })
   })
 
+  describe('optimism standards', () => {
+    it('should return the correct interface support', async () => {
+      // ERC165
+      expect(await eco.supportsInterface("0x01ffc9a7")).to.be.true
+  
+      // L2StandardERC20
+      expect(await eco.supportsInterface("0x1d1d8b63")).to.be.true
+  
+      expect(await eco.supportsInterface("0xffffffff")).to.be.false
+    })
+  })
+
   describe('minting', () => {
     const mintAmount = 1000
 

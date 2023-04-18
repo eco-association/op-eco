@@ -163,10 +163,8 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable, IERC165 {
     }
 
     function supportsInterface(bytes4 _interfaceId) external pure returns (bool) {
-        bytes4 firstSupportedInterface = bytes4(keccak256("supportsInterface(bytes4)")); // ERC165
-        bytes4 secondSupportedInterface = IL2StandardERC20.l1Token.selector ^
-            IL2StandardERC20.mint.selector ^
-            IL2StandardERC20.burn.selector; // compliant to OP's IL2StandardERC20
+        bytes4 firstSupportedInterface = type(IERC165).interfaceId; // ERC165
+        bytes4 secondSupportedInterface = type(IL2StandardERC20).interfaceId; // compliant to OP's IL2StandardERC20
         return _interfaceId == firstSupportedInterface || _interfaceId == secondSupportedInterface;
     }
 
