@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {ERC20Pausable} from "@helix-foundation/currency/contracts/currency/ERC20Pausable.sol";
-import {DelegatePermit} from "@helix-foundation/currency/contracts/currency/DelegatePermit.sol";
+import {ERC20PausableUpgradeable} from "./ERC20PausableUpgradeable.sol";
+import {DelegatePermitUpgradeable} from "../cryptography/DelegatePermitUpgradeable.sol";
 
-/**
- * @title L2ECO
- */
-contract L2ECO is ERC20Pausable, DelegatePermit {
+contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable {
     uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1e18;
 
     uint256 public linearInflationMultiplier;
@@ -35,42 +32,58 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
      */
     event NewInflationMultiplier(uint256 inflationMultiplier);
 
+    modifier uninitialized() {
+        require(
+            linearInflationMultiplier == 0,
+            "L2ECO: contract has already been initialized"
+        );
+        _;
+    }
+
     modifier onlyMinterRole() {
-        require(minters[msg.sender], "not authorized to mint");
+        require(minters[msg.sender], "L2ECO: not authorized to mint");
         _;
     }
 
     modifier onlyBurnerRoleOrSelf(address _from) {
         require(
             _from == msg.sender || burners[msg.sender],
-            "not authorized to burn"
+            "L2ECO: not authorized to burn"
         );
         _;
     }
 
     modifier onlyRebaserRole() {
-        require(rebasers[msg.sender], "not authorized to rebase");
+        require(rebasers[msg.sender], "L2ECO: not authorized to rebase");
         _;
     }
 
     modifier onlyTokenRoleAdmin() {
-        require(msg.sender == tokenRoleAdmin, "not authorized to edit roles");
+        require(
+            msg.sender == tokenRoleAdmin,
+            "L2ECO: not authorized to edit roles"
+        );
         _;
     }
 
-    // when admin becomes mutable, we put it in the initialize function
-    constructor(address admin)
-        ERC20Pausable("Optimism ECO", "OP-ECO", admin, address(0))
-    {}
+    /**
+     * Disable the implementation contract
+     */
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
     function initialize(
         address _l1Token,
         address _l2Bridge,
         address _initialPauser
-    ) public {
-        require(
-            linearInflationMultiplier == 0,
-            "Contract has already been initialized."
+    ) public initializer uninitialized {
+        ERC20PausableUpgradeable.__ERC20PausableUpgradeable_init(
+            "Optimism ECO",
+            "OP-ECO",
+            _l2Bridge,
+            _initialPauser
         );
         linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
         minters[_l2Bridge] = true;
@@ -84,13 +97,13 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
     /** Access function to determine the token balance held by some address.
      */
     function balanceOf(address _owner) public view override returns (uint256) {
-        return _balances[_owner] / linearInflationMultiplier;
+        return super.balanceOf(_owner) / linearInflationMultiplier;
     }
 
     /** Returns the total (inflation corrected) token supply
      */
     function totalSupply() public view override returns (uint256) {
-        return _totalSupply / linearInflationMultiplier;
+        return super.totalSupply() / linearInflationMultiplier;
     }
 
     function updateMinters(address _key, bool _value)
@@ -146,12 +159,16 @@ contract L2ECO is ERC20Pausable, DelegatePermit {
         address from,
         address to,
         uint256 amount
-    ) internal virtual override returns (uint256) {
-        amount = super._beforeTokenTransfer(from, to, amount);
+    ) internal virtual override {
+        super._beforeTokenTransfer(from, to, amount);
         uint256 gonsAmount = amount * linearInflationMultiplier;
 
         emit BaseValueTransfer(from, to, gonsAmount);
-
-        return gonsAmount;
     }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override {}
 }

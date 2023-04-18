@@ -108,3 +108,4 @@ dist
 artifacts
 cache
 docs
+typechain-types

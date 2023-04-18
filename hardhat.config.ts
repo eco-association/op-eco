@@ -96,10 +96,10 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  typechain: {
-    outDir: 'dist/types',
-    target: 'ethers-v5',
-  },
+  // typechain: {
+  //   outDir: 'dist/types',
+  //   target: 'ethers-v5',
+  // },
   paths: {
     deploy: './deploy',
     deployments: './deployments',

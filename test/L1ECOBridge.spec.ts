@@ -12,15 +12,7 @@ import {
   NON_ZERO_ADDRESS,
 } from './utils/constants'
 import { deployFromName, getContractInterface } from './utils/contracts'
-
-// TODO: Maybe we should consider automatically generating these and exporting them?
-const ERROR_STRINGS = {
-  INVALID_MESSENGER: 'OVM_XCHAIN: messenger contract unauthenticated',
-  INVALID_X_DOMAIN_MSG_SENDER:
-    'OVM_XCHAIN: wrong sender of cross-domain message',
-  ALREADY_INITIALIZED: 'Contract has already been initialized.',
-  NOT_UPGRADER: 'Caller not authorized to upgrade L2 contracts.',
-}
+import { ERROR_STRINGS } from './utils/errors'
 
 const DUMMY_L2_ERC20_ADDRESS = '0xaBBAABbaaBbAABbaABbAABbAABbaAbbaaBbaaBBa'
 const DUMMY_L2_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
@@ -103,7 +95,7 @@ describe('L1ECOBridge', () => {
           L1ERC20.address,
           DUMMY_UPGRADER_ADDRESS
         )
-      ).to.be.revertedWith(ERROR_STRINGS.ALREADY_INITIALIZED)
+      ).to.be.revertedWith(ERROR_STRINGS.UPGRADES.ALREADY_INITIALIZED)
     })
   })
 
@@ -216,7 +208,7 @@ describe('L1ECOBridge', () => {
           1,
           NON_NULL_BYTES32
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_MESSENGER)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_MESSENGER)
     })
 
     it('onlyFromCrossDomainAccount: should revert on calls from the right crossDomainMessenger, but wrong xDomainMessageSender (ie. not the L2DepositedERC20)', async () => {
@@ -236,7 +228,7 @@ describe('L1ECOBridge', () => {
             from: Fake__L1CrossDomainMessenger.address,
           }
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_X_DOMAIN_MSG_SENDER)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
     })
 
     it('should credit funds to the withdrawer and not use too much gas', async () => {
@@ -289,7 +281,7 @@ describe('L1ECOBridge', () => {
           DUMMY_L2_ERC20_ADDRESS,
           FINALIZATION_GAS
         )
-      ).to.not.be.revertedWith(ERROR_STRINGS.NOT_UPGRADER)
+      ).to.not.be.revertedWith(ERROR_STRINGS.L1ECOBridge.UNAUTHORIZED_UPGRADER)
 
       expect(
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args

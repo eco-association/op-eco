@@ -61,7 +61,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
     ) public {
         require(
             messenger == address(0),
-            "Contract has already been initialized."
+            "Initializable: contract is already initialized"
         );
         messenger = _l1messenger;
         l2TokenBridge = _l2TokenBridge;
@@ -88,7 +88,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
     modifier onlyUpgrader() {
         require(
             msg.sender == upgrader,
-            "Caller not authorized to upgrade L2 contracts."
+            "L1ECOBridge: caller not authorized to upgrade L2 contracts."
         );
         _;
     }
