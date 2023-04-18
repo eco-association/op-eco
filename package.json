@@ -58,6 +58,7 @@
     "@codechecks/client": "^0.1.11",
     "@defi-wonderland/smock": "^2.0.2",
     "@eth-optimism/hardhat-deploy-config": "^0.2.6",
+    "@eth-optimism/sdk": "2.0.2",
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/providers": "^5.7.0",
     "@nomicfoundation/hardhat-chai-matchers": "1.0.3",
