@@ -3,8 +3,10 @@ pragma solidity 0.8.19;
 
 import {ERC20PausableUpgradeable} from "./ERC20PausableUpgradeable.sol";
 import {DelegatePermitUpgradeable} from "../cryptography/DelegatePermitUpgradeable.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC20.sol";
 
-contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable {
+contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable, IERC165 {
     uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1e18;
 
     uint256 public linearInflationMultiplier;
@@ -26,6 +28,14 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable {
         address indexed to,
         uint256 value
     );
+
+    // event for minted tokens
+    // required for IL2StandardERC20 compliance
+    event Mint(address indexed _account, uint256 _amount);
+
+    // event for burned tokens
+    // required for IL2StandardERC20 compliance
+    event Burn(address indexed _account, uint256 _amount);
 
     /** Fired when notified by L1 of a new inflation multiplier.
      * Used to calculate values for the rebased token.
@@ -131,15 +141,17 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable {
         tokenRoleAdmin = _newAdmin;
     }
 
-    function mint(address _to, uint256 _value) external onlyMinterRole {
-        _mint(_to, _value);
+    function mint(address _to, uint256 _amount) external onlyMinterRole {
+        _mint(_to, _amount);
+        emit Mint(_to, _amount);
     }
 
-    function burn(address _from, uint256 _value)
+    function burn(address _from, uint256 _amount)
         external
         onlyBurnerRoleOrSelf(_from)
     {
-        _burn(_from, _value);
+        _burn(_from, _amount);
+        emit Burn(_from, _amount);
     }
 
     function rebase(uint256 _newLinearInflationMultiplier)
@@ -147,11 +159,19 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable {
         onlyRebaserRole
     {
         _rebase(_newLinearInflationMultiplier);
+        emit NewInflationMultiplier(_newLinearInflationMultiplier);
+    }
+
+    function supportsInterface(bytes4 _interfaceId) external pure returns (bool) {
+        bytes4 firstSupportedInterface = bytes4(keccak256("supportsInterface(bytes4)")); // ERC165
+        bytes4 secondSupportedInterface = IL2StandardERC20.l1Token.selector ^
+            IL2StandardERC20.mint.selector ^
+            IL2StandardERC20.burn.selector; // compliant to OP's IL2StandardERC20
+        return _interfaceId == firstSupportedInterface || _interfaceId == secondSupportedInterface;
     }
 
     function _rebase(uint256 _newLinearInflationMultiplier) internal {
         linearInflationMultiplier = _newLinearInflationMultiplier;
-        emit NewInflationMultiplier(_newLinearInflationMultiplier);
     }
 
     // this function converts to gons for the sake of transferring
