@@ -1,33 +1,44 @@
+/* eslint-disable camelcase */
 import { ethers } from 'hardhat'
-import { Signer, Contract, constants } from 'ethers'
+import { Signer, Contract, constants, BigNumber } from 'ethers'
 import { smock, FakeContract, MockContract } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-
 import * as L1CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contracts/L1/messaging/L1CrossDomainMessenger.sol/L1CrossDomainMessenger.json'
-
-import { expect } from './tools/setup'
-import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './tools/constants'
-import { deployFromName, getContractInterface } from './tools/contracts'
-
-// TODO: Maybe we should consider automatically generating these and exporting them?
-const ERROR_STRINGS = {
-  INVALID_MESSENGER: 'OVM_XCHAIN: messenger contract unauthenticated',
-  INVALID_X_DOMAIN_MSG_SENDER:
-    'OVM_XCHAIN: wrong sender of cross-domain message',
-  ALREADY_INITIALIZED: 'Contract has already been initialized.',
-}
+import { expect } from 'chai'
+import {
+  REGISTRY_DEPLOY_TX,
+  REGISTRY_DEPLOYER_ADDRESS,
+  NON_NULL_BYTES32,
+  NON_ZERO_ADDRESS,
+} from './utils/constants'
+import { deployFromName, getContractInterface } from './utils/contracts'
+import { ERROR_STRINGS } from './utils/errors'
 
 const DUMMY_L2_ERC20_ADDRESS = '0xaBBAABbaaBbAABbaABbAABbAABbaAbbaaBbaaBBa'
 const DUMMY_L2_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
-const INITIAL_TOTAL_L1_SUPPLY = 5000
+const DUMMY_L1_ERC20_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
+const DUMMY_UPGRADER_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
+const INITIAL_INFLATION_MULTIPLIER = BigNumber.from('1000000000000000000')
+// 2e18
+const INITIAL_TOTAL_L1_SUPPLY = BigNumber.from('2000000000000000000')
 const FINALIZATION_GAS = 1_200_000
 
 describe('L1ECOBridge', () => {
   let l1MessengerImpersonator: Signer
   let alice: SignerWithAddress
   let bob: SignerWithAddress
+
   before(async () => {
     ;[l1MessengerImpersonator, alice, bob] = await ethers.getSigners()
+    await (
+      await alice.sendTransaction({
+        to: REGISTRY_DEPLOYER_ADDRESS,
+        value: ethers.utils.parseEther('0.08'),
+      })
+    ).wait()
+    if (alice.provider) {
+      await (await alice.provider.sendTransaction(REGISTRY_DEPLOY_TX)).wait()
+    }
   })
 
   let L1ERC20: MockContract<Contract>
@@ -40,44 +51,67 @@ describe('L1ECOBridge', () => {
       { address: await l1MessengerImpersonator.getAddress() } // This allows us to use an ethers override {from: Mock__L2CrossDomainMessenger.address} to mock calls
     )
 
-    // Deploy the contract under test
-    L1ECOBridge = await deployFromName('L1ECOBridge')
-    await L1ECOBridge.initialize(
-      Fake__L1CrossDomainMessenger.address,
-      DUMMY_L2_BRIDGE_ADDRESS
+    L1ERC20 = await (
+      await smock.mock(
+        '@helix-foundation/currency/contracts/currency/ECO.sol:ECO'
+      )
+    ).deploy(
+      DUMMY_L1_ERC20_ADDRESS,
+      alice.address,
+      ethers.utils.parseEther('10000'),
+      alice.address
     )
 
-    L1ERC20 = await (
-      await smock.mock('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20')
-    ).deploy('L1ERC20', 'ERC')
-    await L1ERC20.setVariable('_totalSupply', INITIAL_TOTAL_L1_SUPPLY)
     await L1ERC20.setVariable('_balances', {
-      [alice.address]: INITIAL_TOTAL_L1_SUPPLY,
+      [alice.address]: INITIAL_TOTAL_L1_SUPPLY.mul(
+        INITIAL_INFLATION_MULTIPLIER
+      ),
     })
+    await L1ERC20.setVariable('checkpoints', {
+      [alice.address]: [
+        {
+          fromBlock: 0,
+          value: INITIAL_TOTAL_L1_SUPPLY.mul(INITIAL_INFLATION_MULTIPLIER),
+        },
+      ],
+    })
+
+    // Deploy the contract under test
+    L1ECOBridge = await deployFromName('L1ECOBridge')
+    await L1ECOBridge.connect(alice).initialize(
+      Fake__L1CrossDomainMessenger.address,
+      DUMMY_L2_BRIDGE_ADDRESS,
+      L1ERC20.address,
+      alice.address
+    )
   })
 
   describe('initialize', () => {
     it('Should only be callable once', async () => {
       await expect(
         L1ECOBridge.initialize(
-          ethers.constants.AddressZero,
-          DUMMY_L2_BRIDGE_ADDRESS
+          Fake__L1CrossDomainMessenger.address,
+          DUMMY_L2_BRIDGE_ADDRESS,
+          L1ERC20.address,
+          DUMMY_UPGRADER_ADDRESS
         )
-      ).to.be.revertedWith(ERROR_STRINGS.ALREADY_INITIALIZED)
+      ).to.be.revertedWith(ERROR_STRINGS.UPGRADES.ALREADY_INITIALIZED)
     })
   })
 
   describe('ERC20 deposits', () => {
-    const depositAmount = 1_000
+    //  .5e18
+    const depositAmount = INITIAL_TOTAL_L1_SUPPLY.div(4)
 
     beforeEach(async () => {
-      await L1ERC20.connect(alice).approve(
-        L1ECOBridge.address,
-        depositAmount
-      )
+      await L1ERC20.connect(alice).approve(L1ECOBridge.address, depositAmount)
     })
 
     it('depositERC20() escrows the deposit amount and sends the correct deposit message', async () => {
+      expect(await L1ERC20.balanceOf(alice.address)).to.equal(
+        INITIAL_TOTAL_L1_SUPPLY
+      )
+
       await L1ECOBridge.connect(alice).depositERC20(
         L1ERC20.address,
         DUMMY_L2_ERC20_ADDRESS,
@@ -97,7 +131,7 @@ describe('L1ECOBridge', () => {
             DUMMY_L2_ERC20_ADDRESS,
             alice.address,
             alice.address,
-            depositAmount,
+            depositAmount.mul(INITIAL_INFLATION_MULTIPLIER),
             NON_NULL_BYTES32,
           ]
         ),
@@ -105,7 +139,7 @@ describe('L1ECOBridge', () => {
       ])
 
       expect(await L1ERC20.balanceOf(alice.address)).to.equal(
-        INITIAL_TOTAL_L1_SUPPLY - depositAmount
+        INITIAL_TOTAL_L1_SUPPLY.sub(depositAmount)
       )
 
       expect(await L1ERC20.balanceOf(L1ECOBridge.address)).to.equal(
@@ -134,7 +168,7 @@ describe('L1ECOBridge', () => {
             DUMMY_L2_ERC20_ADDRESS,
             alice.address,
             bob.address,
-            depositAmount,
+            depositAmount.mul(INITIAL_INFLATION_MULTIPLIER),
             NON_NULL_BYTES32,
           ]
         ),
@@ -142,7 +176,7 @@ describe('L1ECOBridge', () => {
       ])
 
       expect(await L1ERC20.balanceOf(alice.address)).to.equal(
-        INITIAL_TOTAL_L1_SUPPLY - depositAmount
+        INITIAL_TOTAL_L1_SUPPLY.sub(depositAmount)
       )
 
       expect(await L1ERC20.balanceOf(L1ECOBridge.address)).to.equal(
@@ -161,85 +195,6 @@ describe('L1ECOBridge', () => {
         )
       ).to.be.revertedWith('Account not EOA')
     })
-
-    describe('Handling ERC20.transferFrom() failures that revert ', () => {
-      let Fake__L1ERC20: FakeContract
-      before(async () => {
-        Fake__L1ERC20 = await smock.fake<Contract>('ERC20')
-        Fake__L1ERC20.transferFrom.reverts()
-      })
-
-      it('depositERC20(): will revert if ERC20.transferFrom() reverts', async () => {
-        await expect(
-          L1ECOBridge.connect(alice).depositERC20(
-            Fake__L1ERC20.address,
-            DUMMY_L2_ERC20_ADDRESS,
-            depositAmount,
-            FINALIZATION_GAS,
-            NON_NULL_BYTES32
-          )
-        ).to.be.revertedWith('SafeERC20: low-level call failed')
-      })
-
-      it('depositERC20To(): will revert if ERC20.transferFrom() reverts', async () => {
-        await expect(
-          L1ECOBridge.connect(alice).depositERC20To(
-            Fake__L1ERC20.address,
-            DUMMY_L2_ERC20_ADDRESS,
-            bob.address,
-            depositAmount,
-            FINALIZATION_GAS,
-            NON_NULL_BYTES32
-          )
-        ).to.be.revertedWith('SafeERC20: low-level call failed')
-      })
-
-      it('depositERC20To(): will revert if the L1 ERC20 has no code or is zero address', async () => {
-        await expect(
-          L1ECOBridge.connect(alice).depositERC20To(
-            ethers.constants.AddressZero,
-            DUMMY_L2_ERC20_ADDRESS,
-            bob.address,
-            depositAmount,
-            FINALIZATION_GAS,
-            NON_NULL_BYTES32
-          )
-        ).to.be.revertedWith('Address: call to non-contract')
-      })
-    })
-
-    describe('Handling ERC20.transferFrom failures that return false', () => {
-      let Fake__L1ERC20: FakeContract
-      before(async () => {
-        Fake__L1ERC20 = await smock.fake('ERC20')
-        Fake__L1ERC20.transferFrom.returns(false)
-      })
-
-      it('deposit(): will revert if ERC20.transferFrom() returns false', async () => {
-        await expect(
-          L1ECOBridge.connect(alice).depositERC20(
-            Fake__L1ERC20.address,
-            DUMMY_L2_ERC20_ADDRESS,
-            depositAmount,
-            FINALIZATION_GAS,
-            NON_NULL_BYTES32
-          )
-        ).to.be.revertedWith('SafeERC20: ERC20 operation did not succeed')
-      })
-
-      it('depositTo(): will revert if ERC20.transferFrom() returns false', async () => {
-        await expect(
-          L1ECOBridge.depositERC20To(
-            Fake__L1ERC20.address,
-            DUMMY_L2_ERC20_ADDRESS,
-            bob.address,
-            depositAmount,
-            FINALIZATION_GAS,
-            NON_NULL_BYTES32
-          )
-        ).to.be.revertedWith('SafeERC20: ERC20 operation did not succeed')
-      })
-    })
   })
 
   describe('ERC20 withdrawals', () => {
@@ -253,7 +208,7 @@ describe('L1ECOBridge', () => {
           1,
           NON_NULL_BYTES32
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_MESSENGER)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_MESSENGER)
     })
 
     it('onlyFromCrossDomainAccount: should revert on calls from the right crossDomainMessenger, but wrong xDomainMessageSender (ie. not the L2DepositedERC20)', async () => {
@@ -273,12 +228,12 @@ describe('L1ECOBridge', () => {
             from: Fake__L1CrossDomainMessenger.address,
           }
         )
-      ).to.be.revertedWith(ERROR_STRINGS.INVALID_X_DOMAIN_MSG_SENDER)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
     })
 
     it('should credit funds to the withdrawer and not use too much gas', async () => {
       // First Alice will 'donate' some tokens so that there's a balance to be withdrawn
-      const withdrawalAmount = 10
+      const withdrawalAmount = INITIAL_TOTAL_L1_SUPPLY
       await L1ERC20.connect(alice).approve(
         L1ECOBridge.address,
         withdrawalAmount
@@ -308,7 +263,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_ERC20_ADDRESS,
         NON_ZERO_ADDRESS,
         NON_ZERO_ADDRESS,
-        withdrawalAmount,
+        withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
         NON_NULL_BYTES32,
         { from: Fake__L1CrossDomainMessenger.address }
       )
@@ -316,6 +271,62 @@ describe('L1ECOBridge', () => {
       expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(
         withdrawalAmount
       )
+    })
+  })
+
+  describe('upgrades to L2 contract', () => {
+    it('should only work if caller is upgrader', async () => {
+      await expect(
+        L1ECOBridge.connect(alice).upgradeECO(
+          DUMMY_L2_ERC20_ADDRESS,
+          FINALIZATION_GAS
+        )
+      ).to.not.be.revertedWith(ERROR_STRINGS.L1ECOBridge.UNAUTHORIZED_UPGRADER)
+
+      expect(
+        Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
+      ).to.deep.equal([
+        DUMMY_L2_BRIDGE_ADDRESS,
+        (await getContractInterface('L2ECOBridge')).encodeFunctionData(
+          'upgradeECO',
+          [DUMMY_L2_ERC20_ADDRESS]
+        ),
+        FINALIZATION_GAS,
+      ])
+    })
+  })
+
+  describe('does a rebase', () => {
+    it('should fetch the inflation multiplier', async () => {
+      expect(await L1ECOBridge.inflationMultiplier()).to.eq(
+        INITIAL_INFLATION_MULTIPLIER
+      )
+
+      const newInflationMultiplier = INITIAL_INFLATION_MULTIPLIER.div(2)
+
+      if (alice.provider) {
+        await L1ERC20.setVariable('_linearInflationCheckpoints', [
+          {
+            fromBlock: (await alice.provider.getBlock('latest')).number,
+            value: newInflationMultiplier,
+          },
+        ])
+      }
+      await L1ECOBridge.connect(alice).rebase(FINALIZATION_GAS)
+      expect(await L1ECOBridge.inflationMultiplier()).to.eq(
+        newInflationMultiplier
+      )
+
+      expect(
+        Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
+      ).to.deep.equal([
+        DUMMY_L2_BRIDGE_ADDRESS,
+        (await getContractInterface('L2ECOBridge')).encodeFunctionData(
+          'rebase',
+          [newInflationMultiplier]
+        ),
+        FINALIZATION_GAS,
+      ])
     })
   })
 })

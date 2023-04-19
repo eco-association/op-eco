@@ -5,13 +5,14 @@ pragma solidity 0.8.19;
 import {IL1ECOBridge} from "../interfaces/bridge/IL1ECOBridge.sol";
 import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
 import {IL2ERC20Bridge} from "@eth-optimism/contracts/L2/messaging/IL2ERC20Bridge.sol";
+import {L2ECOBridge} from "../bridge/L2ECOBridge.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /* Library Imports */
 import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
 import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ECO} from "@helix-foundation/currency/contracts/currency/ECO.sol";
 
 /**
  * @title L1ECOBridge
@@ -21,16 +22,21 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
  *
  */
 contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
-    using SafeERC20 for IERC20;
-
     /********************************
      * External Contract References *
      ********************************/
 
+    // L2 side of the bridge
     address public l2TokenBridge;
 
-    // Maps L1 token to L2 token to balance of the L1 token deposited
-    mapping(address => mapping(address => uint256)) public deposits;
+    // L1 ECO address
+    address public ecoAddress;
+
+    // L2 upgrader role
+    address public upgrader;
+
+    // Current inflation multiplier
+    uint256 public inflationMultiplier;
 
     /***************
      * Constructor *
@@ -47,14 +53,23 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
      * @param _l1messenger L1 Messenger address being used for cross-chain communications.
      * @param _l2TokenBridge L2 standard bridge address.
      */
-    // slither-disable-next-line external-function
-    function initialize(address _l1messenger, address _l2TokenBridge) public {
+    function initialize(
+        address _l1messenger,
+        address _l2TokenBridge,
+        address _ecoAddress,
+        address _upgrader
+    ) public {
         require(
             messenger == address(0),
-            "Contract has already been initialized."
+            "Initializable: contract is already initialized"
         );
         messenger = _l1messenger;
         l2TokenBridge = _l2TokenBridge;
+        ecoAddress = _ecoAddress;
+        upgrader = _upgrader;
+        inflationMultiplier = ECO(_ecoAddress).getPastLinearInflation(
+            block.number
+        );
     }
 
     /**************
@@ -70,6 +85,23 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         _;
     }
 
+    modifier onlyUpgrader() {
+        require(
+            msg.sender == upgrader,
+            "L1ECOBridge: caller not authorized to upgrade L2 contracts."
+        );
+        _;
+    }
+
+    function upgradeECO(address _impl, uint32 _l2Gas) external onlyUpgrader {
+        bytes memory message = abi.encodeWithSelector(
+            L2ECOBridge.upgradeECO.selector,
+            _impl
+        );
+
+        sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
+    }
+
     /**
      */
     function depositERC20(
@@ -80,7 +112,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         bytes calldata _data
     ) external virtual onlyEOA {
         _initiateERC20Deposit(
-            _l1Token,
+            ecoAddress,
             _l2Token,
             msg.sender,
             msg.sender,
@@ -101,7 +133,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         bytes calldata _data
     ) external virtual {
         _initiateERC20Deposit(
-            _l1Token,
+            ecoAddress,
             _l2Token,
             msg.sender,
             _to,
@@ -135,10 +167,11 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         bytes calldata _data
     ) internal {
         // When a deposit is initiated on L1, the L1 Bridge transfers the funds to itself for future
-        // withdrawals. The use of safeTransferFrom enables support of "broken tokens" which do not
-        // return a boolean value.
-        // slither-disable-next-line reentrancy-events, reentrancy-benign
-        IERC20(_l1Token).safeTransferFrom(_from, address(this), _amount);
+        // withdrawals.
+
+        ECO(_l1Token).transferFrom(_from, address(this), _amount);
+        // gons move across the bridge, with inflation multipliers on either side to correctly scale balances
+        _amount = _amount * inflationMultiplier;
 
         // Construct calldata for _l2Token.finalizeDeposit(_to, _amount)
         bytes memory message = abi.encodeWithSelector(
@@ -153,13 +186,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         );
 
         // Send calldata into L2
-        // slither-disable-next-line reentrancy-events, reentrancy-benign
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
 
-        // slither-disable-next-line reentrancy-benign
-        deposits[_l1Token][_l2Token] = deposits[_l1Token][_l2Token] + _amount;
-
-        // slither-disable-next-line reentrancy-events
         emit ERC20DepositInitiated(
             _l1Token,
             _l2Token,
@@ -184,21 +212,32 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         uint256 _amount,
         bytes calldata _data
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
-        deposits[_l1Token][_l2Token] = deposits[_l1Token][_l2Token] - _amount;
+        _amount = _amount / inflationMultiplier;
 
         // When a withdrawal is finalized on L1, the L1 Bridge transfers the funds to the withdrawer
-        // slither-disable-next-line reentrancy-events
-        IERC20(_l1Token).safeTransfer(_to, _amount);
+        ECO(_l1Token).transfer(_to, _amount);
 
-        // slither-disable-next-line reentrancy-events
         emit ERC20WithdrawalFinalized(
-            _l1Token,
+            ecoAddress,
             _l2Token,
             _from,
             _to,
             _amount,
             _data
         );
+    }
+
+    function rebase(uint32 _l2Gas) external {
+        inflationMultiplier = ECO(ecoAddress).getPastLinearInflation(
+            block.number
+        );
+
+        bytes memory message = abi.encodeWithSelector(
+            L2ECOBridge.rebase.selector,
+            inflationMultiplier
+        );
+
+        sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
     }
 
     /*****************************
