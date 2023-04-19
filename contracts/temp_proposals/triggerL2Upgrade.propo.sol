@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import "@helix-foundation/currency/contracts/policy/Policy.sol";
 import "@helix-foundation/currency/contracts/policy/Policed.sol";
 import "@helix-foundation/currency/contracts/governance/community/proposals/Proposal.sol";
-import "../interfaces/bridge/IL1ECOBridge";
+import "../bridge/L1ECOBridge.sol";
 
 /** @title Upgrade L2Bridge or L2ECO
  * A proposal to trigger the upgrade cycle on the L2
@@ -12,7 +12,7 @@ import "../interfaces/bridge/IL1ECOBridge";
 contract triggerL2Upgrade is Policy, Proposal {
 
     // The address to be targeted by the new notifier tx data
-    IL1ECOBridge public immutable l1Bridge;
+    L1ECOBridge public immutable l1Bridge;
 
     // The L2 address for the new implementation
     address public immutable l2Impl;
@@ -33,7 +33,7 @@ contract triggerL2Upgrade is Policy, Proposal {
         address _l2Impl,
         uint32 _l2Gas
     ) {
-        l1Bridge = IL1ECOBridge(_l1Bridge);
+        l1Bridge = L1ECOBridge(_l1Bridge);
         l2Impl = _l2Impl;
         l2Gas = _l2Gas;
     }
@@ -60,6 +60,6 @@ contract triggerL2Upgrade is Policy, Proposal {
      * this function only accepts calls via governance by the root policy
      */
     function enacted(address self) public override {
-      l1Bridge.upgradeL2(l2Impl, l1Gas);
+      l1Bridge.upgradeECO(l2Impl, l2Gas);
     }
 }
