@@ -1,35 +1,27 @@
-// import * as ethers from 'ethers'
-// import optimismSDK from "@eth-optimism/sdk"
-const ethers = require("ethers")
-const optimismSDK = require("@eth-optimism/sdk")
-// import * as fs from 'fs'
+import * as ethers from 'ethers'
+import { CrossChainMessenger, MessageStatus } from "@eth-optimism/sdk"
+import * as fs from 'fs'
 require('dotenv').config({ path: '.env' })
 
-// function getABI(path: string): ethers.utils.Interface {
-//     return new ethers.utils.Interface(JSON.parse(fs.readFileSync(path, 'utf8')))
-//     // return JSON.parse(fs.readFileSync(path, 'utf8'))
-// }
+function getABI(path: string): ethers.utils.Interface {
+    return new ethers.utils.Interface(JSON.parse(fs.readFileSync(path, 'utf8')))
+}
 
 //ABIs
 
-// const forwardProxyABI = getABI(`${stub}proxy/ForwardProxy.sol/ForwardProxy.json`)
-// const ecoxABI = getABI(`${stub}currency/ECOx.sol/ECOx.json`)
-// const ecoxStakingABI = getABI(`${stub}governance/community/ECOxStaking.sol/ECOxStaking.json`)
-// const implementationUpdatingABI = getABI(`${stub}test/ImplementationUpdatingTarget.sol/ImplementationUpdatingTarget.json`)
-// const ecoInitializableABI = getABI(`${stub}deploy/EcoInitializable.sol/EcoInitializable.json`)
-// const ecoABI = getABI(`${stub}currency/ECO.sol/ECO.json`)
+const forwardProxyABI:ethers.utils.Interface = getABI(`artifacts/contracts/@helix-foundation/currency/proxy/ForwardProxy.sol/ForwardProxy.json`)
+const implementationUpdatingABI:ethers.utils.Interface = getABI(`artifacts/contracts/@helix-foundation/currency/test/ImplementationUpdatingTarget.sol/ImplementationUpdatingTarget.json`)
+const ecoInitializableABI:ethers.utils.Interface = getABI(`artifacts/contracts/@helix-foundation/currency/deploy/EcoInitializable.sol/EcoInitializable.json`)
+const ecoABI:ethers.utils.Interface = getABI(`artifacts/contracts/@helix-foundation/currency/currency/ECO.sol/ECO.json`)
 
-// const L1ECOBridgeABI:ethers.utils.Interface = getABI('artifacts/contracts/bridge/L1ECOBridge.sol/L1ECOBridge.json')
-// const L2ECOBridgeABI:ethers.utils.Interface = getABI('artifacts/contracts/bridge/L2ECOBridge.sol/L2ECOBridge.json')
-// const L2ECOABI:ethers.utils.Interface = getABI('artifacts/contracts/token/L2ECO.sol/L2ECO.json')
+const L1ECOBridgeABI:ethers.utils.Interface = getABI('artifacts/contracts/bridge/L1ECOBridge.sol/L1ECOBridge.json')
+const L2ECOBridgeABI:ethers.utils.Interface = getABI('artifacts/contracts/bridge/L2ECOBridge.sol/L2ECOBridge.json')
+const L2ECOABI:ethers.utils.Interface = getABI('artifacts/contracts/token/L2ECO.sol/L2ECO.json')
 
 const infuraAPIkey = process.env.API_KEY || ''
 const pk = process.env.PRIVKEY || ''
 const pk2 = process.env.OTHRKEY || ''
 const POLICY = process.env.ROOT_POLICY || ''
-// const ecoxAddress = process.env.TOKEN || ''
-// const ecoxStakingAddress = '0xb26f87e63fc9a3ffe8a4a27c66f85191cd8a9680'
-// const sup = '0x35244C622E5034Dc1BCf2FF3931cfA57192572FF'
 
 const rpc_url1 = `https://goerli.infura.io/v3/${infuraAPIkey}`
 const rpc_url2 = `https://optimism-goerli.infura.io/v3/${infuraAPIkey}`
@@ -37,14 +29,15 @@ const rpc_url2 = `https://optimism-goerli.infura.io/v3/${infuraAPIkey}`
 const l1provider = new ethers.providers.JsonRpcProvider(rpc_url1)
 const l2provider = new ethers.providers.JsonRpcProvider(rpc_url2)
 
-let crossChainMessenger
+const l1Wallet = new ethers.Wallet(pk, l1provider)
+const l2Wallet = new ethers.Wallet(pk, l2provider)
+
+let crossChainMessenger:CrossChainMessenger
 
 async function setupOP() {
     const l1ChainId = (await l1provider.getNetwork()).chainId
     const l2ChainId = (await l2provider.getNetwork()).chainId
-    const l1Wallet = new ethers.Wallet(pk, l1provider)
-    const l2Wallet = new ethers.Wallet(pk, l2provider)
-    crossChainMessenger = new optimismSDK.CrossChainMessenger({
+    crossChainMessenger = new CrossChainMessenger({
         l1ChainId: l1ChainId,
         l2ChainId: l2ChainId,
         l1SignerOrProvider: l1Wallet,
@@ -53,14 +46,13 @@ async function setupOP() {
 })
 }
 
-// const ID_ECO = ethers.utils.solidityKeccak256(['string'], ['ECO'])
-
-// const UNI_V2 = '0x09bc52b9eb7387ede639fc10ce5fa01cbcbf2b17'
-
-// const NOTIFIER_DATA = '0xfff6cae9'
-
-// const staked = ethers.utils.parseEther('50')
-// const seed = '0xaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd'
+const L1_OP_MESSANGER_ADDRESS = '0x5086d1eEF304eb5284A0f6720f79403b4e9bE294'
+const L2_OP_MESSANGER_ADDRESS = '0x4200000000000000000000000000000000000007'
+const ID_ECO = ethers.utils.solidityKeccak256(['string'], ['ECO'])
+const L1_BRIDGE_ADDRESS = '0x383eB66F810F56442351B642fC8b223C9C2e9B07'
+const L2_BRIDGE_ADDRESS = '0x2b96D98da64E733B6014A41A2c580142ffe3fb2e'
+const L1_ECO_ADDRESS = '0x3E87d4d9E69163E7590f9b39a70853cf25e5ABE3'
+const L2_ECO_ADDRESS = '0xE44Eed627F3fb2B39B462f4EC90eB78513039f87'
 
 // async function callFuse() {
 //     const proxy = new ethers.Contract('0xfC6632E95588902C967BBdc47e1a7d28350f88b9', ecoInitializableABI.abi, wallet)
@@ -74,77 +66,69 @@ async function setupOP() {
 //     console.log(await proxy.implementation())
 // }
 
-// async function deployInitializeable() {
-//     const initializeableFactory = new ethers.ContractFactory(ecoInitializableABI.abi, ecoInitializableABI.bytecode, wallet)
-//     const initializeable = await initializeableFactory.deploy(wallet.address)
-//     await initializeable.deployTransaction.wait()
-//     console.log(initializeable.address)
-// }
+async function deployInitializeable() {
+    const initializeableFactory = ethers.ContractFactory.fromSolidity(ecoInitializableABI, l1Wallet)
+    const initializeable = await initializeableFactory.deploy(l1Wallet.address)
+    await initializeable.deployTransaction.wait()
+    console.log(initializeable.address)
+}
 
-// async function deployL1Bridge() {
-//     const bridgeFactory = ethers.ContractFactory.fromSolidity(L1ECOBridgeABI, l1Wallet)
-//     const currGasPrice = ethers.BigNumber.from(await wallet.getGasPrice())
-//     const theNonce = await wallet.getTransactionCount()
-//     console.log(currGasPrice.toString())
-//     console.log(theNonce)
-//     currGasPrice = currGasPrice.mul(12).div(10)
+async function deployL1Bridge() {
+    const bridgeFactory = ethers.ContractFactory.fromSolidity(L1ECOBridgeABI, l1Wallet)
+    const currGasPrice = ethers.BigNumber.from(await l1Wallet.getGasPrice())
+    const theNonce = await l1Wallet.getTransactionCount()
+    console.log(currGasPrice.toString())
+    console.log(theNonce)
 
-//     const bridge = await bridgeFactory.deploy({
-//         gasPrice: currGasPrice,
-//         nonce: theNonce + 1
-//     })
-//     await bridge.deployTransaction.wait()
-//     console.log(bridge.address)
-// }
+    const bridge = await bridgeFactory.deploy({
+        // gasPrice: currGasPrice.mul(14).div(10),
+        // nonce: theNonce + 1
+    })
+    await bridge.deployTransaction.wait()
+    console.log(bridge.address)
+}
 
-// async function deployL2ECO() {
-//     console.log(await wallet.getChainId())
-//     console.log(await wallet.getBalance())
-//     const L2ECOFactory = new ethers.ContractFactory(L2ECOABI.abi, L2ECOABI.bytecode, wallet)
-//     const L2ECO = await L2ECOFactory.deploy()
-//     await L2ECO.deployTransaction.wait()
-//     console.log(L2ECO.address)
-// }
+async function deployL2ECO() {
+    console.log(await l2Wallet.getBalance())
+    const L2ECOFactory = ethers.ContractFactory.fromSolidity(L2ECOABI, l2Wallet)
+    const L2ECO = await L2ECOFactory.deploy()
+    await L2ECO.deployTransaction.wait()
+    console.log(L2ECO.address)
+}
 
-// async function deployL2Bridge() {
-//     const bridgeFactory = new ethers.ContractFactory(L2ECOBridgeABI.abi, L2ECOBridgeABI.bytecode, wallet)
-//     const currGasPrice = ethers.BigNumber.from(await wallet.getGasPrice())
-//     const theNonce = await wallet.getTransactionCount()
-//     console.log(currGasPrice.toString())
-//     console.log(theNonce)
-//     // currGasPrice = currGasPrice.mul(12).div(10)
+async function deployL2Bridge() {
+    const bridgeFactory = ethers.ContractFactory.fromSolidity(L2ECOBridgeABI, l2Wallet)
+    const bridge = await bridgeFactory.deploy(L2_OP_MESSANGER_ADDRESS, L1_BRIDGE_ADDRESS, L2_ECO_ADDRESS)
+    await bridge.deployTransaction.wait()
+    console.log(bridge.address)
+}
 
-//     const bridge = await bridgeFactory.deploy('0x4200000000000000000000000000000000000007', '0x383eB66F810F56442351B642fC8b223C9C2e9B07', '0xE44Eed627F3fb2B39B462f4EC90eB78513039f87')
-//     await bridge.deployTransaction.wait()
-//     console.log(bridge.address)
-// }
+// metamask fails to send goerli OP eth cuz sometimes zero gas cost
+async function sendGOR(_amt: string, address: string) {
+    const amt = ethers.utils.parseEther(_amt)
+    const tx = await l2Wallet.sendTransaction({
+        to: address,
+        value: amt
+    })
+    const {status} = await tx.wait()
+    console.log(status)
+}
 
-// async function sendGOR(_amt: string) {
-//     const otherWallet = new ethers.Wallet(pk2, provider)
-//     const amt = ethers.utils.parseEther(_amt)
-//     tx = await otherWallet.sendTransaction({
-//         to: wallet.address,
-//         value: amt
-//     })
-//     tx = await tx.wait()
-//     console.log(tx.status)
-// }
+async function initializeL2ECO() {
+    const l2eco = new ethers.Contract(L2_ECO_ADDRESS, L2ECOABI.fragments, l2Wallet)
+    const tx = await l2eco.initialize(L1_ECO_ADDRESS, L2_BRIDGE_ADDRESS, l2Wallet.address)
+    const {status} = await tx.wait()
+    console.log(status)
+    console.log((await l2eco.linearInflationMultiplier()).toString())
+}
 
-// async function initializeL2ECO() {
-//     const l2eco = new ethers.Contract('0xE44Eed627F3fb2B39B462f4EC90eB78513039f87', L2ECOABI.abi, wallet)
-//     tx = await l2eco.initialize('0x3E87d4d9E69163E7590f9b39a70853cf25e5ABE3', '0x2b96D98da64E733B6014A41A2c580142ffe3fb2e', wallet.address)
-//     tx = await tx.wait()
-//     console.log(tx.status)
-//     // console.log((await l2eco.linearInflationMultiplier()).toString())
-// }
-
-// async function initializeL1Bridge() {
-//     const l1bridge = new ethers.Contract('0x383eB66F810F56442351B642fC8b223C9C2e9B07', L1ECOBridgeABI.abi, wallet)
-//     tx = await l1bridge.initialize('0x5086d1eEF304eb5284A0f6720f79403b4e9bE294', '0x2b96D98da64E733B6014A41A2c580142ffe3fb2e', '0x3E87d4d9E69163E7590f9b39a70853cf25e5ABE3', wallet.address)
-//     tx = await tx.wait()
-//     console.log(tx.status)
-//     console.log((await l1bridge.inflationMultiplier()).toString())
-// }
+async function initializeL1Bridge() {
+    const l1bridge = new ethers.Contract(L1_BRIDGE_ADDRESS, L1ECOBridgeABI.fragments, l1Wallet)
+    const tx = await l1bridge.initialize(L1_OP_MESSANGER_ADDRESS, L2_BRIDGE_ADDRESS, L2_ECO_ADDRESS, l1Wallet.address)
+    const {status} = await tx.wait()
+    console.log(status)
+    console.log((await l1bridge.inflationMultiplier()).toString())
+}
 
 // async function deployImplthing() {
 //     // 
@@ -161,54 +145,61 @@ async function setupOP() {
 //     console.log(`staking proxy: ${proxy.address}`)
 // }
 
-// async function rebaseCrossChain() {
-//     const l1bridge = new ethers.Contract('0x383eB66F810F56442351B642fC8b223C9C2e9B07', L1ECOBridgeABI.abi, wallet)
-//     tx = await l1bridge.rebase('10')
-//     tx = await tx.wait()
-//     console.log(`${tx.status} rebased!`)
-// }
+async function rebaseCrossChain() {
+    const l1bridge = new ethers.Contract(L1_BRIDGE_ADDRESS, L1ECOBridgeABI.fragments, l1Wallet)
+    const l2gas = '10'
+    const tx = await l1bridge.rebase(l2gas)
+    const {status} = await tx.wait()
+    console.log(`${status == 1 ? 'yay! ' : 'not '} rebased!`)
+}
 
-// async function approveAndDeposit() {
-//     const l1bridge = new ethers.Contract('0x383eB66F810F56442351B642fC8b223C9C2e9B07', L1ECOBridgeABI.abi, wallet)
-//     // tx = await l1bridge.rebase()
+async function approveAndDeposit() {
+    const l1bridge = new ethers.Contract(L1_BRIDGE_ADDRESS, L1ECOBridgeABI.fragments, l1Wallet)
+    const l1Eco = new ethers.Contract(L1_ECO_ADDRESS, ecoABI.fragments, l1Wallet)
+    const amount = ethers.utils.parseEther('1')
+    const l2gas = '10'
 
+    const data = ethers.utils.arrayify('0x1234')
+    console.log(ethers.utils.isBytes(data))
 
-//     const data = ethers.utils.arrayify('0x1234')
-//     console.log(ethers.utils.isBytes(data))
+    const tx1 = await l1Eco.approve(L1_BRIDGE_ADDRESS, amount)
+    const {status1} = await tx1.wait()
+    console.log(status1)
 
-//     const l1Eco = new ethers.Contract('0x3E87d4d9E69163E7590f9b39a70853cf25e5ABE3', ecoABI.abi, wallet)
-//     tx = await l1Eco.approve(l1bridge.address, ethers.utils.parseEther('1'))
-//     tx = await tx.wait()
-//     console.log(`${tx.status}`)
+    const tx2 = await l1bridge.depositERC20(L1_ECO_ADDRESS, L2_ECO_ADDRESS, amount, l2gas, data)
+    const {status2} = await tx2.wait()
+    console.log(status2)
+}
 
-//     tx = await l1bridge.depositERC20(l1Eco.address, '0xE44Eed627F3fb2B39B462f4EC90eB78513039f87', ethers.utils.parseEther('1'), '0', data)
-//     tx = await tx.wait()
-//     console.log(`${tx.status}!!!`)
-// }
+async function bridgeItBackNowYall() {
+    const data = ethers.utils.arrayify('0x1234')
+    const amount = ethers.utils.parseEther('1')
+    const l1gas = '200000'
+    const l2bridge = new ethers.Contract(L2_BRIDGE_ADDRESS, L2ECOBridgeABI.fragments, l2Wallet)
 
-// async function bridgeItBackNowYall() {
-//     const data = ethers.utils.arrayify('0x1234')
-//     const l2bridge = new ethers.Contract('0x2b96D98da64E733B6014A41A2c580142ffe3fb2e', L2ECOBridgeABI.abi, wallet)
-//     tx = await l2bridge.withdraw('0xE44Eed627F3fb2B39B462f4EC90eB78513039f87', ethers.utils.parseEther('1'), '200000', data)
-//     tx = await tx.wait()
-//     console.log(`${tx.status}`)
-// }
+    const tx = await l2bridge.withdraw(L2_ECO_ADDRESS, amount , l1gas, data)
+    const {status, hash} = await tx.wait()
+    console.log(status === 1 ? hash : 'failure')
+}
 
-// async function checkInterface() {
-//     const l2Eco = new ethers.Contract('0xAcEe5195091C619Ce5CccdE747E7eaF691cb080B', L2ECOABI.abi, wallet)
-//     tx = await l2Eco.supportsInterface('0x1d1d8b63')
-//     console.log(tx)
-// }
+async function checkInterface() {
+    const l2Eco = new ethers.Contract(L2_ECO_ADDRESS, L2ECOABI.fragments, l2Wallet)
+    const tx = await l2Eco.supportsInterface('0x1d1d8b63')
+    console.log(tx)
+}
 
-async function proveHash() {
+async function proveWithdrawal() {
     const withdrawalTx1 = { hash: '0xd96085aaa22a07baab1642ca8246882d429298660e71496aea687be7be802be4' }
-    // await crossChainMessenger.waitForMessageStatus(withdrawalTx1.hash, optimismSDK.MessageStatus.READY_TO_PROVE)
-    // const withdrawalTx2 = await crossChainMessenger.proveMessage(withdrawalTx1.hash)
-    // const {status: statusTx2} = await withdrawalTx2.wait()
+    await crossChainMessenger.waitForMessageStatus(withdrawalTx1.hash, MessageStatus.READY_TO_PROVE)
+    const withdrawalTx2 = await crossChainMessenger.proveMessage(withdrawalTx1.hash)
+    const {status: statusTx2} = await withdrawalTx2.wait()
 
-    // if (statusTx2 != 1) { throw "lame2" }
+    if (statusTx2 != 1) { throw "prove failed" }
+}
 
-    await crossChainMessenger.waitForMessageStatus(withdrawalTx1.hash, optimismSDK.MessageStatus.READY_FOR_RELAY)
+async function finalizeWithdrawal() {
+    const withdrawalTx1 = { hash: '0xd96085aaa22a07baab1642ca8246882d429298660e71496aea687be7be802be4' }
+    await crossChainMessenger.waitForMessageStatus(withdrawalTx1.hash, MessageStatus.READY_FOR_RELAY)
     const withdrawalTx3 = await crossChainMessenger.finalizeMessage(withdrawalTx1.hash)
     await withdrawalTx3.wait()  
     const {status: statusTx3} = await withdrawalTx3.wait()
@@ -217,19 +208,19 @@ async function proveHash() {
 }
 
 async function main() {
-    await setupOP()
-    // deployInitializeable()
-    // deployL1Bridge()
-    // deployL2Bridge()
-    // sendGOR('.97')
-    // deployL2ECO()
-    // initializeL2ECO()
-    // initializeL1Bridge()
-    // approveAndDeposit()
-    // rebaseCrossChain()
-    // bridgeItBackNowYall()
-    // checkInterface()
-    await proveHash()
+    // await setupOP()
+    // await deployL1Bridge()
+    // await deployL2Bridge()
+    // await sendGOR('.97', 'ADDRESS')
+    // await deployL2ECO()
+    // await initializeL2ECO()
+    // await initializeL1Bridge()
+    // await approveAndDeposit()
+    // await rebaseCrossChain()
+    // await bridgeItBackNowYall()
+    // await checkInterface()
+    // await proveWithdrawal()
+    // await finalizeWithdrawal()
 }
 
 main()
