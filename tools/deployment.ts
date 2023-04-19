@@ -4,15 +4,15 @@ import * as fs from 'fs'
 require('dotenv').config({ path: '.env' })
 
 function getABI(path: string): ethers.utils.Interface {
-    return new ethers.utils.Interface(JSON.parse(fs.readFileSync(path, 'utf8')))
+    return new ethers.utils.Interface(JSON.parse(fs.readFileSync(path, 'utf8')).abi)
 }
 
 //ABIs
 
-const forwardProxyABI:ethers.utils.Interface = getABI(`artifacts/contracts/@helix-foundation/currency/proxy/ForwardProxy.sol/ForwardProxy.json`)
-const implementationUpdatingABI:ethers.utils.Interface = getABI(`artifacts/contracts/@helix-foundation/currency/test/ImplementationUpdatingTarget.sol/ImplementationUpdatingTarget.json`)
-const ecoInitializableABI:ethers.utils.Interface = getABI(`artifacts/contracts/@helix-foundation/currency/deploy/EcoInitializable.sol/EcoInitializable.json`)
-const ecoABI:ethers.utils.Interface = getABI(`artifacts/contracts/@helix-foundation/currency/currency/ECO.sol/ECO.json`)
+// const forwardProxyABI:ethers.utils.Interface = getABI(`artifacts/@helix-foundation/currency/contracts/proxy/ForwardProxy.sol/ForwardProxy.json`)
+// const implementationUpdatingABI:ethers.utils.Interface = getABI(`artifacts/@helix-foundation/currency/contracts/test/ImplementationUpdatingTarget.sol/ImplementationUpdatingTarget.json`)
+// const ecoInitializableABI:ethers.utils.Interface = getABI(`artifacts/@helix-foundation/currency/contracts/deploy/EcoInitializable.sol/EcoInitializable.json`)
+const ecoABI:ethers.utils.Interface = getABI(`artifacts/@helix-foundation/currency/contracts/currency/ECO.sol/ECO.json`)
 
 const L1ECOBridgeABI:ethers.utils.Interface = getABI('artifacts/contracts/bridge/L1ECOBridge.sol/L1ECOBridge.json')
 const L2ECOBridgeABI:ethers.utils.Interface = getABI('artifacts/contracts/bridge/L2ECOBridge.sol/L2ECOBridge.json')
@@ -66,12 +66,12 @@ const L2_ECO_ADDRESS = '0xE44Eed627F3fb2B39B462f4EC90eB78513039f87'
 //     console.log(await proxy.implementation())
 // }
 
-async function deployInitializeable() {
-    const initializeableFactory = ethers.ContractFactory.fromSolidity(ecoInitializableABI, l1Wallet)
-    const initializeable = await initializeableFactory.deploy(l1Wallet.address)
-    await initializeable.deployTransaction.wait()
-    console.log(initializeable.address)
-}
+// async function deployInitializeable() {
+//     const initializeableFactory = ethers.ContractFactory.fromSolidity(ecoInitializableABI, l1Wallet)
+//     const initializeable = await initializeableFactory.deploy(l1Wallet.address)
+//     await initializeable.deployTransaction.wait()
+//     console.log(initializeable.address)
+// }
 
 async function deployL1Bridge() {
     const bridgeFactory = ethers.ContractFactory.fromSolidity(L1ECOBridgeABI, l1Wallet)
@@ -157,17 +157,17 @@ async function approveAndDeposit() {
     const l1bridge = new ethers.Contract(L1_BRIDGE_ADDRESS, L1ECOBridgeABI.fragments, l1Wallet)
     const l1Eco = new ethers.Contract(L1_ECO_ADDRESS, ecoABI.fragments, l1Wallet)
     const amount = ethers.utils.parseEther('1')
-    const l2gas = '10'
+    const l2gas = '10000'
 
     const data = ethers.utils.arrayify('0x1234')
     console.log(ethers.utils.isBytes(data))
 
     const tx1 = await l1Eco.approve(L1_BRIDGE_ADDRESS, amount)
-    const {status1} = await tx1.wait()
+    const {status: status1} = await tx1.wait()
     console.log(status1)
 
     const tx2 = await l1bridge.depositERC20(L1_ECO_ADDRESS, L2_ECO_ADDRESS, amount, l2gas, data)
-    const {status2} = await tx2.wait()
+    const {status: status2} = await tx2.wait()
     console.log(status2)
 }
 
@@ -215,7 +215,7 @@ async function main() {
     // await deployL2ECO()
     // await initializeL2ECO()
     // await initializeL1Bridge()
-    // await approveAndDeposit()
+    await approveAndDeposit()
     // await rebaseCrossChain()
     // await bridgeItBackNowYall()
     // await checkInterface()
