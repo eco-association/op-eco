@@ -337,11 +337,11 @@ describe('L2ECOBridge tests', () => {
     })
   })
 
-  describe('upgradeEco', () => {
+  describe.only('upgradeEco', () => {
     let newEcoImpl: MockContract<Contract>
-    let proxyAdmin: ProxyAdmin, l2Eco: L2ECO, l2EcoBridge: L2ECOBridge
+    let l2EcoBridge: L2ECOBridge
     beforeEach(async () => {
-      ;[l2Eco, l2EcoBridge, proxyAdmin] = await deployL2(
+      ;[, l2EcoBridge] = await deployL2(
         Fake__L2CrossDomainMessenger.address,
         DUMMY_L1_BRIDGE_ADDRESS,
         DUMMY_L1_ERC20_ADDRESS,
@@ -396,5 +396,68 @@ describe('L2ECOBridge tests', () => {
         .to.emit(l2EcoBridge, 'UpgradeECOImplementation')
         .withArgs(newEcoImpl.address)
     })
+  })
+
+  describe('upgradeSelf', () => {
+    let newBridgeImpl: MockContract<Contract>
+    let proxyAdmin: ProxyAdmin, l2Eco: L2ECO, l2EcoBridge: L2ECOBridge
+    beforeEach(async () => {
+      ;[l2Eco, l2EcoBridge, proxyAdmin] = await deployL2(
+        Fake__L2CrossDomainMessenger.address,
+        DUMMY_L1_BRIDGE_ADDRESS,
+        DUMMY_L1_ERC20_ADDRESS,
+        alice.address,
+        { adminBridge: false }
+      )
+      // newBridgeImpl = await (await smock.mock('L2ECOBridge')).deploy(Fake__L2CrossDomainMessenger.address,
+      //   DUMMY_L1_BRIDGE_ADDRESS,
+      //   DUMMY_L1_ERC20_ADDRESS,
+      //   proxyAdmin.address)
+      await (
+        await smock.mock('L2ECOBridge')
+      ).deploy(
+        DUMMY_L1_BRIDGE_ADDRESS,
+        DUMMY_L1_BRIDGE_ADDRESS,
+        DUMMY_L1_BRIDGE_ADDRESS,
+        DUMMY_L1_BRIDGE_ADDRESS
+      )
+    })
+
+    it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L2 account', async () => {
+      await expect(
+        L2ECOBridge.upgradeSelf(newBridgeImpl.address)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_MESSENGER)
+    })
+
+    it('onlyFromCrossDomainAccount: should revert on calls from the right crossDomainMessenger, but wrong xDomainMessageSender (ie. not the L1ECOBridge)', async () => {
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        NON_ZERO_ADDRESS
+      )
+
+      await expect(
+        L2ECOBridge.connect(l2MessengerImpersonator).upgradeSelf(
+          newBridge.address
+        )
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
+    })
+
+    it.only('should remove old permission to the contract being replaced', async () => {
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        DUMMY_L1_BRIDGE_ADDRESS
+      )
+
+      await L2ECOBridge.connect(l2MessengerImpersonator).upgradeSelf(
+        newBridge.address
+      )
+      expect(await MOCK_L2ECO.getVariable('rebasers')).to.eq({})
+    })
+
+    it('should add permissions to the new contract', async () => {})
+
+    it('should update the token admin holder to the new address', async () => {})
+
+    it('should make the new contract the AdminProxy owner', async () => {})
+
+    it('should emit an event on successful updateSelf', async () => {})
   })
 })

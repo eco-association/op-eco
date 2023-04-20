@@ -29,13 +29,23 @@ export async function deployL2(
   const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
 
   const L2ECOBridgeContract = await ethers.getContractFactory('L2ECOBridge')
-  const l2Bridge = await L2ECOBridgeContract.deploy(
-    l2CrossDomainMessenger,
-    l1Bridge,
-    proxyInitial.address,
-    proxyAdmin.address
+  const l2BridgeProxy = await upgrades.deployProxy(
+    L2ECOBridgeContract,
+    [
+      l2CrossDomainMessenger,
+      l1Bridge,
+      proxyInitial.address,
+      proxyAdmin.address,
+    ],
+    { initializer: 'initialize' }
   )
-  await l2Bridge.deployed()
+  //  await L2ECOBridgeContract.deploy(
+  //   l2CrossDomainMessenger,
+  //   l1Bridge,
+  //   proxyInitial.address,
+  //   proxyAdmin.address
+  // )
+  await l2BridgeProxy.deployed()
 
   const L2EcoContract = await ethers.getContractFactory('L2ECO')
   const l2EcoProxy = await upgrades.upgradeProxy(
@@ -44,7 +54,7 @@ export async function deployL2(
     {
       call: {
         fn: 'initialize',
-        args: [l1Token, l2Bridge.address, initialPauser] as L2EcoContract,
+        args: [l1Token, l2BridgeProxy.address, initialPauser] as L2EcoContract,
       },
     }
   )
@@ -59,11 +69,11 @@ export async function deployL2(
   // console.log("l2Bridge.address: ", l2Bridge.address)
 
   if (opts.adminBridge) {
-    transferOwnership(l2Bridge.address)
+    transferOwnership(l2BridgeProxy.address)
   }
   // console.log("ProxyAdmin Owner: ", await proxyAdmin.owner())
 
-  return [l2EcoProxy as L2ECO, l2Bridge as L2ECOBridge, proxyAdmin]
+  return [l2EcoProxy as L2ECO, l2BridgeProxy as L2ECOBridge, proxyAdmin]
 }
 
 export async function transferOwnership(
