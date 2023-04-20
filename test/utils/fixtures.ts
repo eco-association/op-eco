@@ -37,14 +37,10 @@ export async function deployL2(
       proxyInitial.address,
       proxyAdmin.address,
     ],
-    { initializer: 'initialize' }
+    {
+      initializer: 'initialize',
+    }
   )
-  //  await L2ECOBridgeContract.deploy(
-  //   l2CrossDomainMessenger,
-  //   l1Bridge,
-  //   proxyInitial.address,
-  //   proxyAdmin.address
-  // )
   await l2BridgeProxy.deployed()
 
   const L2EcoContract = await ethers.getContractFactory('L2ECO')

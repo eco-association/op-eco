@@ -5,8 +5,6 @@ import {IL1ECOBridge} from "../interfaces/bridge/IL1ECOBridge.sol";
 import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
 import {L2ECO} from "../token/L2ECO.sol";
 import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
-import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
@@ -177,6 +175,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     /**
      * @dev Upgrades the L2ECO token implementation address.
      * @param _newEcoImpl The new L2ECO implementation address.
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
     function upgradeECO(address _newEcoImpl)
         external
@@ -197,6 +196,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     /**
      * @dev Upgrades this contract implementation by passing the new implementation address to the ProxyAdmin.
      * @param _newBridgeImpl The new L2ECOBridge implementation address.
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
     function upgradeSelf(address _newBridgeImpl)
         external

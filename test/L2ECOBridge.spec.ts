@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ethers } from 'hardhat'
+import { ethers, upgrades } from 'hardhat'
 import { Contract, BigNumber } from 'ethers'
 import { smock, FakeContract, MockContract } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
@@ -49,15 +49,15 @@ describe('L2ECOBridge tests', () => {
     // Deploy an L2 ERC20
     MOCK_L2ECO = await (await smock.mock('L2ECO')).deploy()
 
-    // Deploy the contract under test
-    L2ECOBridge = await deployFromName('L2ECOBridge', {
-      args: [
-        Fake__L2CrossDomainMessenger.address,
-        DUMMY_L1_BRIDGE_ADDRESS,
-        MOCK_L2ECO.address,
-        AddressZero,
-      ],
-    })
+    // Deploy the bridge
+    L2ECOBridge = await (await smock.mock('L2ECOBridge')).deploy()
+    await L2ECOBridge.setVariable('_initializing', false)
+    await L2ECOBridge.initialize(
+      Fake__L2CrossDomainMessenger.address,
+      DUMMY_L1_BRIDGE_ADDRESS,
+      MOCK_L2ECO.address,
+      AddressZero,
+    )
 
     await MOCK_L2ECO.setVariable('_initializing', false)
     await MOCK_L2ECO.initialize(
@@ -337,7 +337,7 @@ describe('L2ECOBridge tests', () => {
     })
   })
 
-  describe.only('upgradeEco', () => {
+  describe('upgradeEco', () => {
     let newEcoImpl: MockContract<Contract>
     let l2EcoBridge: L2ECOBridge
     beforeEach(async () => {
@@ -398,7 +398,7 @@ describe('L2ECOBridge tests', () => {
     })
   })
 
-  describe('upgradeSelf', () => {
+  describe.only('upgradeSelf', () => {
     let newBridgeImpl: MockContract<Contract>
     let proxyAdmin: ProxyAdmin, l2Eco: L2ECO, l2EcoBridge: L2ECOBridge
     beforeEach(async () => {
@@ -441,7 +441,7 @@ describe('L2ECOBridge tests', () => {
       ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
     })
 
-    it.only('should remove old permission to the contract being replaced', async () => {
+    it('should remove old permission to the contract being replaced', async () => {
       Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
         DUMMY_L1_BRIDGE_ADDRESS
       )
@@ -452,12 +452,12 @@ describe('L2ECOBridge tests', () => {
       expect(await MOCK_L2ECO.getVariable('rebasers')).to.eq({})
     })
 
-    it('should add permissions to the new contract', async () => {})
+    it('should add permissions to the new contract', async () => { })
 
-    it('should update the token admin holder to the new address', async () => {})
+    it('should update the token admin holder to the new address', async () => { })
 
-    it('should make the new contract the AdminProxy owner', async () => {})
+    it('should make the new contract the AdminProxy owner', async () => { })
 
-    it('should emit an event on successful updateSelf', async () => {})
+    it('should emit an event on successful updateSelf', async () => { })
   })
 })
