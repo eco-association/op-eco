@@ -10,7 +10,6 @@ import "../bridge/L1ECOBridge.sol";
  * A proposal to trigger the upgrade cycle on the L2
  */
 contract TriggerL2Upgrade is Policy, Proposal {
-
     // The address to be targeted by the new notifier tx data
     L1ECOBridge public immutable l1Bridge;
 
@@ -58,6 +57,6 @@ contract TriggerL2Upgrade is Policy, Proposal {
      * this function only accepts calls via governance by the root policy
      */
     function enacted(address self) public override {
-      l1Bridge.upgradeECO(l2Impl, l2Gas);
+        l1Bridge.upgradeECO(l2Impl, l2Gas);
     }
 }

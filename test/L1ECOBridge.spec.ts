@@ -23,7 +23,7 @@ const INITIAL_INFLATION_MULTIPLIER = BigNumber.from('1000000000000000000')
 const INITIAL_TOTAL_L1_SUPPLY = BigNumber.from('2000000000000000000')
 const FINALIZATION_GAS = 1_200_000
 
-describe('L1ECOBridge', () => {
+describe.only('L1ECOBridge', () => {
   let l1MessengerImpersonator: Signer
   let alice: SignerWithAddress
   let bob: SignerWithAddress

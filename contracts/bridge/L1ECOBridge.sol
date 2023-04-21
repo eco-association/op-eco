@@ -13,6 +13,9 @@ import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/Cross
 import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ECO} from "@helix-foundation/currency/contracts/currency/ECO.sol";
+import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
 /**
  * @title L1ECOBridge
@@ -21,16 +24,17 @@ import {ECO} from "@helix-foundation/currency/contracts/currency/ECO.sol";
  * and listening to it for newly finalized withdrawals.
  *
  */
-contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
-    /********************************
-     * External Contract References *
-     ********************************/
-
+contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     // L2 side of the bridge
     address public l2TokenBridge;
 
     // L1 ECO address
     address public ecoAddress;
+
+    /**
+     * @dev L1 proxy admin that manages this proxy contract
+     */
+    ProxyAdmin public l1ProxyAdmin;
 
     // L2 upgrader role
     address public upgrader;
@@ -38,46 +42,9 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
     // Current inflation multiplier
     uint256 public inflationMultiplier;
 
-    /***************
-     * Constructor *
-     ***************/
-
-    // This contract lives behind a proxy, so the constructor parameters will go unused.
-    constructor() CrossDomainEnabled(address(0)) {}
-
-    /******************
-     * Initialization *
-     ******************/
-
     /**
-     * @param _l1messenger L1 Messenger address being used for cross-chain communications.
-     * @param _l2TokenBridge L2 standard bridge address.
-     */
-    function initialize(
-        address _l1messenger,
-        address _l2TokenBridge,
-        address _ecoAddress,
-        address _upgrader
-    ) public {
-        require(
-            messenger == address(0),
-            "Initializable: contract is already initialized"
-        );
-        messenger = _l1messenger;
-        l2TokenBridge = _l2TokenBridge;
-        ecoAddress = _ecoAddress;
-        upgrader = _upgrader;
-        inflationMultiplier = ECO(_ecoAddress).getPastLinearInflation(
-            block.number
-        );
-    }
-
-    /**************
-     * Depositing *
-     **************/
-
-    /** @dev Modifier requiring sender to be EOA.  This check could be bypassed by a malicious
-     *  contract via initcode, but it takes care of the user error we want to avoid.
+     * @dev Modifier requiring sender to be EOA.  This check could be bypassed by a malicious
+     * contract via initcode, but it takes care of the user error we want to avoid.
      */
     modifier onlyEOA() {
         // Used to stop deposits from contracts (avoid accidentally lost tokens)
@@ -93,13 +60,77 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
         _;
     }
 
-    function upgradeECO(address _impl, uint32 _l2Gas) external onlyUpgrader {
+    /**
+     * Disable the implementation contract
+     */
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /**
+     * @param _l1messenger L1 Messenger address being used for cross-chain communications.
+     * @param _l2TokenBridge L2 standard bridge address.
+     */
+    function initialize(
+        address _l1messenger,
+        address _l2TokenBridge,
+        address _ecoAddress,
+        address _l1ProxyAdmin,
+        address _upgrader
+    ) public {
+        require(
+            messenger == address(0),
+            "Initializable: contract is already initialized"
+        );
+        CrossDomainEnabledUpgradeable.__CrossDomainEnabledUpgradeable_init(
+            _l1messenger
+        );
+        l2TokenBridge = _l2TokenBridge;
+        ecoAddress = _ecoAddress;
+        l1ProxyAdmin = ProxyAdmin(_l1ProxyAdmin);
+        upgrader = _upgrader;
+        inflationMultiplier = ECO(_ecoAddress).getPastLinearInflation(
+            block.number
+        );
+    }
+
+    /**
+     * @dev Upgrades the L2ECO token implementation address, by sending
+     *      a cross domain message to the L2 Bridge via the L1 Messenger
+     * @param _impl L2 contract address.
+     * @param _l2Gas Gas limit for the L2 message.
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
+     */
+    function upgradeECO(address _impl, uint32 _l2Gas)
+        external
+        virtual
+        onlyUpgrader
+    {
         bytes memory message = abi.encodeWithSelector(
             L2ECOBridge.upgradeECO.selector,
             _impl
         );
 
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
+        emit UpgradeL2ECO(_impl);
+    }
+
+    /**
+     * @dev Upgrades this contract implementation by passing the new implementation address to the ProxyAdmin.
+     * @param _newBridgeImpl The new L1ECOBridge implementation address.
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
+     */
+    function upgradeSelf(address _newBridgeImpl) external virtual onlyUpgrader {
+        //cast to a payable address since l2EcoToken is the proxy address of a ITransparentUpgradeableProxy contract
+        address payable proxyAddr = payable(address(this));
+
+        ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
+            proxyAddr
+        );
+        l1ProxyAdmin.upgrade(proxy, _newBridgeImpl);
+
+        emit UpgradeSelf(_newBridgeImpl);
     }
 
     /**
@@ -142,6 +173,52 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
             _data
         );
     }
+
+    /**
+     */
+    function finalizeERC20Withdrawal(
+        address _l1Token,
+        address _l2Token,
+        address _from,
+        address _to,
+        uint256 _amount,
+        bytes calldata _data
+    ) external onlyFromCrossDomainAccount(l2TokenBridge) {
+        _amount = _amount / inflationMultiplier;
+
+        // When a withdrawal is finalized on L1, the L1 Bridge transfers the funds to the withdrawer
+        ECO(_l1Token).transfer(_to, _amount);
+
+        emit ERC20WithdrawalFinalized(
+            ecoAddress,
+            _l2Token,
+            _from,
+            _to,
+            _amount,
+            _data
+        );
+    }
+
+    function rebase(uint32 _l2Gas) external {
+        inflationMultiplier = ECO(ecoAddress).getPastLinearInflation(
+            block.number
+        );
+
+        bytes memory message = abi.encodeWithSelector(
+            L2ECOBridge.rebase.selector,
+            inflationMultiplier
+        );
+
+        sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
+    }
+
+    /**
+     * @dev Adds ETH balance to the account. This is meant to allow for ETH
+     * to be migrated from an old gateway to a new gateway.
+     * NOTE: This is left for one upgrade only so we are able to receive the migrated ETH from the
+     * old contract
+     */
+    function donateETH() external payable {}
 
     /**
      * @dev Performs the logic for deposits by informing the L2 Deposited Token
@@ -197,58 +274,4 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabled {
             _data
         );
     }
-
-    /*************************
-     * Cross-chain Functions *
-     *************************/
-
-    /**
-     */
-    function finalizeERC20Withdrawal(
-        address _l1Token,
-        address _l2Token,
-        address _from,
-        address _to,
-        uint256 _amount,
-        bytes calldata _data
-    ) external onlyFromCrossDomainAccount(l2TokenBridge) {
-        _amount = _amount / inflationMultiplier;
-
-        // When a withdrawal is finalized on L1, the L1 Bridge transfers the funds to the withdrawer
-        ECO(_l1Token).transfer(_to, _amount);
-
-        emit ERC20WithdrawalFinalized(
-            ecoAddress,
-            _l2Token,
-            _from,
-            _to,
-            _amount,
-            _data
-        );
-    }
-
-    function rebase(uint32 _l2Gas) external {
-        inflationMultiplier = ECO(ecoAddress).getPastLinearInflation(
-            block.number
-        );
-
-        bytes memory message = abi.encodeWithSelector(
-            L2ECOBridge.rebase.selector,
-            inflationMultiplier
-        );
-
-        sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
-    }
-
-    /*****************************
-     * Temporary - Migrating ETH *
-     *****************************/
-
-    /**
-     * @dev Adds ETH balance to the account. This is meant to allow for ETH
-     * to be migrated from an old gateway to a new gateway.
-     * NOTE: This is left for one upgrade only so we are able to receive the migrated ETH from the
-     * old contract
-     */
-    function donateETH() external payable {}
 }
