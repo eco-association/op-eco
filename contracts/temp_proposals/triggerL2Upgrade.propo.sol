@@ -20,8 +20,6 @@ contract TriggerL2Upgrade is Policy, Proposal {
     // How much gas to pre-allocate for L2 execution
     uint32 public immutable l2Gas;
 
-    // upgradeL2(address _impl, uint32 _l2Gas)
-
     /** Instantiate a new proposal.
      *
      * @param _l1Bridge The address of the L1 Bridge
