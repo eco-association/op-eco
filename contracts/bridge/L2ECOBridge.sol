@@ -182,7 +182,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
     {
-        //cast to a payable address since l2EcoToken is the proxy address of a TransparentUpgradeableProxy contract
+        //cast to a payable address since l2EcoToken is the proxy address of a ITransparentUpgradeableProxy contract
         address payable proxyAddr = payable(address(l2EcoToken));
 
         ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
@@ -203,10 +203,10 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
     {
-        //cast to a payable address since l2EcoToken is the proxy address of a TransparentUpgradeableProxy contract
+        //cast to a payable address since l2EcoToken is the proxy address of a ITransparentUpgradeableProxy contract
         address payable proxyAddr = payable(address(this));
 
-        TransparentUpgradeableProxy proxy = TransparentUpgradeableProxy(
+        ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
             proxyAddr
         );
         l2ProxyAdmin.upgrade(proxy, _newBridgeImpl);
