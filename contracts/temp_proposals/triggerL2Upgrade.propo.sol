@@ -9,7 +9,7 @@ import "../bridge/L1ECOBridge.sol";
 /** @title Upgrade L2Bridge or L2ECO
  * A proposal to trigger the upgrade cycle on the L2
  */
-contract triggerL2Upgrade is Policy, Proposal {
+contract TriggerL2Upgrade is Policy, Proposal {
 
     // The address to be targeted by the new notifier tx data
     L1ECOBridge public immutable l1Bridge;
