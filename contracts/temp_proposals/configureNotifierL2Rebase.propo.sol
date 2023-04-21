@@ -25,10 +25,7 @@ contract ConfigureNotifierL2Rebase is Policy, Proposal {
      * @param _l1Bridge The address that will be targeted by the notifier
      * @param _rebaseFunctionData The function data that will be called on the address
      */
-    constructor(
-        address _l1Bridge,
-        bytes memory _rebaseFunctionData
-    ) {
+    constructor(address _l1Bridge, bytes memory _rebaseFunctionData) {
         l1Bridge = _l1Bridge;
         rebaseFunctionData = _rebaseFunctionData;
     }

@@ -162,10 +162,16 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable, IERC165 {
         emit NewInflationMultiplier(_newLinearInflationMultiplier);
     }
 
-    function supportsInterface(bytes4 _interfaceId) external pure returns (bool) {
+    function supportsInterface(bytes4 _interfaceId)
+        external
+        pure
+        returns (bool)
+    {
         bytes4 firstSupportedInterface = type(IERC165).interfaceId; // ERC165
         bytes4 secondSupportedInterface = type(IL2StandardERC20).interfaceId; // compliant to OP's IL2StandardERC20
-        return _interfaceId == firstSupportedInterface || _interfaceId == secondSupportedInterface;
+        return
+            _interfaceId == firstSupportedInterface ||
+            _interfaceId == secondSupportedInterface;
     }
 
     function _rebase(uint256 _newLinearInflationMultiplier) internal {

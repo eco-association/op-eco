@@ -11,12 +11,15 @@ import {
   NON_NULL_BYTES32,
   NON_ZERO_ADDRESS,
 } from './utils/constants'
-import { deployFromName, getContractInterface } from './utils/contracts'
+import { getContractInterface } from './utils/contracts'
 import { ERROR_STRINGS } from './utils/errors'
+import { L1ECOBridge, ProxyAdmin } from '../typechain-types'
+import { deployL1, transferOwnership } from './utils/fixtures'
 
 const DUMMY_L2_ERC20_ADDRESS = '0xaBBAABbaaBbAABbaABbAABbAABbaAbbaaBbaaBBa'
 const DUMMY_L2_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const DUMMY_L1_ERC20_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
+const DUMMY_PROXY_ADMIN_ADDRESS = '0x1234512345123451234512345123451234512345'
 const DUMMY_UPGRADER_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const INITIAL_INFLATION_MULTIPLIER = BigNumber.from('1000000000000000000')
 // 2e18
@@ -76,27 +79,16 @@ describe('L1ECOBridge', () => {
       ],
     })
 
-    // Deploy the contract under test
-    L1ECOBridge = await deployFromName('L1ECOBridge')
+    // Deploy the bridge
+    L1ECOBridge = await (await smock.mock('L1ECOBridge')).deploy()
+    await L1ECOBridge.setVariable('_initializing', false)
     await L1ECOBridge.connect(alice).initialize(
       Fake__L1CrossDomainMessenger.address,
       DUMMY_L2_BRIDGE_ADDRESS,
       L1ERC20.address,
+      DUMMY_PROXY_ADMIN_ADDRESS,
       alice.address
     )
-  })
-
-  describe('initialize', () => {
-    it('Should only be callable once', async () => {
-      await expect(
-        L1ECOBridge.initialize(
-          Fake__L1CrossDomainMessenger.address,
-          DUMMY_L2_BRIDGE_ADDRESS,
-          L1ERC20.address,
-          DUMMY_UPGRADER_ADDRESS
-        )
-      ).to.be.revertedWith(ERROR_STRINGS.UPGRADES.ALREADY_INITIALIZED)
-    })
   })
 
   describe('ERC20 deposits', () => {
@@ -275,13 +267,20 @@ describe('L1ECOBridge', () => {
   })
 
   describe('upgrades to L2 contract', () => {
-    it('should only work if caller is upgrader', async () => {
+    it("should revert if caller isn't upgrader", async () => {
       await expect(
-        L1ECOBridge.connect(alice).upgradeECO(
+        L1ECOBridge.connect(bob).upgradeECO(
           DUMMY_L2_ERC20_ADDRESS,
           FINALIZATION_GAS
         )
-      ).to.not.be.revertedWith(ERROR_STRINGS.L1ECOBridge.UNAUTHORIZED_UPGRADER)
+      ).to.be.revertedWith(ERROR_STRINGS.L1ECOBridge.UNAUTHORIZED_UPGRADER)
+    })
+
+    it('should succeed to send the correct argumnents', async () => {
+      await L1ECOBridge.connect(alice).upgradeECO(
+        DUMMY_L2_ERC20_ADDRESS,
+        FINALIZATION_GAS
+      )
 
       expect(
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
@@ -293,6 +292,17 @@ describe('L1ECOBridge', () => {
         ),
         FINALIZATION_GAS,
       ])
+    })
+
+    it('should succeed and emit an event', async () => {
+      await expect(
+        L1ECOBridge.connect(alice).upgradeECO(
+          DUMMY_L2_ERC20_ADDRESS,
+          FINALIZATION_GAS
+        )
+      )
+        .to.emit(L1ECOBridge, 'UpgradeL2ECO')
+        .withArgs(DUMMY_L2_ERC20_ADDRESS)
     })
   })
 
@@ -327,6 +337,54 @@ describe('L1ECOBridge', () => {
         ),
         FINALIZATION_GAS,
       ])
+    })
+  })
+
+  describe('upgradeSelf', () => {
+    let newBridgeImpl: MockContract<Contract>
+    let proxyAdmin: ProxyAdmin, l1EcoBridge: L1ECOBridge
+    beforeEach(async () => {
+      ;[l1EcoBridge, proxyAdmin] = await deployL1(
+        Fake__L1CrossDomainMessenger.address,
+        DUMMY_L2_BRIDGE_ADDRESS,
+        L1ERC20.address,
+        alice.address,
+        { adminBridge: false }
+      )
+      newBridgeImpl = await (await smock.mock('L1ECOBridge')).deploy()
+    })
+
+    it("should revert if the caller isn't the upgrader", async () => {
+      await expect(
+        L1ECOBridge.upgradeSelf(newBridgeImpl.address)
+      ).to.be.revertedWith(ERROR_STRINGS.L1ECOBridge.UNAUTHORIZED_UPGRADER)
+    })
+
+    it("should revert when bridge isn't owner of ProxyAdmin", async () => {
+      await expect(
+        l1EcoBridge.connect(alice).upgradeSelf(newBridgeImpl.address)
+      ).to.be.revertedWith(ERROR_STRINGS.OWNABLE.NOT_OWNER)
+    })
+
+    it('should upgrade the implementation and emit an event', async () => {
+      await transferOwnership(l1EcoBridge.address)
+      const bridgeBefore = await proxyAdmin.getProxyImplementation(
+        l1EcoBridge.address
+      )
+
+      await expect(
+        l1EcoBridge.connect(alice).upgradeSelf(newBridgeImpl.address)
+      )
+        .to.emit(l1EcoBridge, 'UpgradeSelf')
+        .withArgs(newBridgeImpl.address)
+
+      expect(await l1EcoBridge.ecoAddress()).to.eq(L1ERC20.address)
+      // check that the old implementation address is not the new implementation address
+      expect(bridgeBefore).to.not.eq(newBridgeImpl.address)
+      // check the implementation address against the new implementation
+      expect(
+        await proxyAdmin.getProxyImplementation(l1EcoBridge.address)
+      ).to.eq(newBridgeImpl.address)
     })
   })
 })
