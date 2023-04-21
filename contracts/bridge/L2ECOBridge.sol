@@ -9,7 +9,7 @@ import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165C
 import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
 import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 /**
  * @title L2ECOBridge
@@ -175,7 +175,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
         //cast to a payable address since l2EcoToken is the proxy address of a TransparentUpgradeableProxy contract
         address payable proxyAddr = payable(address(l2EcoToken));
 
-        TransparentUpgradeableProxy proxy = TransparentUpgradeableProxy(
+        ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
             proxyAddr
         );
         l2ProxyAdmin.upgrade(proxy, _newEcoImpl);
