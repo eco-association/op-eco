@@ -5,9 +5,9 @@ import {IL1ECOBridge} from "../interfaces/bridge/IL1ECOBridge.sol";
 import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
 import {L2ECO} from "../token/L2ECO.sol";
 import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
-import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
-import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
 
 /**
  * @title L2ECOBridge
@@ -18,9 +18,9 @@ import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constant
  * This contract also acts as a burner of the tokens intended for withdrawal, informing the L1
  * bridge to release L1 funds.
  */
-contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
+contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     // L1 bridge contract. This is the only address that can call `finalizeDeposit` on this contract.
-    address public immutable l1TokenBridge;
+    address public l1TokenBridge;
 
     // current inflation multiplier
     uint256 public inflationMultiplier;
@@ -28,7 +28,12 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
     /**
      * @dev L2 token address
      */
-    L2ECO public immutable l2EcoToken;
+    L2ECO public l2EcoToken;
+
+    /**
+     * @dev L2 proxy admin that manages the upgrade of L2 token implementation
+     */
+    ProxyAdmin public l2ProxyAdmin;
 
     /**
      * @dev Modifier to check that the L2 token is the same as the one set in the constructor
@@ -65,16 +70,28 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
     }
 
     /**
-     * @dev Constructor that sets the L2 messanger to use, L1 bridge address and the L2 token address
+     * Disable the implementation contract
+     */
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /**
+     * @dev Initializer that sets the L2 messanger to use, L1 bridge address and the L2 token address
      * @param _l2CrossDomainMessenger Cross-domain messenger used by this contract on L2
      * @param _l1TokenBridge Address of the L1 bridge deployed to L1 chain
      * @param _l2EcoToken Address of the L2 ECO token deployed to L2 chain
      */
-    constructor(
+    function initialize(
         address _l2CrossDomainMessenger,
         address _l1TokenBridge,
-        address _l2EcoToken
-    ) CrossDomainEnabled(_l2CrossDomainMessenger) {
+        address _l2EcoToken,
+        address _l2ProxyAdmin
+    ) public initializer {
+        CrossDomainEnabledUpgradeable.__CrossDomainEnabledUpgradeable_init(
+            _l2CrossDomainMessenger
+        );
         l1TokenBridge = _l1TokenBridge;
         l2EcoToken = L2ECO(_l2EcoToken);
         inflationMultiplier = l2EcoToken.INITIAL_INFLATION_MULTIPLIER();
@@ -155,15 +172,44 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabled {
 
     /**
      * @dev Upgrades the L2ECO token implementation address.
-     * @param _newEco The new L2ECO implementation address.
+     * @param _newEcoImpl The new L2ECO implementation address.
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
     function upgradeECO(address _newEco)
         external
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
     {
-        //todo
-        emit UpgradeECOInitiated(_newEco);
+        //cast to a payable address since l2EcoToken is the proxy address of a ITransparentUpgradeableProxy contract
+        address payable proxyAddr = payable(address(l2EcoToken));
+
+        ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
+            proxyAddr
+        );
+        l2ProxyAdmin.upgrade(proxy, _newEcoImpl);
+
+        emit UpgradeECOImplementation(_newEcoImpl);
+    }
+
+    /**
+     * @dev Upgrades this contract implementation by passing the new implementation address to the ProxyAdmin.
+     * @param _newBridgeImpl The new L2ECOBridge implementation address.
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
+     */
+    function upgradeSelf(address _newBridgeImpl)
+        external
+        virtual
+        onlyFromCrossDomainAccount(l1TokenBridge)
+    {
+        //cast to a payable address since l2EcoToken is the proxy address of a ITransparentUpgradeableProxy contract
+        address payable proxyAddr = payable(address(this));
+
+        ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
+            proxyAddr
+        );
+        l2ProxyAdmin.upgrade(proxy, _newBridgeImpl);
+
+        emit UpgradeSelf(_newBridgeImpl);
     }
 
     /**

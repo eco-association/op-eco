@@ -8,7 +8,7 @@ import { AddressZero } from '@ethersproject/constants'
 import * as L2CrossDomainMessenger from '@eth-optimism/contracts/artifacts/contracts/L2/messaging/L2CrossDomainMessenger.sol/L2CrossDomainMessenger.json'
 
 import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './utils/constants'
-import { getContractInterface, deployFromName } from './utils/contracts'
+import { getContractInterface } from './utils/contracts'
 import { expect } from 'chai'
 import { ERROR_STRINGS } from './utils/errors'
 import { deployL2, transferOwnership } from './utils/fixtures'
@@ -24,13 +24,10 @@ describe('L2ECOBridge tests', () => {
 
   let alice: SignerWithAddress
   let bob: SignerWithAddress
-  // still have to figure out pausing
-  let pausingPaul: SignerWithAddress
   let l2MessengerImpersonator: SignerWithAddress
   before(async () => {
     // Create a special signer which will enable us to send messages from the L2Messenger contract
-    ;[alice, bob, pausingPaul, l2MessengerImpersonator] =
-      await ethers.getSigners()
+    ;[alice, bob, l2MessengerImpersonator] = await ethers.getSigners()
   })
 
   let L2ECOBridge: Contract
@@ -49,15 +46,15 @@ describe('L2ECOBridge tests', () => {
     // Deploy an L2 ERC20
     MOCK_L2ECO = await (await smock.mock('L2ECO')).deploy()
 
-    // Deploy the contract under test
-    L2ECOBridge = await deployFromName('L2ECOBridge', {
-      args: [
-        Fake__L2CrossDomainMessenger.address,
-        DUMMY_L1_BRIDGE_ADDRESS,
-        MOCK_L2ECO.address,
-        AddressZero,
-      ],
-    })
+    // Deploy the bridge
+    L2ECOBridge = await (await smock.mock('L2ECOBridge')).deploy()
+    await L2ECOBridge.setVariable('_initializing', false)
+    await L2ECOBridge.initialize(
+      Fake__L2CrossDomainMessenger.address,
+      DUMMY_L1_BRIDGE_ADDRESS,
+      MOCK_L2ECO.address,
+      AddressZero
+    )
 
     await MOCK_L2ECO.setVariable('_initializing', false)
     await MOCK_L2ECO.initialize(
@@ -339,9 +336,9 @@ describe('L2ECOBridge tests', () => {
 
   describe('upgradeEco', () => {
     let newEcoImpl: MockContract<Contract>
-    let proxyAdmin: ProxyAdmin, l2Eco: L2ECO, l2EcoBridge: L2ECOBridge
+    let l2EcoBridge: L2ECOBridge
     beforeEach(async () => {
-      ;[l2Eco, l2EcoBridge, proxyAdmin] = await deployL2(
+      ;[, l2EcoBridge] = await deployL2(
         Fake__L2CrossDomainMessenger.address,
         DUMMY_L1_BRIDGE_ADDRESS,
         DUMMY_L1_ERC20_ADDRESS,
@@ -395,6 +392,79 @@ describe('L2ECOBridge tests', () => {
       )
         .to.emit(l2EcoBridge, 'UpgradeECOImplementation')
         .withArgs(newEcoImpl.address)
+    })
+  })
+
+  describe('upgradeSelf', () => {
+    let newBridgeImpl: MockContract<Contract>
+    let proxyAdmin: ProxyAdmin, l2Eco: L2ECO, l2EcoBridge: L2ECOBridge
+    beforeEach(async () => {
+      ;[l2Eco, l2EcoBridge, proxyAdmin] = await deployL2(
+        Fake__L2CrossDomainMessenger.address,
+        DUMMY_L1_BRIDGE_ADDRESS,
+        DUMMY_L1_ERC20_ADDRESS,
+        alice.address,
+        { adminBridge: false }
+      )
+
+      newBridgeImpl = await (await smock.mock('L2ECOBridge')).deploy()
+    })
+
+    it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L2 account', async () => {
+      await expect(
+        L2ECOBridge.upgradeSelf(newBridgeImpl.address)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_MESSENGER)
+    })
+
+    it('onlyFromCrossDomainAccount: should revert on calls from the right crossDomainMessenger, but wrong xDomainMessageSender (ie. not the L1ECOBridge)', async () => {
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        NON_ZERO_ADDRESS
+      )
+
+      await expect(
+        L2ECOBridge.connect(l2MessengerImpersonator).upgradeSelf(
+          newBridgeImpl.address
+        )
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
+    })
+
+    it("should revert when bridge isn't owner of ProxyAdmin", async () => {
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        DUMMY_L1_BRIDGE_ADDRESS
+      )
+
+      await expect(
+        l2EcoBridge
+          .connect(l2MessengerImpersonator)
+          .upgradeSelf(newBridgeImpl.address)
+      ).to.be.revertedWith(ERROR_STRINGS.OWNABLE.NOT_OWNER)
+    })
+
+    it('should upgrade the implementation and emit an event', async () => {
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        DUMMY_L1_BRIDGE_ADDRESS
+      )
+
+      await transferOwnership(l2EcoBridge.address)
+      const bridgeBefore = await proxyAdmin.getProxyImplementation(
+        l2EcoBridge.address
+      )
+
+      await expect(
+        l2EcoBridge
+          .connect(l2MessengerImpersonator)
+          .upgradeSelf(newBridgeImpl.address)
+      )
+        .to.emit(l2EcoBridge, 'UpgradeSelf')
+        .withArgs(newBridgeImpl.address)
+
+      expect(await l2EcoBridge.l2EcoToken()).to.eq(l2Eco.address)
+      // check that the old implementation address is not the new implementation address
+      expect(bridgeBefore).to.not.eq(newBridgeImpl.address)
+      // check the implementation address against the new implementation
+      expect(
+        await proxyAdmin.getProxyImplementation(l2EcoBridge.address)
+      ).to.eq(newBridgeImpl.address)
     })
   })
 })
