@@ -178,7 +178,8 @@ async function bridgeItBackNowYall() {
     const l2bridge = new ethers.Contract(L2_BRIDGE_ADDRESS, L2ECOBridgeABI.fragments, l2Wallet)
 
     const tx = await l2bridge.withdraw(L2_ECO_ADDRESS, amount , l1gas, data)
-    const {status, hash} = await tx.wait()
+    const {hash} = tx
+    const {status} = await tx.wait()
     console.log(status === 1 ? hash : 'failure')
 }
 
@@ -189,7 +190,7 @@ async function checkInterface() {
 }
 
 async function proveWithdrawal() {
-    const withdrawalTx1 = { hash: '0xd96085aaa22a07baab1642ca8246882d429298660e71496aea687be7be802be4' }
+    const withdrawalTx1 = { hash: '0x97b9c80097b77d5d79813b5367e515d83c25d21185550ed7b9d9c51348b016c0' }
     await crossChainMessenger.waitForMessageStatus(withdrawalTx1.hash, MessageStatus.READY_TO_PROVE)
     const withdrawalTx2 = await crossChainMessenger.proveMessage(withdrawalTx1.hash)
     const {status: statusTx2} = await withdrawalTx2.wait()
@@ -198,7 +199,7 @@ async function proveWithdrawal() {
 }
 
 async function finalizeWithdrawal() {
-    const withdrawalTx1 = { hash: '0xd96085aaa22a07baab1642ca8246882d429298660e71496aea687be7be802be4' }
+    const withdrawalTx1 = { hash: '0x97b9c80097b77d5d79813b5367e515d83c25d21185550ed7b9d9c51348b016c0' }
     await crossChainMessenger.waitForMessageStatus(withdrawalTx1.hash, MessageStatus.READY_FOR_RELAY)
     const withdrawalTx3 = await crossChainMessenger.finalizeMessage(withdrawalTx1.hash)
     await withdrawalTx3.wait()  
@@ -208,19 +209,19 @@ async function finalizeWithdrawal() {
 }
 
 async function main() {
-    // await setupOP()
+    await setupOP()
     // await deployL1Bridge()
     // await deployL2Bridge()
     // await sendGOR('.97', 'ADDRESS')
     // await deployL2ECO()
     // await initializeL2ECO()
     // await initializeL1Bridge()
-    await approveAndDeposit()
+    // await approveAndDeposit()
     // await rebaseCrossChain()
     // await bridgeItBackNowYall()
     // await checkInterface()
-    // await proveWithdrawal()
-    // await finalizeWithdrawal()
+    await proveWithdrawal()
+    await finalizeWithdrawal()
 }
 
 main()
