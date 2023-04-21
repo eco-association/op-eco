@@ -6,7 +6,7 @@ import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
 import {L2ECO} from "../token/L2ECO.sol";
 import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
 
 /**
@@ -182,10 +182,10 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
     {
-        //cast to a payable address since l2EcoToken is the proxy address of a TransparentUpgradeableProxy contract
+        //cast to a payable address since l2EcoToken is the proxy address of a ITransparentUpgradeableProxy contract
         address payable proxyAddr = payable(address(l2EcoToken));
 
-        TransparentUpgradeableProxy proxy = TransparentUpgradeableProxy(
+        ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
             proxyAddr
         );
         l2ProxyAdmin.upgrade(proxy, _newEcoImpl);
@@ -203,10 +203,10 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
     {
-        //cast to a payable address since l2EcoToken is the proxy address of a TransparentUpgradeableProxy contract
+        //cast to a payable address since l2EcoToken is the proxy address of a ITransparentUpgradeableProxy contract
         address payable proxyAddr = payable(address(this));
 
-        TransparentUpgradeableProxy proxy = TransparentUpgradeableProxy(
+        ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
             proxyAddr
         );
         l2ProxyAdmin.upgrade(proxy, _newBridgeImpl);
