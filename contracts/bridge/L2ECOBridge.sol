@@ -7,7 +7,6 @@ import {L2ECO} from "../token/L2ECO.sol";
 import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
 
 /**
  * @title L2ECOBridge
