@@ -42,7 +42,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     modifier isL2EcoToken(address _l2Token) {
         require(
             _l2Token == address(l2EcoToken),
-            "L2ECOBridge: Invalid L2ECO token address"
+            "L2ECOBridge: invalid L2ECO token address"
         );
         _;
     }
@@ -53,7 +53,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     modifier tokensMatch(address _l1Token) {
         require(
             _l1Token == l2EcoToken.l1Token(),
-            "L2ECOBridge: Invalid L1 token address"
+            "L2ECOBridge: invalid L1 token address"
         );
         _;
     }
@@ -64,7 +64,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     modifier validRebaseMultiplier(uint256 _inflationMutiplier) {
         require(
             _inflationMutiplier > 0,
-            "L2ECOBridge: Invalid inflation multiplier"
+            "L2ECOBridge: invalid inflation multiplier"
         );
         _;
     }
@@ -82,6 +82,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
      * @param _l2CrossDomainMessenger Cross-domain messenger used by this contract on L2
      * @param _l1TokenBridge Address of the L1 bridge deployed to L1 chain
      * @param _l2EcoToken Address of the L2 ECO token deployed to L2 chain
+     * @param _l2ProxyAdmin Address of the L2 proxy admin that manages the upgrade of the L2 token implementation
      */
     function initialize(
         address _l2CrossDomainMessenger,
@@ -94,6 +95,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         );
         l1TokenBridge = _l1TokenBridge;
         l2EcoToken = L2ECO(_l2EcoToken);
+        l2ProxyAdmin = ProxyAdmin(_l2ProxyAdmin);
         inflationMultiplier = l2EcoToken.INITIAL_INFLATION_MULTIPLIER();
     }
 
@@ -175,7 +177,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
      * @param _newEcoImpl The new L2ECO implementation address.
      * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
-    function upgradeECO(address _newEco)
+    function upgradeECO(address _newEcoImpl)
         external
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
