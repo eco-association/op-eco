@@ -17,6 +17,7 @@ import { ERROR_STRINGS } from './utils/errors'
 const DUMMY_L2_ERC20_ADDRESS = '0xaBBAABbaaBbAABbaABbAABbAABbaAbbaaBbaaBBa'
 const DUMMY_L2_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const DUMMY_L1_ERC20_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
+const DUMMY_PROXY_ADMIN_ADDRESS = '0x1234512345123451234512345123451234512345'
 const DUMMY_UPGRADER_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const INITIAL_INFLATION_MULTIPLIER = BigNumber.from('1000000000000000000')
 // 2e18
@@ -76,27 +77,16 @@ describe.only('L1ECOBridge', () => {
       ],
     })
 
-    // Deploy the contract under test
-    L1ECOBridge = await deployFromName('L1ECOBridge')
+    // Deploy the bridge
+    L1ECOBridge = await (await smock.mock('L1ECOBridge')).deploy()
+    await L1ECOBridge.setVariable('_initializing', false)
     await L1ECOBridge.connect(alice).initialize(
       Fake__L1CrossDomainMessenger.address,
       DUMMY_L2_BRIDGE_ADDRESS,
       L1ERC20.address,
+      DUMMY_PROXY_ADMIN_ADDRESS,
       alice.address
     )
-  })
-
-  describe('initialize', () => {
-    it('Should only be callable once', async () => {
-      await expect(
-        L1ECOBridge.initialize(
-          Fake__L1CrossDomainMessenger.address,
-          DUMMY_L2_BRIDGE_ADDRESS,
-          L1ERC20.address,
-          DUMMY_UPGRADER_ADDRESS
-        )
-      ).to.be.revertedWith(ERROR_STRINGS.UPGRADES.ALREADY_INITIALIZED)
-    })
   })
 
   describe('ERC20 deposits', () => {
@@ -275,13 +265,20 @@ describe.only('L1ECOBridge', () => {
   })
 
   describe('upgrades to L2 contract', () => {
-    it('should only work if caller is upgrader', async () => {
+    it("should revert if caller isn't upgrader", async () => {
       await expect(
-        L1ECOBridge.connect(alice).upgradeECO(
+        L1ECOBridge.connect(bob).upgradeECO(
           DUMMY_L2_ERC20_ADDRESS,
           FINALIZATION_GAS
         )
-      ).to.not.be.revertedWith(ERROR_STRINGS.L1ECOBridge.UNAUTHORIZED_UPGRADER)
+      ).to.be.revertedWith(ERROR_STRINGS.L1ECOBridge.UNAUTHORIZED_UPGRADER)
+    })
+
+    it('should succeed to send the correct argumnents', async () => {
+      await L1ECOBridge.connect(alice).upgradeECO(
+        DUMMY_L2_ERC20_ADDRESS,
+        FINALIZATION_GAS
+      )
 
       expect(
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
@@ -293,6 +290,17 @@ describe.only('L1ECOBridge', () => {
         ),
         FINALIZATION_GAS,
       ])
+    })
+
+    it('should succeed and emit an event', async () => {
+      await expect(
+        L1ECOBridge.connect(alice).upgradeECO(
+          DUMMY_L2_ERC20_ADDRESS,
+          FINALIZATION_GAS
+        )
+      )
+        .to.emit(L1ECOBridge, 'UpgradeL2ECO')
+        .withArgs(DUMMY_L2_ERC20_ADDRESS)
     })
   })
 

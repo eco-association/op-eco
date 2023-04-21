@@ -78,11 +78,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         address _ecoAddress,
         address _l1ProxyAdmin,
         address _upgrader
-    ) public {
-        require(
-            messenger == address(0),
-            "Initializable: contract is already initialized"
-        );
+    ) public initializer {
         CrossDomainEnabledUpgradeable.__CrossDomainEnabledUpgradeable_init(
             _l1messenger
         );
