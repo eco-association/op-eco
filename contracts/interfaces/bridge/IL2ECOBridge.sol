@@ -13,6 +13,9 @@ interface IL2ECOBridge is IL2ERC20Bridge {
     // Event for when the L2ECO token implementation is upgraded
     event UpgradeECOImplementation(address _newEcoImpl);
 
+    // Event for when the L2ECOBridge authority is transferred to a new bridge address
+    event UpgradeSelf(address _newBridgeImpl);
+
     /**
      * @dev Passes the inflation multiplier to the L2Eco token.
      * @param _inflationMultiplier The inflation multiplier to rebase the
@@ -21,7 +24,13 @@ interface IL2ECOBridge is IL2ERC20Bridge {
 
     /**
      * @dev Sets the L2ECO token proxy to a new implementation address for the L2ECO token.
-     * @param _newEco The address of the new L2ECO token implementation
+     * @param _newEcoImpl The address of the new L2ECO token implementation
      */
-    function upgradeECO(address _newEco) external;
+    function upgradeECO(address _newEcoImpl) external;
+
+    /**
+     * @dev Upgrades this contract implementation by passing the new implementation address to the ProxyAdmin.
+     * @param _newBridgeImpl The new L2ECOBridge implementation address.
+     */
+    function upgradeSelf(address _newBridgeImpl) external;
 }
