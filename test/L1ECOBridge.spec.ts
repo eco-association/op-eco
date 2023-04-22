@@ -223,47 +223,88 @@ describe('L1ECOBridge', () => {
       ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
     })
 
-    it('should credit funds to the withdrawer and not use too much gas', async () => {
-      // First Alice will 'donate' some tokens so that there's a balance to be withdrawn
+    describe('funded withdrawals', () => {
       const withdrawalAmount = INITIAL_TOTAL_L1_SUPPLY
-      await L1ERC20.connect(alice).approve(
-        L1ECOBridge.address,
-        withdrawalAmount
-      )
-
-      await L1ECOBridge.connect(alice).depositERC20(
-        L1ERC20.address,
-        DUMMY_L2_ERC20_ADDRESS,
-        withdrawalAmount,
-        FINALIZATION_GAS,
-        NON_NULL_BYTES32
-      )
-
-      expect(await L1ERC20.balanceOf(L1ECOBridge.address)).to.be.equal(
-        withdrawalAmount
-      )
-
-      // make sure no balance at start of test
-      expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
-
-      Fake__L1CrossDomainMessenger.xDomainMessageSender.returns(
+      beforeEach(async () => {
+        // First Alice will 'donate' some tokens so that there's a balance to be withdrawn
+        await L1ERC20.connect(alice).approve(
+          L1ECOBridge.address,
+          withdrawalAmount
+        )
+  
+        await L1ECOBridge.connect(alice).depositERC20(
+          L1ERC20.address,
+          DUMMY_L2_ERC20_ADDRESS,
+          withdrawalAmount,
+          FINALIZATION_GAS,
+          NON_NULL_BYTES32
+        )
+  
+        expect(await L1ERC20.balanceOf(L1ECOBridge.address)).to.be.equal(
+          withdrawalAmount
+        )
+  
+        // make sure no balance at start of test
+        expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
+        Fake__L1CrossDomainMessenger.xDomainMessageSender.returns(
         DUMMY_L2_BRIDGE_ADDRESS
-      )
+      )})
 
-      await L1ECOBridge.finalizeERC20Withdrawal(
-        L1ERC20.address,
-        DUMMY_L2_ERC20_ADDRESS,
-        NON_ZERO_ADDRESS,
-        NON_ZERO_ADDRESS,
-        withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
-        NON_NULL_BYTES32,
-        { from: Fake__L1CrossDomainMessenger.address }
-      )
+      it('should credit funds to the withdrawer', async () => {
+        await L1ECOBridge.finalizeERC20Withdrawal(
+          L1ERC20.address,
+          DUMMY_L2_ERC20_ADDRESS,
+          NON_ZERO_ADDRESS,
+          NON_ZERO_ADDRESS,
+          withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
+          NON_NULL_BYTES32,
+          { from: Fake__L1CrossDomainMessenger.address }
+        )
+  
+        expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(
+          withdrawalAmount
+        )
+      })
+  
+      it('should u-turn on a revert', async () => {
+        L1ERC20.transfer.reverts('Pausable: paused')
+  
+        await L1ECOBridge.finalizeERC20Withdrawal(
+          L1ERC20.address,
+          DUMMY_L2_ERC20_ADDRESS,
+          NON_ZERO_ADDRESS,
+          NON_ZERO_ADDRESS,
+          withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
+          NON_NULL_BYTES32,
+          { from: Fake__L1CrossDomainMessenger.address }
+        )
+  
+        expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(
+          withdrawalAmount
+        )
+      })
 
-      expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(
-        withdrawalAmount
-      )
+      it('should u-turn on a false return value', async () => {
+        L1ERC20.transfer.returns(
+          false
+        )
+  
+        await L1ECOBridge.finalizeERC20Withdrawal(
+          L1ERC20.address,
+          DUMMY_L2_ERC20_ADDRESS,
+          NON_ZERO_ADDRESS,
+          NON_ZERO_ADDRESS,
+          withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
+          NON_NULL_BYTES32,
+          { from: Fake__L1CrossDomainMessenger.address }
+        )
+  
+        expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(
+          withdrawalAmount
+        )
+      })
     })
+    
   })
 
   describe('upgrades to L2 contract', () => {
