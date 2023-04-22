@@ -171,6 +171,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
+     * When a withdrawal is finalized on L1, the L1 Bridge transfers the funds to the withdrawer
      */
     function finalizeERC20Withdrawal(
         address _l1Token,
@@ -182,18 +183,27 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
         uint256 _amount = _gonsAmount / inflationMultiplier;
 
-        // When a withdrawal is finalized on L1, the L1 Bridge transfers the funds to the withdrawer
-        // ECO(_l1Token).transfer(_to, _amount);
-
+        // equivalent to ECO(_l1Token).transfer(_to, _amount); but is revert safe
         bytes memory _ecoTransferMessage = abi.encodeWithSelector(
-            ECO.transfer.selector,
+            IERC20.transfer.selector,
             _to,
             _amount
         );
+        (bool success, bytes memory returnData) = _l1Token.call{value:0}(_ecoTransferMessage);
+        
 
-        (bool success, ) = _l1Token.call{value:0}(_ecoTransferMessage);
+        // make sure that the call to transfer didn't revert or return false
+        // if (success) {
+        //     if (returnData.length >= 1) {
+        //         assembly {
+        //             success := mload(add(returnData, 32))
+        //         }
+        //     } else {
+        //         success = false;
+        //     }
+        // }
 
-        if (success) {
+        if (success && abi.decode(returnData, (bool))) {
             // if successful, emit an event
             emit ERC20WithdrawalFinalized(
                 ecoAddress,
@@ -206,7 +216,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         } else {
             // if the transfer fails, create a return tx
             bytes memory message = abi.encodeWithSelector(
-                IL2ECOBridge.finalizeERC20Deposit.selector,
+                IL2ERC20Bridge.finalizeDeposit.selector,
                 _l1Token,
                 _l2Token,
                 _to, // switched the _to and _from here to bounce back the deposit to the sender
@@ -275,7 +285,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
 
         // Construct calldata for _l2Token.finalizeDeposit(_to, _amount)
         bytes memory message = abi.encodeWithSelector(
-            //call parent interface of IL2ECOBridge to get the selector
+            //call parent interface of IL2ERC20Bridge to get the selector
             IL2ERC20Bridge.finalizeDeposit.selector,
             _l1Token,
             _l2Token,
