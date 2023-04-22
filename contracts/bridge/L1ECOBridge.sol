@@ -177,22 +177,49 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         address _l2Token,
         address _from,
         address _to,
-        uint256 _amount,
+        uint256 _gonsAmount,
         bytes calldata _data
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
-        _amount = _amount / inflationMultiplier;
+        uint256 _amount = _gonsAmount / inflationMultiplier;
 
         // When a withdrawal is finalized on L1, the L1 Bridge transfers the funds to the withdrawer
-        ECO(_l1Token).transfer(_to, _amount);
+        // ECO(_l1Token).transfer(_to, _amount);
 
-        emit ERC20WithdrawalFinalized(
-            ecoAddress,
-            _l2Token,
-            _from,
+        bytes memory _ecoTransferMessage = abi.encodeWithSelector(
+            ECO.transfer.selector,
             _to,
-            _amount,
-            _data
+            _amount
         );
+
+        (bool success, ) = _l1Token.call{value:0}(_ecoTransferMessage);
+
+        if (success) {
+            // if successful, emit an event
+            emit ERC20WithdrawalFinalized(
+                ecoAddress,
+                _l2Token,
+                _from,
+                _to,
+                _amount,
+                _data
+            );
+        } else {
+            // if the transfer fails, create a return tx
+            bytes memory message = abi.encodeWithSelector(
+                IL2ECOBridge.finalizeERC20Deposit.selector,
+                _l1Token,
+                _l2Token,
+                _to, // switched the _to and _from here to bounce back the deposit to the sender
+                _from,
+                _gonsAmount,
+                _data
+            );
+
+            // Send message up to L1 bridge
+            sendCrossDomainMessage(l2TokenBridge, 0, message);
+            // Emit an event to signal success event listeners to expect failure
+            emit WithdrawalFailed(_l1Token, _l2Token, _from, _to, _amount, _data);
+        }
     }
 
     function rebase(uint32 _l2Gas) external {
