@@ -183,13 +183,13 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
         uint256 _amount = _gonsAmount / inflationMultiplier;
 
-        // equivalent to ECO(_l1Token).transfer(_to, _amount); but is revert safe
+        // equivalent to ECO(ecoAddress).transfer(_to, _amount); but is revert safe
         bytes memory _ecoTransferMessage = abi.encodeWithSelector(
             IERC20.transfer.selector,
             _to,
             _amount
         );
-        (bool success, bytes memory returnData) = _l1Token.call{value:0}(_ecoTransferMessage);
+        (bool success, bytes memory returnData) = ecoAddress.call{value:0}(_ecoTransferMessage);
         
 
         // make sure that the call to transfer didn't revert or return false
