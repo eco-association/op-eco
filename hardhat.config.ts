@@ -143,7 +143,7 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY,
-      optimisticGoerli: process.env.OPTIMISM_ETHERSCAN_API_KEY,
+      goerliOptimism: process.env.OPTIMISM_ETHERSCAN_API_KEY,
       goerli: process.env.ETHERSCAN_API_KEY,
       // Basescan doesn't require an API key, however
       // Hardhat still expects an arbitrary string to be provided.

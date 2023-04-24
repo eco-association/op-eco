@@ -34,7 +34,7 @@ export async function upgradeBridgesL2(
   await upgrades.upgradeProxy(l2BridgeAddress, L2ECOBridgeContract, {
     call: {
       fn: 'upgrade1',
-      args: [l2BridgeAddress],
+      args: [l1BridgeAddress],
     },
   })
   console.log(`L2 Bridge updated`)
@@ -110,6 +110,8 @@ export async function deployL2(
   await proxyInitial.deployed()
 
   const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
+  // console.log(`address : ${ proxyAdmin.address}`)
+  // console.log(`owner : ${await proxyAdmin.owner()}`)
 
   const L2ECOBridgeContract = await ethers.getContractFactory('L2ECOBridge')
   const l2BridgeProxy = await upgrades.deployProxy(
@@ -139,7 +141,7 @@ export async function deployL2(
   )
 
   if (opts.adminBridge) {
-    transferOwnership(l2BridgeProxy.address)
+    // transferOwnership(l2BridgeProxy.address)
     // console.log("ProxyAdmin Owner: ", await proxyAdmin.owner())
   }
 

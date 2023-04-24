@@ -8,8 +8,8 @@ async function main() {
   );
   
   const bridgeAddress = await proxyAdmin.getProxyImplementation(
-    // process.env.L1_BRIDGE_ADDRESS || ""
-    process.env.L2_BRIDGE_ADDRESS || ""
+    process.env.L1_BRIDGE_ADDRESS || ""
+    // process.env.L2_BRIDGE_ADDRESS || ""
   )
 
   console.log(`Bridge deployed to: ${bridgeAddress}`)
