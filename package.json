@@ -39,7 +39,12 @@
     "test": "hardhat test",
     "test:hardhat": "yarn typechain && hardhat test test/**/*.ts",
     "testParallel": "hardhat test --parallel",
-    "typechain": "hardhat typechain"
+    "typechain": "hardhat typechain",
+    "deployL1": "hardhat run scripts/deployL1.ts --network goerli",
+    "deployL2": "hardhat run scripts/deployL2.ts --network base-goerli",
+    "upgradeBridgeL1": "hardhat run scripts/upgradeBridgeL1.ts --network goerli",
+    "upgradeBridgeL2": "hardhat run scripts/upgradeBridgeL2.ts --network base-goerli",
+    "getImpl": "hardhat run scripts/getImpl.ts --network goerliOptimism"
   },
   "dependencies": {
     "@eth-optimism/contracts": "^0.5.40",
@@ -65,7 +70,7 @@
     "@nomicfoundation/hardhat-network-helpers": "1.0.6",
     "@nomiclabs/ethereumjs-vm": "^4.2.2",
     "@nomiclabs/hardhat-ethers": "^2.2.2",
-    "@nomiclabs/hardhat-etherscan": "^3.1.2",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^4.8.3",
     "@openzeppelin/contracts-upgradeable": "^4.8.3",
