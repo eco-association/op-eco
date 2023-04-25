@@ -5,15 +5,15 @@ module.exports = {
     mocha: true,
     node: true,
   },
-  extends: [
-    "standard",
-    "plugin:prettier/recommended",
-    "plugin:node/recommended",
-  ],
   plugins: [
     "@typescript-eslint",
     "mocha",
     "chai-friendly"
+  ],
+  extends: [
+    "standard",
+    "plugin:prettier/recommended",
+    "plugin:node/recommended",
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
@@ -25,11 +25,14 @@ module.exports = {
     "prefer-destructuring": 0,
     "mocha/no-exclusive-tests": "error",
     "chai-friendly/no-unused-expressions": 2,
-    "no-multiple-empty-lines": ["error", {
-      max: 1,
-      maxEOF: 0,
-      maxBOF: 0
-    }],
+    "@typescript-eslint/no-unused-vars": ["error"],
+    "no-multiple-empty-lines": [
+      "error",
+      {
+        max: 1,
+        maxEOF: 0,
+        maxBOF: 0
+      }],
     "node/no-unsupported-features/es-syntax": [
       "error",
       { ignores: ["modules"] },
@@ -45,10 +48,8 @@ module.exports = {
       "error", {
         allowModules: [],
         tryExtensions: [".js", ".json", ".node", ".ts", ".d.ts"]
-      }]
+      }],
+    "node/no-unpublished-import": 0,
+    "node/no-unpublished-require": 0,
   },
-  globals: {
-    BigInt: "readonly",
-    ethers: "readonly"
-  }
 }
