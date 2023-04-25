@@ -139,7 +139,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     /**
      */
     function depositERC20(
-        address _l1Token,
+        address,//_l1Token
         address _l2Token,
         uint256 _amount,
         uint32 _l2Gas,
@@ -159,7 +159,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     /**
      */
     function depositERC20To(
-        address _l1Token,
+        address,//_l1Token
         address _l2Token,
         address _to,
         uint256 _amount,
