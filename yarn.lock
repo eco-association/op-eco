@@ -9647,6 +9647,11 @@ solc@^0.6.3:
     semver "^5.5.0"
     tmp "0.0.33"
 
+solhint-plugin-eco@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/solhint-plugin-eco/-/solhint-plugin-eco-0.1.0.tgz#aaea153bce264c98ae41a90138d695ea7c8ee39b"
+  integrity sha512-4x4xq14tcNr+wK7wkzXWgwyee0tBIoMO9C4ePPjBprRKBiegiPAV9pZL0Z2D5sfInXsOiPm3mU4yRxQ0zn/Okg==
+
 solhint@3.3.7:
   version "3.3.7"
   resolved "https://registry.npmjs.org/solhint/-/solhint-3.3.7.tgz"

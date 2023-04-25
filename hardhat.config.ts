@@ -1,17 +1,16 @@
-import * as dotenv from "dotenv"
+import * as dotenv from 'dotenv'
 
-import { HardhatUserConfig } from "hardhat/config"
-import "@nomiclabs/hardhat-etherscan"
-import "@nomiclabs/hardhat-waffle"
-import "@typechain/hardhat"
-import "hardhat-gas-reporter"
-import "solidity-coverage"
+import { HardhatUserConfig } from 'hardhat/config'
+import '@nomiclabs/hardhat-etherscan'
+import '@nomiclabs/hardhat-waffle'
+import '@typechain/hardhat'
+import 'hardhat-gas-reporter'
+import 'solidity-coverage'
 
-import "@nomiclabs/hardhat-ethers"
-import "@openzeppelin/hardhat-upgrades"
+import '@nomiclabs/hardhat-ethers'
+import '@openzeppelin/hardhat-upgrades'
 
 dotenv.config()
-
 
 const privateKey = process.env.PRIVATE_KEY || '0x' + '11'.repeat(32) // this is to avoid hardhat error
 const deploy = process.env.DEPLOY_DIRECTORY || 'deploy'
@@ -24,7 +23,7 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: { enabled: true, runs: 10_000 },
         },
-      }
+      },
     ],
     settings: {
       metadata: {
@@ -61,7 +60,7 @@ const config: HardhatUserConfig = {
     },
     goerliOptimism: {
       chainId: 420,
-      url: process.env.OPTIMISM_GOERLI_URL || "",
+      url: process.env.OPTIMISM_GOERLI_URL || '',
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
@@ -84,7 +83,7 @@ const config: HardhatUserConfig = {
     },
     goerli: {
       chainId: 5,
-      url: process.env.GOERLI_URL || "",
+      url: process.env.GOERLI_URL || '',
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
@@ -111,26 +110,26 @@ const config: HardhatUserConfig = {
       goerli: process.env.ETHERSCAN_API_KEY || '',
       // Basescan doesn't require an API key, however
       // Hardhat still expects an arbitrary string to be provided.
-      "base-goerli": "PLACEHOLDER_STRING"
+      'base-goerli': 'PLACEHOLDER_STRING',
     },
     customChains: [
       {
-        network: "goerliOptimism",
+        network: 'goerliOptimism',
         chainId: 420,
         urls: {
-          apiURL: "https://api-goerli-optimism.etherscan.io/api",
-          browserURL: "https://goerli-optimism.etherscan.io"
-        }
+          apiURL: 'https://api-goerli-optimism.etherscan.io/api',
+          browserURL: 'https://goerli-optimism.etherscan.io',
+        },
       },
       {
-        network: "base-goerli",
+        network: 'base-goerli',
         chainId: 84531,
         urls: {
-          apiURL: "https://api-goerli.basescan.org/api",
-          browserURL: "https://goerli.basescan.org"
-        }
-      }
-    ]
+          apiURL: 'https://api-goerli.basescan.org/api',
+          browserURL: 'https://goerli.basescan.org',
+        },
+      },
+    ],
   },
   dodoc: {
     runOnCompile: true,
@@ -160,7 +159,6 @@ const config: HardhatUserConfig = {
     },
     exclude: ['contracts/test-helpers', 'contracts/test-libraries'],
   },
-
 }
 
 export default config
