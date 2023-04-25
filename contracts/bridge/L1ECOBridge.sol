@@ -189,8 +189,9 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
             _to,
             _amount
         );
-        (bool success, bytes memory returnData) = ecoAddress.call{value:0}(_ecoTransferMessage);
-        
+        (bool success, bytes memory returnData) = ecoAddress.call{value: 0}(
+            _ecoTransferMessage
+        );
 
         // make sure that the call to transfer didn't revert or return false
         // if (success) {
@@ -228,7 +229,14 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
             // Send message up to L1 bridge
             sendCrossDomainMessage(l2TokenBridge, 0, message);
             // Emit an event to signal success event listeners to expect failure
-            emit WithdrawalFailed(_l1Token, _l2Token, _from, _to, _amount, _data);
+            emit WithdrawalFailed(
+                _l1Token,
+                _l2Token,
+                _from,
+                _to,
+                _amount,
+                _data
+            );
         }
     }
 

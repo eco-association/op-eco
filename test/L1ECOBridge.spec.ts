@@ -20,7 +20,6 @@ const DUMMY_L2_ERC20_ADDRESS = '0xaBBAABbaaBbAABbaABbAABbAABbaAbbaaBbaaBBa'
 const DUMMY_L2_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const DUMMY_L1_ERC20_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const DUMMY_PROXY_ADMIN_ADDRESS = '0x1234512345123451234512345123451234512345'
-const DUMMY_UPGRADER_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
 const INITIAL_INFLATION_MULTIPLIER = BigNumber.from('1000000000000000000')
 // 2e18
 const INITIAL_TOTAL_L1_SUPPLY = BigNumber.from('2000000000000000000')
@@ -231,7 +230,7 @@ describe('L1ECOBridge', () => {
           L1ECOBridge.address,
           withdrawalAmount
         )
-  
+
         await L1ECOBridge.connect(alice).depositERC20(
           L1ERC20.address,
           DUMMY_L2_ERC20_ADDRESS,
@@ -239,20 +238,21 @@ describe('L1ECOBridge', () => {
           FINALIZATION_GAS,
           NON_NULL_BYTES32
         )
-  
+
         expect(await L1ERC20.balanceOf(L1ECOBridge.address)).to.be.equal(
           withdrawalAmount
         )
-  
+
         // make sure no balance at start of test
         expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
         Fake__L1CrossDomainMessenger.xDomainMessageSender.returns(
-        DUMMY_L2_BRIDGE_ADDRESS
-      )})
+          DUMMY_L2_BRIDGE_ADDRESS
+        )
+      })
 
       it('should credit funds to the withdrawer', async () => {
         expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
-        
+
         await L1ECOBridge.finalizeERC20Withdrawal(
           L1ERC20.address,
           DUMMY_L2_ERC20_ADDRESS,
@@ -262,7 +262,7 @@ describe('L1ECOBridge', () => {
           NON_NULL_BYTES32,
           { from: Fake__L1CrossDomainMessenger.address }
         )
-  
+
         expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(
           withdrawalAmount
         )
@@ -270,31 +270,34 @@ describe('L1ECOBridge', () => {
 
       it('should emit an event on success', async () => {
         expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
-        
-        await expect(L1ECOBridge.finalizeERC20Withdrawal(
-          L1ERC20.address,
-          DUMMY_L2_ERC20_ADDRESS,
-          NON_ZERO_ADDRESS,
-          NON_ZERO_ADDRESS,
-          withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
-          NON_NULL_BYTES32,
-          { from: Fake__L1CrossDomainMessenger.address }
-        )).to.emit(L1ECOBridge, 'ERC20WithdrawalFinalized')
-        .withArgs(
-          L1ERC20.address,
-          DUMMY_L2_ERC20_ADDRESS,
-          NON_ZERO_ADDRESS,
-          NON_ZERO_ADDRESS,
-          withdrawalAmount,
-          NON_NULL_BYTES32,
+
+        await expect(
+          L1ECOBridge.finalizeERC20Withdrawal(
+            L1ERC20.address,
+            DUMMY_L2_ERC20_ADDRESS,
+            NON_ZERO_ADDRESS,
+            NON_ZERO_ADDRESS,
+            withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
+            NON_NULL_BYTES32,
+            { from: Fake__L1CrossDomainMessenger.address }
+          )
         )
+          .to.emit(L1ECOBridge, 'ERC20WithdrawalFinalized')
+          .withArgs(
+            L1ERC20.address,
+            DUMMY_L2_ERC20_ADDRESS,
+            NON_ZERO_ADDRESS,
+            NON_ZERO_ADDRESS,
+            withdrawalAmount,
+            NON_NULL_BYTES32
+          )
       })
-  
+
       it('should u-turn on pause', async () => {
         expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
         // L1ERC20.transfer.reverts('Pausable: paused') this doesn't work for some reason, smock doesn't apply to low level calls
         await L1ERC20.setVariable('_paused', true)
-  
+
         await L1ECOBridge.finalizeERC20Withdrawal(
           L1ERC20.address,
           DUMMY_L2_ERC20_ADDRESS,
@@ -304,10 +307,8 @@ describe('L1ECOBridge', () => {
           NON_NULL_BYTES32,
           { from: Fake__L1CrossDomainMessenger.address }
         )
-  
-        expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(
-          0
-        )
+
+        expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
 
         expect(
           Fake__L1CrossDomainMessenger.sendMessage.getCall(1).args
@@ -332,56 +333,57 @@ describe('L1ECOBridge', () => {
         expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
         // L1ERC20.transfer.reverts('Pausable: paused') this doesn't work for some reason, smock doesn't apply to low level calls
         await L1ERC20.setVariable('_paused', true)
-  
-        await expect(L1ECOBridge.finalizeERC20Withdrawal(
-          L1ERC20.address,
-          DUMMY_L2_ERC20_ADDRESS,
-          NON_ZERO_ADDRESS,
-          NON_ZERO_ADDRESS,
-          withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
-          NON_NULL_BYTES32,
-          { from: Fake__L1CrossDomainMessenger.address }
-        )).to.emit(L1ECOBridge, 'WithdrawalFailed')
-        .withArgs(
-          L1ERC20.address,
-          DUMMY_L2_ERC20_ADDRESS,
-          NON_ZERO_ADDRESS,
-          NON_ZERO_ADDRESS,
-          withdrawalAmount,
-          NON_NULL_BYTES32,
+
+        await expect(
+          L1ECOBridge.finalizeERC20Withdrawal(
+            L1ERC20.address,
+            DUMMY_L2_ERC20_ADDRESS,
+            NON_ZERO_ADDRESS,
+            NON_ZERO_ADDRESS,
+            withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
+            NON_NULL_BYTES32,
+            { from: Fake__L1CrossDomainMessenger.address }
+          )
         )
-  
-        expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(
-          0
-        )
+          .to.emit(L1ECOBridge, 'WithdrawalFailed')
+          .withArgs(
+            L1ERC20.address,
+            DUMMY_L2_ERC20_ADDRESS,
+            NON_ZERO_ADDRESS,
+            NON_ZERO_ADDRESS,
+            withdrawalAmount,
+            NON_NULL_BYTES32
+          )
+
+        expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
       })
 
       it('should u-turn on a false return value', async () => {
         // note this mock function doesn't cause the function to actually not transfer
-        L1ERC20.transfer.returns(
-          false
+        L1ERC20.transfer.returns(false)
+
+        await expect(
+          L1ECOBridge.finalizeERC20Withdrawal(
+            L1ERC20.address,
+            DUMMY_L2_ERC20_ADDRESS,
+            NON_ZERO_ADDRESS,
+            NON_ZERO_ADDRESS,
+            withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
+            NON_NULL_BYTES32,
+            { from: Fake__L1CrossDomainMessenger.address }
+          )
         )
-  
-        await expect(L1ECOBridge.finalizeERC20Withdrawal(
-          L1ERC20.address,
-          DUMMY_L2_ERC20_ADDRESS,
-          NON_ZERO_ADDRESS,
-          NON_ZERO_ADDRESS,
-          withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
-          NON_NULL_BYTES32,
-          { from: Fake__L1CrossDomainMessenger.address }
-        )).to.emit(L1ECOBridge, 'WithdrawalFailed')
-        .withArgs(
-          L1ERC20.address,
-          DUMMY_L2_ERC20_ADDRESS,
-          NON_ZERO_ADDRESS,
-          NON_ZERO_ADDRESS,
-          withdrawalAmount,
-          NON_NULL_BYTES32,
-        )
+          .to.emit(L1ECOBridge, 'WithdrawalFailed')
+          .withArgs(
+            L1ERC20.address,
+            DUMMY_L2_ERC20_ADDRESS,
+            NON_ZERO_ADDRESS,
+            NON_ZERO_ADDRESS,
+            withdrawalAmount,
+            NON_NULL_BYTES32
+          )
       })
     })
-    
   })
 
   describe('upgrades to L2 contract', () => {
