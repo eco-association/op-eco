@@ -90,8 +90,8 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable, IERC165 {
         address _initialPauser
     ) public initializer uninitialized {
         ERC20PausableUpgradeable.__ERC20PausableUpgradeable_init(
-            "Optimism ECO",
-            "OP-ECO",
+            "ECO",
+            "ECO",
             _l2Bridge,
             _initialPauser
         );

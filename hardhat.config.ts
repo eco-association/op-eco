@@ -49,6 +49,19 @@ const config: HardhatUserConfig = {
       deploy,
       accounts: [privateKey],
     },
+    goerliOptimism: {
+      chainId: 420,
+      url: process.env.OPTIMISM_GOERLI_URL || "",
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
+    // for testnet
+    'base-goerli': {
+      chainId: 84531,
+      url: 'https://goerli.base.org',
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
     'mainnet-trial': {
       chainId: 42069,
       url: 'http://127.0.0.1:8545',
@@ -59,6 +72,12 @@ const config: HardhatUserConfig = {
       url: process.env.CONTRACTS_RPC_URL || '',
       deploy,
       accounts: [privateKey],
+    },
+    goerli: {
+      chainId: 5,
+      url: process.env.GOERLI_URL || "",
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     mainnet: {
       chainId: 1,
@@ -118,10 +137,36 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      mainnet: process.env.ETHERSCAN_API_KEY,
-      optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
-      goerli: process.env.ETHERSCAN_API_KEY,
+
     },
+  },
+  etherscan: {
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
+      goerliOptimism: process.env.OPTIMISM_ETHERSCAN_API_KEY,
+      goerli: process.env.ETHERSCAN_API_KEY,
+      // Basescan doesn't require an API key, however
+      // Hardhat still expects an arbitrary string to be provided.
+      "base-goerli": "PLACEHOLDER_STRING"
+    },
+    customChains: [
+      {
+        network: "goerliOptimism",
+        chainId: 420,
+        urls: {
+          apiURL: "https://api-goerli-optimism.etherscan.io/api",
+          browserURL: "https://goerli-optimism.etherscan.io"
+        }
+      },
+      {
+        network: "base-goerli",
+        chainId: 84531,
+        urls: {
+          apiURL: "https://api-goerli.basescan.org/api",
+          browserURL: "https://goerli.basescan.org"
+        }
+      }
+    ]
   },
   dodoc: {
     runOnCompile: true,

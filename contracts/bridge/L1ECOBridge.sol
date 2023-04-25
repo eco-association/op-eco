@@ -92,6 +92,13 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
+     * Upate the l2TokenBridge address to the correct one
+     */
+    function upgrade1(address _l2TokenBridge) public reinitializer(2) {
+        l2TokenBridge = _l2TokenBridge;
+    }
+
+    /**
      * @dev Upgrades the L2ECO token implementation address, by sending
      *      a cross domain message to the L2 Bridge via the L1 Messenger
      * @param _impl L2 contract address.
