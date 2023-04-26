@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {ERC20PausableUpgradeable} from "./ERC20PausableUpgradeable.sol";
+import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {DelegatePermitUpgradeable} from "../cryptography/DelegatePermitUpgradeable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC20.sol";
 
-contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable, IERC165 {
+contract L2ECO is ERC20Upgradeable, DelegatePermitUpgradeable, IERC165 {
     uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1e18;
 
     uint256 public linearInflationMultiplier;
@@ -86,14 +86,11 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable, IERC165 {
 
     function initialize(
         address _l1Token,
-        address _l2Bridge,
-        address _initialPauser
+        address _l2Bridge
     ) public initializer uninitialized {
-        ERC20PausableUpgradeable.__ERC20PausableUpgradeable_init(
+        ERC20Upgradeable.__ERC20_init(
             "ECO",
-            "ECO",
-            _l2Bridge,
-            _initialPauser
+            "ECO"
         );
         linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
         minters[_l2Bridge] = true;
@@ -101,7 +98,6 @@ contract L2ECO is ERC20PausableUpgradeable, DelegatePermitUpgradeable, IERC165 {
         rebasers[_l2Bridge] = true;
         l1Token = _l1Token;
         tokenRoleAdmin = _l2Bridge;
-        pauser = _initialPauser;
     }
 
     /** Access function to determine the token balance held by some address.
