@@ -11,7 +11,6 @@ async function main() {
     L2_OP_MESSANGER_ADDRESS,
     L1_BRIDGE_ADDRESS,
     L1_ECO_ADDRESS,
-    SHARK_TEST_ACCOUNT_ADDRESS,
     { adminBridge: false }
   )
   console.log(`L2ECO deployed to: ${l2Eco.address}`)

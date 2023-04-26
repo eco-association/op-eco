@@ -8,7 +8,7 @@ import {
 import { Address } from '@eth-optimism/core-utils'
 
 // L2Eco contract initilization parameter types
-type L2EcoContract = [l1Token: string, l2Bridge: string, initialPauser: string]
+type L2EcoContract = [l1Token: string, l2Bridge: string]
 
 export async function upgradeBridgesL1(
   l1BridgeAddress: Address,
@@ -99,7 +99,6 @@ export async function deployL2(
   l2CrossDomainMessenger: Address,
   l1Bridge: Address,
   l1Token: Address,
-  initialPauser: Address,
   opts: { adminBridge: boolean } = { adminBridge: true }
 ): Promise<[L2ECO, L2ECOBridge, ProxyAdmin]> {
   const TokenInitialContract = await ethers.getContractFactory('TokenInitial')
@@ -135,7 +134,7 @@ export async function deployL2(
     {
       call: {
         fn: 'initialize',
-        args: [l1Token, l2BridgeProxy.address, initialPauser] as L2EcoContract,
+        args: [l1Token, l2BridgeProxy.address] as L2EcoContract,
       },
     }
   )

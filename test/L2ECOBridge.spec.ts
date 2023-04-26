@@ -30,7 +30,7 @@ describe('L2ECOBridge tests', () => {
     ;[alice, bob, l2MessengerImpersonator] = await ethers.getSigners()
   })
 
-  let L2ECOBridge: Contract
+  let L2ECOBridge: MockContract
   let MOCK_L2ECO: MockContract<Contract>
   let Fake__L2CrossDomainMessenger: FakeContract
   beforeEach(async () => {
@@ -60,7 +60,6 @@ describe('L2ECOBridge tests', () => {
     await MOCK_L2ECO.initialize(
       DUMMY_L1_ERC20_ADDRESS,
       L2ECOBridge.address,
-      AddressZero
     )
     // set rebase to 1 so our numbers arent crazy big
     await MOCK_L2ECO.setVariable('linearInflationMultiplier', 1)
@@ -342,7 +341,6 @@ describe('L2ECOBridge tests', () => {
         Fake__L2CrossDomainMessenger.address,
         DUMMY_L1_BRIDGE_ADDRESS,
         DUMMY_L1_ERC20_ADDRESS,
-        alice.address,
         { adminBridge: false }
       )
       newEcoImpl = await (await smock.mock('L2ECO')).deploy()
@@ -403,7 +401,6 @@ describe('L2ECOBridge tests', () => {
         Fake__L2CrossDomainMessenger.address,
         DUMMY_L1_BRIDGE_ADDRESS,
         DUMMY_L1_ERC20_ADDRESS,
-        alice.address,
         { adminBridge: false }
       )
 
