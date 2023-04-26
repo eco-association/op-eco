@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {IL1ECOBridge} from "../interfaces/bridge/IL1ECOBridge.sol";
 import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
+import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
 import {L2ECO} from "../token/L2ECO.sol";
 import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
