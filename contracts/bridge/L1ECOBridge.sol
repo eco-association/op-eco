@@ -201,16 +201,6 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         );
 
         // make sure that the call to transfer didn't revert or return false
-        // if (success) {
-        //     if (returnData.length >= 1) {
-        //         assembly {
-        //             success := mload(add(returnData, 32))
-        //         }
-        //     } else {
-        //         success = false;
-        //     }
-        // }
-
         if (success && abi.decode(returnData, (bool))) {
             // if successful, emit an event
             emit ERC20WithdrawalFinalized(
