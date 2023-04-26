@@ -57,10 +57,7 @@ describe('L2ECOBridge tests', () => {
     )
 
     await MOCK_L2ECO.setVariable('_initializing', false)
-    await MOCK_L2ECO.initialize(
-      DUMMY_L1_ERC20_ADDRESS,
-      L2ECOBridge.address,
-    )
+    await MOCK_L2ECO.initialize(DUMMY_L1_ERC20_ADDRESS, L2ECOBridge.address)
     // set rebase to 1 so our numbers arent crazy big
     await MOCK_L2ECO.setVariable('linearInflationMultiplier', 1)
   })

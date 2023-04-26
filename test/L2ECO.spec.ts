@@ -31,10 +31,7 @@ describe('L2ECO tests', () => {
   describe('initialize', () => {
     it('Should only be callable once', async () => {
       await expect(
-        eco.initialize(
-          AddressZero,
-          NON_ZERO_ADDRESS,
-        )
+        eco.initialize(AddressZero, NON_ZERO_ADDRESS)
       ).to.be.revertedWith(ERROR_STRINGS.UPGRADES.ALREADY_INITIALIZED)
     })
   })
