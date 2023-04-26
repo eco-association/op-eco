@@ -8,7 +8,50 @@ import {
 import { Address } from '@eth-optimism/core-utils'
 
 // L2Eco contract initilization parameter types
-type L2EcoContract = [l1Token: string, l2Bridge: string, initialPauser: string]
+type L2EcoContract = [l1Token: string, l2Bridge: string]
+
+export async function upgradeBridgesL1(
+  l1BridgeAddress: Address,
+  l2BridgeAddress: Address
+) {
+  const L1ECOBridgeContract = await ethers.getContractFactory('L1ECOBridge')
+
+  await upgrades.upgradeProxy(l1BridgeAddress, L1ECOBridgeContract, {
+    call: {
+      fn: 'upgrade1',
+      args: [l2BridgeAddress],
+    },
+  })
+  console.log(`L1 Bridge updated`)
+}
+
+export async function upgradeBridgesL2(
+  l1BridgeAddress: Address,
+  l2BridgeAddress: Address
+) {
+  const L2ECOBridgeContract = await ethers.getContractFactory('L2ECOBridge')
+
+  await upgrades.upgradeProxy(l2BridgeAddress, L2ECOBridgeContract, {
+    call: {
+      fn: 'upgrade1',
+      args: [l1BridgeAddress],
+    },
+  })
+  console.log(`L2 Bridge updated`)
+}
+export async function upgradeBridges(
+  l1BridgeAddress: Address,
+  l2BridgeAddress: Address,
+  side: 'L1' | 'L2'
+) {
+  switch (side) {
+    case 'L1':
+      await upgradeBridgesL1(l1BridgeAddress, l2BridgeAddress)
+      break
+    case 'L2':
+      await upgradeBridgesL2(l1BridgeAddress, l2BridgeAddress)
+  }
+}
 
 export async function deployL1(
   l1CrossDomainMessenger: Address,
@@ -55,8 +98,7 @@ export async function deployL1(
 export async function deployL2(
   l2CrossDomainMessenger: Address,
   l1Bridge: Address,
-  l2Token: Address,
-  initialPauser: Address,
+  l1Token: Address,
   opts: { adminBridge: boolean } = { adminBridge: true }
 ): Promise<[L2ECO, L2ECOBridge, ProxyAdmin]> {
   const TokenInitialContract = await ethers.getContractFactory('TokenInitial')
@@ -67,6 +109,8 @@ export async function deployL2(
   await proxyInitial.deployed()
 
   const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
+  // console.log(`address : ${ proxyAdmin.address}`)
+  // console.log(`owner : ${await proxyAdmin.owner()}`)
 
   const L2ECOBridgeContract = await ethers.getContractFactory('L2ECOBridge')
   const l2BridgeProxy = await upgrades.deployProxy(
@@ -90,13 +134,13 @@ export async function deployL2(
     {
       call: {
         fn: 'initialize',
-        args: [l2Token, l2BridgeProxy.address, initialPauser] as L2EcoContract,
+        args: [l1Token, l2BridgeProxy.address] as L2EcoContract,
       },
     }
   )
 
   if (opts.adminBridge) {
-    transferOwnership(l2BridgeProxy.address)
+    // transferOwnership(l2BridgeProxy.address)
     // console.log("ProxyAdmin Owner: ", await proxyAdmin.owner())
   }
 

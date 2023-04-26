@@ -13,6 +13,16 @@ interface IL1ECOBridge is IL1ERC20Bridge {
     // Event for when the L2ECOBridge authority is transferred to a new bridge address
     event UpgradeSelf(address _newBridgeImpl);
 
+    // Event for when failed withdrawal needs to be u-turned
+    event WithdrawalFailed(
+        address indexed _l1Token,
+        address indexed _l2Token,
+        address indexed _from,
+        address _to,
+        uint256 _amount,
+        bytes _data
+    );
+
     /**
      * @dev Upgrades the L2ECO token implementation address, by sending
      *      a cross domain message to the L2 Bridge via the L1 Messenger

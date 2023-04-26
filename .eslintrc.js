@@ -5,50 +5,50 @@ module.exports = {
     mocha: true,
     node: true,
   },
+  plugins: ['@typescript-eslint', 'mocha', 'chai-friendly'],
   extends: [
-    "standard",
-    "plugin:prettier/recommended",
-    "plugin:node/recommended",
+    'standard',
+    'plugin:prettier/recommended',
+    'plugin:node/recommended',
   ],
-  plugins: [
-    "@typescript-eslint",
-    "mocha",
-    "chai-friendly"
-  ],
-  parser: "@typescript-eslint/parser",
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 12,
   },
   rules: {
-    "no-unused-expressions": 0,
-    "no-plusplus": 0,
-    "prefer-destructuring": 0,
-    "mocha/no-exclusive-tests": "error",
-    "chai-friendly/no-unused-expressions": 2,
-    "no-multiple-empty-lines": ["error", {
-      max: 1,
-      maxEOF: 0,
-      maxBOF: 0
-    }],
-    "node/no-unsupported-features/es-syntax": [
-      "error",
-      { ignores: ["modules"] },
-    ],
-    "node/no-missing-import": [
-      "error",
+    'no-unused-expressions': 0,
+    'no-plusplus': 0,
+    'prefer-destructuring': 0,
+    'mocha/no-exclusive-tests': 'error',
+    'chai-friendly/no-unused-expressions': 2,
+    '@typescript-eslint/no-unused-vars': ['error'],
+    'no-multiple-empty-lines': [
+      'error',
       {
-        allowModules: [],
-        tryExtensions: [".js", ".json", ".node", ".ts", ".d.ts"],
+        max: 1,
+        maxEOF: 0,
+        maxBOF: 0,
       },
     ],
-    "node/no-missing-require": [
-      "error", {
+    'node/no-unsupported-features/es-syntax': [
+      'error',
+      { ignores: ['modules'] },
+    ],
+    'node/no-missing-import': [
+      'error',
+      {
         allowModules: [],
-        tryExtensions: [".js", ".json", ".node", ".ts", ".d.ts"]
-      }]
+        tryExtensions: ['.js', '.json', '.node', '.ts', '.d.ts'],
+      },
+    ],
+    'node/no-missing-require': [
+      'error',
+      {
+        allowModules: [],
+        tryExtensions: ['.js', '.json', '.node', '.ts', '.d.ts'],
+      },
+    ],
+    'node/no-unpublished-import': 0,
+    'node/no-unpublished-require': 0,
   },
-  globals: {
-    BigInt: "readonly",
-    ethers: "readonly"
-  }
 }
