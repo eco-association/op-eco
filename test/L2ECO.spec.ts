@@ -17,7 +17,7 @@ describe('L2ECO tests', () => {
     const ecoFactory = await ethers.getContractFactory('L2ECO')
     eco = (await upgrades.deployProxy(
       ecoFactory,
-      [AddressZero, l2BridgeImpersonator.address, l2BridgeImpersonator.address],
+      [AddressZero, l2BridgeImpersonator.address],
       {
         initializer: 'initialize',
       }
@@ -31,11 +31,7 @@ describe('L2ECO tests', () => {
   describe('initialize', () => {
     it('Should only be callable once', async () => {
       await expect(
-        eco.initialize(
-          AddressZero,
-          NON_ZERO_ADDRESS, // this is cuz a zero address could trigger a different revert
-          ethers.constants.AddressZero
-        )
+        eco.initialize(AddressZero, NON_ZERO_ADDRESS)
       ).to.be.revertedWith(ERROR_STRINGS.UPGRADES.ALREADY_INITIALIZED)
     })
   })
