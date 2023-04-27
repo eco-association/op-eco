@@ -1,4 +1,4 @@
-import { ethers, upgrades } from 'hardhat'
+import { ethers, upgrades, artifacts } from 'hardhat'
 
 interface FactoryABI {
   abi: any[]

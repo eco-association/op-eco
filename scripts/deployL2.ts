@@ -1,4 +1,3 @@
-import { ethers } from 'hardhat'
 import { deployL2 } from '../test/utils/fixtures'
 
 // const SHARK_TEST_ACCOUNT_ADDRESS = '0x6F81Ac980BC23fc70EcE1635D59ddBb3F12E6150'
