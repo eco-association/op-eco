@@ -71,6 +71,9 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     /**
      * @param _l1messenger L1 Messenger address being used for cross-chain communications.
      * @param _l2TokenBridge L2 standard bridge address.
+     * @param _ecoAddress address of L1 ECO contract.
+     * @param _l1ProxyAdmin address of ProxyAdmin contract for the L1 Bridge.
+     * @param _upgrader address that can perform upgrades.
      */
     function initialize(
         address _l1messenger,
@@ -92,9 +95,9 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * Upate the l2TokenBridge address to the correct one
+     * Update the l2TokenBridge address to the correct one
      */
-    function upgrade1(address _l2TokenBridge) public reinitializer(2) {
+    function setL2Bridge(address _l2TokenBridge) external reinitializer(2) {
         l2TokenBridge = _l2TokenBridge;
     }
 
