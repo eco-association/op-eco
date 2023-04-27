@@ -57,8 +57,8 @@ export async function deployL1(
   l1CrossDomainMessenger: Address,
   l2Bridge: Address,
   l1Token: Address,
-  upgrader: Address,
-  opts: { adminBridge: boolean } = { adminBridge: true }
+  upgrader: Address
+  // opts: { adminBridge: boolean } = { adminBridge: true }
 ): Promise<[L1ECOBridge, ProxyAdmin]> {
   const InitialBridgeContract = await ethers.getContractFactory('InitialBridge')
   const proxyInitial = await upgrades.deployProxy(InitialBridgeContract, [], {
@@ -77,11 +77,7 @@ export async function deployL1(
       initializer: 'initialize',
     }
   )
-  // address _l1messenger,
-  // address _l2TokenBridge,
-  // address _ecoAddress,
-  // address _l1ProxyAdmin,
-  // address _upgrader
+
   await l1BridgeProxy.deployed()
 
   // const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
