@@ -26,7 +26,8 @@
   ],
   "scripts": {
     "test": "hardhat test",
-    "build": "hardhat compile",
+    "coverage": "hardhat coverage",
+    "build": "nvm use && hardhat compile",
     "clean": "hardhat clean",
     "node": "hardhat node",
     "format": "concurrently 'npm:format:*'",
