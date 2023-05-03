@@ -38,12 +38,6 @@ interface IL1ECOBridge is IL1ERC20Bridge {
     ) external;
 
     /**
-     * @dev Sets the L2TokenBridge attribute to the correct address.
-     * @param _l2TokenBridge address of the L2 token bridge
-     */
-    function setL2Bridge(address _l2TokenBridge) external;
-
-    /**
      * @dev Upgrades the L2ECO token implementation address, by sending
      *      a cross domain message to the L2 Bridge via the L1 Messenger
      * @param _impl L2 contract address.

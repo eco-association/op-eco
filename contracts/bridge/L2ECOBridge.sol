@@ -99,13 +99,6 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         inflationMultiplier = l2EcoToken.INITIAL_INFLATION_MULTIPLIER();
     }
 
-    // /**
-    //  * Upate the l1TokenBridge address to the correct one
-    //  */
-    // function upgrade1(address _l1TokenBridge) public reinitializer(2) {
-    //     l1TokenBridge = _l1TokenBridge;
-    // }
-
     /**
      * @dev Withdraws tokens from L2 to L1 for the caller
      * @param _l2Token L2 token address to withdraw

@@ -26,6 +26,7 @@
   ],
   "scripts": {
     "test": "hardhat test",
+    "coverage": "hardhat coverage",
     "build": "hardhat compile",
     "clean": "hardhat clean",
     "node": "hardhat node",
