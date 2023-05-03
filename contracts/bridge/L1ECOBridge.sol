@@ -12,7 +12,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
 import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {ECO} from "@helix-foundation/currency/contracts/currency/ECO.sol";
+import {IECO} from "@helix-foundation/currency/contracts/currency/IECO.sol";
 import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
 import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
@@ -89,7 +89,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         ecoAddress = _ecoAddress;
         l1ProxyAdmin = ProxyAdmin(_l1ProxyAdmin);
         upgrader = _upgrader;
-        inflationMultiplier = ECO(_ecoAddress).getPastLinearInflation(
+        inflationMultiplier = IECO(_ecoAddress).getPastLinearInflation(
             block.number
         );
     }
@@ -193,7 +193,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
         uint256 _amount = _gonsAmount / inflationMultiplier;
 
-        // equivalent to ECO(ecoAddress).transfer(_to, _amount); but is revert safe
+        // equivalent to IECO(ecoAddress).transfer(_to, _amount); but is revert safe
         bytes memory _ecoTransferMessage = abi.encodeWithSelector(
             IERC20.transfer.selector,
             _to,
@@ -241,7 +241,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     function rebase(uint32 _l2Gas) external {
-        inflationMultiplier = ECO(ecoAddress).getPastLinearInflation(
+        inflationMultiplier = IECO(ecoAddress).getPastLinearInflation(
             block.number
         );
 
@@ -287,7 +287,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         // When a deposit is initiated on L1, the L1 Bridge transfers the funds to itself for future
         // withdrawals.
 
-        ECO(_l1Token).transferFrom(_from, address(this), _amount);
+        IECO(_l1Token).transferFrom(_from, address(this), _amount);
         // gons move across the bridge, with inflation multipliers on either side to correctly scale balances
         _amount = _amount * inflationMultiplier;
 
