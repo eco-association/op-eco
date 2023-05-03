@@ -780,10 +780,10 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
-"@helix-foundation/currency@1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@helix-foundation/currency/-/currency-1.0.4.tgz#88b2dd331d4c614d3c48c0761bce96d9778dec7c"
-  integrity sha512-mPrnjVhkTUq3WU8yayuqdcKbiIBpgVWCLfNtGzsHwS+iIKsCXhPGxhGC3rmh+X6SHdymKFDosbO9gN2L+vsbuw==
+"@helix-foundation/currency@1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@helix-foundation/currency/-/currency-1.0.5.tgz#db99a24691c8fa759a79794901e4684769795ebd"
+  integrity sha512-UkX7z0wY4pHGUcYAsWDbsdZUtTlCHLj79EBmeeV6fV4GJfiNrKof0EZtQ1m2oJIoUSkEM4/sESl51Aajbj196A==
   dependencies:
     "@ethersproject/experimental" "^5.7.0"
     "@openzeppelin/contracts" "^4.6.0"
