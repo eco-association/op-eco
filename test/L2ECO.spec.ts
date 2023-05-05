@@ -12,6 +12,8 @@ describe('L2ECO tests', () => {
   let l2BridgeImpersonator: SignerWithAddress
   let eco: L2ECO
 
+  const baseInflationMult = 10
+
   beforeEach(async () => {
     ;[alice, bob, l2BridgeImpersonator] = await ethers.getSigners()
     const ecoFactory = await ethers.getContractFactory('L2ECO')
@@ -23,8 +25,8 @@ describe('L2ECO tests', () => {
       }
     )) as L2ECO
     await eco.deployed()
-    // set rebase to 1 so our numbers arent crazy big
-    await eco.connect(l2BridgeImpersonator).rebase(1)
+    // set rebase to 10 so our numbers arent crazy big
+    await eco.connect(l2BridgeImpersonator).rebase(baseInflationMult)
   })
 
   // test initialize reverting
@@ -98,7 +100,7 @@ describe('L2ECO tests', () => {
 
   describe('rebasing', () => {
     const newInflationMult = 2
-    const newInflationScale = 1 / newInflationMult
+    const newInflationScale = baseInflationMult / newInflationMult
 
     it('reverts if unauthed', async () => {
       await expect(
@@ -148,7 +150,7 @@ describe('L2ECO tests', () => {
         eco.connect(alice).transfer(bob.address, initialAliceBalance)
       )
         .to.emit(eco, 'BaseValueTransfer')
-        .withArgs(alice.address, bob.address, '1000')
+        .withArgs(alice.address, bob.address, initialAliceBalance*baseInflationMult)
     })
   })
 
@@ -250,7 +252,7 @@ describe('L2ECO tests', () => {
 
     describe('rebasing', () => {
       const newInflationMult = 2
-      const newInflationScale = 1 / newInflationMult
+      const newInflationScale = baseInflationMult / newInflationMult
       const aliceBalance = 1000
 
       beforeEach(async () => {
