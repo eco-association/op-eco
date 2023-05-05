@@ -150,7 +150,11 @@ describe('L2ECO tests', () => {
         eco.connect(alice).transfer(bob.address, initialAliceBalance)
       )
         .to.emit(eco, 'BaseValueTransfer')
-        .withArgs(alice.address, bob.address, initialAliceBalance*baseInflationMult)
+        .withArgs(
+          alice.address,
+          bob.address,
+          initialAliceBalance * baseInflationMult
+        )
     })
   })
 
