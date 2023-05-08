@@ -11,7 +11,7 @@ import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './utils/constants'
 import { getContractInterface } from './utils/contracts'
 import { expect } from 'chai'
 import { ERROR_STRINGS } from './utils/errors'
-import { deployL2, transferOwnership } from './utils/fixtures'
+import { deployL2Test, transferOwnership } from './utils/fixtures'
 import { L2ECO, L2ECOBridge, ProxyAdmin } from '../typechain-types'
 const hre = require('hardhat')
 
@@ -333,12 +333,12 @@ describe('L2ECOBridge tests', () => {
   describe('upgradeEco', () => {
     let newEcoImpl: MockContract<Contract>
     let l2EcoBridge: L2ECOBridge
+    
     beforeEach(async () => {
-      ;[, l2EcoBridge] = await deployL2(
+      ;[, l2EcoBridge] = await deployL2Test(
         Fake__L2CrossDomainMessenger.address,
         DUMMY_L1_BRIDGE_ADDRESS,
         DUMMY_L1_ERC20_ADDRESS,
-        { adminBridge: false }
       )
       newEcoImpl = await (await smock.mock('L2ECO')).deploy()
     })
@@ -394,11 +394,10 @@ describe('L2ECOBridge tests', () => {
     let newBridgeImpl: MockContract<Contract>
     let proxyAdmin: ProxyAdmin, l2Eco: L2ECO, l2EcoBridge: L2ECOBridge
     beforeEach(async () => {
-      ;[l2Eco, l2EcoBridge, proxyAdmin] = await deployL2(
+      ;[l2Eco, l2EcoBridge, proxyAdmin] = await deployL2Test(
         Fake__L2CrossDomainMessenger.address,
         DUMMY_L1_BRIDGE_ADDRESS,
         DUMMY_L1_ERC20_ADDRESS,
-        { adminBridge: false }
       )
 
       newBridgeImpl = await (await smock.mock('L2ECOBridge')).deploy()
