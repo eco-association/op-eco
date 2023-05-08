@@ -14,7 +14,7 @@ import {
 import { getContractInterface } from './utils/contracts'
 import { ERROR_STRINGS } from './utils/errors'
 import { L1ECOBridge, ProxyAdmin } from '../typechain-types'
-import { deployL1, transferOwnership } from './utils/fixtures'
+import { deployL1Test, transferOwnership } from './utils/fixtures'
 
 const DUMMY_L2_ERC20_ADDRESS = '0xaBBAABbaaBbAABbaABbAABbAABbaAbbaaBbaaBBa'
 const DUMMY_L2_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
@@ -463,13 +463,13 @@ describe('L1ECOBridge', () => {
   describe('upgradeSelf', () => {
     let newBridgeImpl: MockContract<Contract>
     let proxyAdmin: ProxyAdmin, l1EcoBridge: L1ECOBridge
+
     beforeEach(async () => {
-      ;[l1EcoBridge, proxyAdmin] = await deployL1(
+      ;[l1EcoBridge, proxyAdmin] = await deployL1Test(
         Fake__L1CrossDomainMessenger.address,
         DUMMY_L2_BRIDGE_ADDRESS,
         L1ERC20.address,
-        alice.address,
-        { adminBridge: false }
+        alice.address
       )
       newBridgeImpl = await (await smock.mock('L1ECOBridge')).deploy()
     })
