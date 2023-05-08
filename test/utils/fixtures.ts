@@ -18,7 +18,7 @@ export async function deployL1Test(
 ): Promise<[L1ECOBridge, ProxyAdmin]> {
   // const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
   const l1BridgeProxyAddress = await deployBridgeProxy()
-  const proxyAdmin = await deployProxyAdmin()
+  const proxyAdmin = await getProxyAdmin()
 
   const l1BridgeProxy = await initializeBridgeL1(
     l1BridgeProxyAddress,
@@ -40,7 +40,7 @@ export async function deployL2Test(
 ): Promise<[L2ECO, L2ECOBridge, ProxyAdmin]> {
   const l2BridgeProxyAddress = await deployBridgeProxy()
   const l2EcoProxyAddress = await deployTokenProxy()
-  const proxyAdmin = await deployProxyAdmin()
+  const proxyAdmin = await getProxyAdmin()
   
   const l2EcoProxy = await initializeEcoL2(
     l2EcoProxyAddress,
@@ -75,7 +75,6 @@ export async function initializeBridgeL1(
       args: [l1messenger, l2BridgeAddress, ecoAddress, l1ProxyAdmin, upgrader],
     },
   })
-  console.log(`L1 Bridge initialized`)
 
   return l1BridgeProxy as L1ECOBridge
 }
@@ -95,7 +94,6 @@ export async function initializeBridgeL2(
       args: [l2messenger, l1BridgeAddress, l2EcoToken, l2ProxyAdmin],
     },
   })
-  console.log(`L2 Bridge initialized`)
 
   return l2BridgeProxy as L2ECOBridge
 }
@@ -113,7 +111,6 @@ export async function initializeEcoL2(
       args: [l1EcoToken, l2BridgeAddress],
     },
   })
-  console.log(`L2 ECO initialized`)
 
   return l2EcoProxy as L2ECO
 }
@@ -178,10 +175,12 @@ export async function deployTokenProxy(): Promise<Address> {
 //   return [l2EcoProxy as L2ECO, l2BridgeProxy as L2ECOBridge, proxyAdmin]
 // }
 
-export async function deployProxyAdmin(): Promise<ProxyAdmin> {
+export async function getProxyAdmin(verbose: boolean = false): Promise<ProxyAdmin> {
   const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
-  console.log(`address : ${ proxyAdmin.address}`)
-  console.log(`owner : ${await proxyAdmin.owner()}`)
+  if (verbose) {
+    console.log(`address : ${ proxyAdmin.address}`)
+    console.log(`owner : ${await proxyAdmin.owner()}`)
+  }
 
   await proxyAdmin.deployed()
 

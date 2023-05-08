@@ -36,10 +36,7 @@
     "format:sol": "solhint --fix contracts/**/*.sol",
     "depcheck": "depcheck --ignore-bin-package --ignores @openzeppelin/contracts,@openzeppelin/contracts-upgradeable,prettier-plugin-solidity,solhint-plugin-eco,concurrently,@types/mocha",
     "lint": "yarn format",
-    "deployL1": "hardhat run scripts/deployL1.ts --network goerli",
-    "deployL2": "hardhat run scripts/deployL2.ts --network base-goerli",
-    "upgradeBridgeL1": "hardhat run scripts/upgradeBridgeL1.ts --network goerli",
-    "upgradeBridgeL2": "hardhat run scripts/upgradeBridgeL2.ts --network base-goerli",
+    "deploy": "hardhat run scripts/deploy.ts",
     "getImpl": "hardhat run scripts/getImpl.ts --network goerliOptimism"
   },
   "dependencies": {
@@ -52,6 +49,7 @@
     "@helix-foundation/currency": "1.0.5",
     "dotenv": "^16.0.1",
     "ethers": "^5.6.9",
+    "hardhat-change-network": "^0.0.7",
     "react": "^18.2.0",
     "typescript": "4.8.3"
   },
