@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import {ERC20Upgradeable} from "./ERC20Upgradeable.sol";
 import {DelegatePermitUpgradeable} from "../cryptography/DelegatePermitUpgradeable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC20.sol";
@@ -16,7 +16,7 @@ contract L2ECO is ERC20Upgradeable, DelegatePermitUpgradeable, IERC165 {
     // address of the L1 token contract
     address public l1Token;
 
-    // additional roles to be managed by roleAdmin from ERC20Pausable
+    // roles to be managed by tokenRoleAdmin
     mapping(address => bool) public minters;
     mapping(address => bool) public burners;
     mapping(address => bool) public rebasers;
@@ -179,11 +179,12 @@ contract L2ECO is ERC20Upgradeable, DelegatePermitUpgradeable, IERC165 {
         address from,
         address to,
         uint256 amount
-    ) internal virtual override {
-        super._beforeTokenTransfer(from, to, amount);
-        uint256 gonsAmount = amount * linearInflationMultiplier;
+    ) internal virtual override returns(uint256) {
+        amount = super._beforeTokenTransfer(from, to, amount);
+        amount = amount * linearInflationMultiplier;
 
-        emit BaseValueTransfer(from, to, gonsAmount);
+        emit BaseValueTransfer(from, to, amount);
+        return amount;
     }
 
     function _afterTokenTransfer(
