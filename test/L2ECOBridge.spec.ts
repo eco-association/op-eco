@@ -333,12 +333,12 @@ describe('L2ECOBridge tests', () => {
   describe('upgradeEco', () => {
     let newEcoImpl: MockContract<Contract>
     let l2EcoBridge: L2ECOBridge
-    
+
     beforeEach(async () => {
       ;[, l2EcoBridge] = await deployL2Test(
         Fake__L2CrossDomainMessenger.address,
         DUMMY_L1_BRIDGE_ADDRESS,
-        DUMMY_L1_ERC20_ADDRESS,
+        DUMMY_L1_ERC20_ADDRESS
       )
       newEcoImpl = await (await smock.mock('L2ECO')).deploy()
     })
@@ -397,7 +397,7 @@ describe('L2ECOBridge tests', () => {
       ;[l2Eco, l2EcoBridge, proxyAdmin] = await deployL2Test(
         Fake__L2CrossDomainMessenger.address,
         DUMMY_L1_BRIDGE_ADDRESS,
-        DUMMY_L1_ERC20_ADDRESS,
+        DUMMY_L1_ERC20_ADDRESS
       )
 
       newBridgeImpl = await (await smock.mock('L2ECOBridge')).deploy()

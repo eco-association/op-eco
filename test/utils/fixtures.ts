@@ -7,9 +7,6 @@ import {
 } from '../../typechain-types'
 import { Address } from '@eth-optimism/core-utils'
 
-// L2Eco contract initilization parameter types
-type L2EcoContract = [l1Token: string, l2Bridge: string]
-
 export async function deployL1Test(
   l1CrossDomainMessenger: Address,
   l2Bridge: Address,
@@ -35,17 +32,17 @@ export async function deployL1Test(
 export async function deployL2Test(
   l2CrossDomainMessenger: Address,
   l1Bridge: Address,
-  l1Token: Address,
+  l1Token: Address
   // opts: { adminBridge: boolean } = { adminBridge: true }
 ): Promise<[L2ECO, L2ECOBridge, ProxyAdmin]> {
   const l2BridgeProxyAddress = await deployBridgeProxy()
   const l2EcoProxyAddress = await deployTokenProxy()
   const proxyAdmin = await getProxyAdmin()
-  
+
   const l2EcoProxy = await initializeEcoL2(
     l2EcoProxyAddress,
     l1Token,
-    l2BridgeProxyAddress,
+    l2BridgeProxyAddress
   )
 
   const l2BridgeProxy = await initializeBridgeL2(
@@ -53,7 +50,7 @@ export async function deployL2Test(
     l2CrossDomainMessenger,
     l1Bridge,
     l2EcoProxyAddress,
-    proxyAdmin.address,
+    proxyAdmin.address
   )
 
   return [l2EcoProxy as L2ECO, l2BridgeProxy as L2ECOBridge, proxyAdmin]
@@ -69,12 +66,22 @@ export async function initializeBridgeL1(
 ) {
   const L1ECOBridgeContract = await ethers.getContractFactory('L1ECOBridge')
 
-  const l1BridgeProxy = await upgrades.upgradeProxy(l1BridgeProxyAddress, L1ECOBridgeContract, {
-    call: {
-      fn: 'initialize',
-      args: [l1messenger, l2BridgeAddress, ecoAddress, l1ProxyAdmin, upgrader],
-    },
-  })
+  const l1BridgeProxy = await upgrades.upgradeProxy(
+    l1BridgeProxyAddress,
+    L1ECOBridgeContract,
+    {
+      call: {
+        fn: 'initialize',
+        args: [
+          l1messenger,
+          l2BridgeAddress,
+          ecoAddress,
+          l1ProxyAdmin,
+          upgrader,
+        ],
+      },
+    }
+  )
 
   return l1BridgeProxy as L1ECOBridge
 }
@@ -88,12 +95,16 @@ export async function initializeBridgeL2(
 ): Promise<L2ECOBridge> {
   const L2ECOBridgeContract = await ethers.getContractFactory('L2ECOBridge')
 
-  const l2BridgeProxy = await upgrades.upgradeProxy(l2BridgeProxyAddress, L2ECOBridgeContract, {
-    call: {
-      fn: 'initialize',
-      args: [l2messenger, l1BridgeAddress, l2EcoToken, l2ProxyAdmin],
-    },
-  })
+  const l2BridgeProxy = await upgrades.upgradeProxy(
+    l2BridgeProxyAddress,
+    L2ECOBridgeContract,
+    {
+      call: {
+        fn: 'initialize',
+        args: [l2messenger, l1BridgeAddress, l2EcoToken, l2ProxyAdmin],
+      },
+    }
+  )
 
   return l2BridgeProxy as L2ECOBridge
 }
@@ -101,21 +112,23 @@ export async function initializeBridgeL2(
 export async function initializeEcoL2(
   l2EcoProxyAddress: Address,
   l1EcoToken: Address,
-  l2BridgeAddress: Address,
+  l2BridgeAddress: Address
 ): Promise<L2ECO> {
   const L2ECOContract = await ethers.getContractFactory('L2ECO')
 
-  const l2EcoProxy = await upgrades.upgradeProxy(l2EcoProxyAddress, L2ECOContract, {
-    call: {
-      fn: 'initialize',
-      args: [l1EcoToken, l2BridgeAddress],
-    },
-  })
+  const l2EcoProxy = await upgrades.upgradeProxy(
+    l2EcoProxyAddress,
+    L2ECOContract,
+    {
+      call: {
+        fn: 'initialize',
+        args: [l1EcoToken, l2BridgeAddress],
+      },
+    }
+  )
 
   return l2EcoProxy as L2ECO
 }
-
-
 
 export async function deployBridgeProxy(): Promise<Address> {
   const InitialBridgeContract = await ethers.getContractFactory('InitialBridge')
@@ -175,10 +188,12 @@ export async function deployTokenProxy(): Promise<Address> {
 //   return [l2EcoProxy as L2ECO, l2BridgeProxy as L2ECOBridge, proxyAdmin]
 // }
 
-export async function getProxyAdmin(verbose: boolean = false): Promise<ProxyAdmin> {
+export async function getProxyAdmin(
+  verbose: boolean = false
+): Promise<ProxyAdmin> {
   const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
   if (verbose) {
-    console.log(`address : ${ proxyAdmin.address}`)
+    console.log(`address : ${proxyAdmin.address}`)
     console.log(`owner : ${await proxyAdmin.owner()}`)
   }
 

@@ -1,5 +1,12 @@
 import hre from 'hardhat'
-import { deployBridgeProxy, deployTokenProxy, getProxyAdmin, initializeBridgeL1, initializeBridgeL2, initializeEcoL2 } from '../test/utils/fixtures'
+import {
+  deployBridgeProxy,
+  deployTokenProxy,
+  getProxyAdmin,
+  initializeBridgeL1,
+  initializeBridgeL2,
+  initializeEcoL2,
+} from '../test/utils/fixtures'
 
 const UPGRADER_ADDRESS = '0x6F81Ac980BC23fc70EcE1635D59ddBb3F12E6150'
 const L1_OP_MESSANGER_ADDRESS = '0x5086d1eEF304eb5284A0f6720f79403b4e9bE294'
@@ -13,7 +20,7 @@ async function main() {
 
   const l1BridgeProxyAddress = await deployBridgeProxy()
   console.log(`L1 Bridge deployed to: ${l1BridgeProxyAddress}`)
-  
+
   const l1ProxyAdmin = await getProxyAdmin(true)
   console.log(`Proxy Admin L1 deployed to: ${l1ProxyAdmin.address}`)
 
@@ -28,11 +35,7 @@ async function main() {
   const l2ProxyAdmin = await getProxyAdmin(true)
   console.log(`Proxy Admin L2 deployed to: ${l2ProxyAdmin.address}`)
 
-  await initializeEcoL2(
-    l2EcoProxyAddress,
-    L1_ECO_ADDRESS,
-    l2BridgeProxyAddress,
-  )
+  await initializeEcoL2(l2EcoProxyAddress, L1_ECO_ADDRESS, l2BridgeProxyAddress)
   console.log(`L2 ECO initialized`)
 
   await initializeBridgeL2(
@@ -40,7 +43,7 @@ async function main() {
     L2_OP_MESSANGER_ADDRESS,
     l1BridgeProxyAddress,
     l2EcoProxyAddress,
-    l2ProxyAdmin.address,
+    l2ProxyAdmin.address
   )
   console.log(`L2 Bridge initialized`)
 

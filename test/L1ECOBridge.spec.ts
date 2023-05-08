@@ -463,7 +463,7 @@ describe('L1ECOBridge', () => {
   describe('upgradeSelf', () => {
     let newBridgeImpl: MockContract<Contract>
     let proxyAdmin: ProxyAdmin, l1EcoBridge: L1ECOBridge
-    
+
     beforeEach(async () => {
       ;[l1EcoBridge, proxyAdmin] = await deployL1Test(
         Fake__L1CrossDomainMessenger.address,
