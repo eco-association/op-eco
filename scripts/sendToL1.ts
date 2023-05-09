@@ -18,9 +18,12 @@ async function main() {
   console.log(withdrawalTxHash)
   const crossChainMessenger = await setupOP()
   console.log('OP SDK initialized')
+  // technically might need sleep here too, but proving takes forever anyway
   await proveWithdrawal(crossChainMessenger, withdrawalTxHash)
   console.log('withdrawal proven')
-  await new Promise(r => setTimeout(r, 5000)) // sleep to wait for finalization window
+  console.log('sleeping to wait out finalization time')
+  await new Promise(r => setTimeout(r, 30000)) // sleep to wait for finalization window
+  // eventually this will have to break out to its own script since mainnet has a 7 day delay
   await finalizeWithdrawal(crossChainMessenger, withdrawalTxHash)
   console.log('withdrawal finalized')
 }
