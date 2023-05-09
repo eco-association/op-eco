@@ -2,7 +2,7 @@ import { ethers } from 'hardhat'
 
 async function main() {
   const ProxyAdminContract = await ethers.getContractFactory('ProxyAdmin')
-  const proxyAdmin = await ProxyAdminContract.attach(
+  const proxyAdmin = ProxyAdminContract.attach(
     process.env.PROXY_ADMIN_ADDRESS || ''
   )
 

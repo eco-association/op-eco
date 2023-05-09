@@ -17,7 +17,7 @@ async function main() {
     l1BridgeProxyAddress
   )) as L1ECOBridge
   const ECOContract = await hre.ethers.getContractFactory('ECO')
-  const eco = (await ECOContract.attach(L1_ECO_ADDRESS)) as ECO
+  const eco = (ECOContract.attach(L1_ECO_ADDRESS)) as ECO
 
   const weiAmount = hre.ethers.utils.parseEther(bridgeAmount)
 

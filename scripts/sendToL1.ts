@@ -31,7 +31,7 @@ async function main() {
 async function initiateWithdrawal(_bridgeAmount: string): Promise<ContractTransaction> {
   hre.changeNetwork(l2Network)
   const L2ECOBridgeContract = await hre.ethers.getContractFactory('L2ECOBridge')
-  const bridge = (await L2ECOBridgeContract.attach(
+  const bridge = (L2ECOBridgeContract.attach(
     l2BridgeProxyAddress
   )) as L2ECOBridge
 
