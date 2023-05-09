@@ -3,9 +3,9 @@ import {
   deployBridgeProxy,
   deployTokenProxy,
   getProxyAdmin,
-  initializeBridgeL1,
-  initializeBridgeL2,
-  initializeEcoL2,
+  upgradeBridgeL1,
+  upgradeBridgeL2,
+  upgradeEcoL2,
 } from '../test/utils/fixtures'
 
 const UPGRADER_ADDRESS = '0x71D536c7d9E65AF36AFAA28016618a8C3Ea32952'
@@ -39,10 +39,10 @@ async function main() {
   const l2ProxyAdmin = await getProxyAdmin(true)
   console.log(`Proxy Admin L2 deployed to: ${l2ProxyAdmin.address}`)
 
-  await initializeEcoL2(l2EcoProxyAddress, L1_ECO_ADDRESS, l2BridgeProxyAddress)
+  await upgradeEcoL2(l2EcoProxyAddress, L1_ECO_ADDRESS, l2BridgeProxyAddress)
   console.log(`L2 ECO initialized`)
 
-  await initializeBridgeL2(
+  await upgradeBridgeL2(
     l2BridgeProxyAddress,
     L2_OP_MESSANGER_ADDRESS,
     l1BridgeProxyAddress,
@@ -53,7 +53,7 @@ async function main() {
 
   hre.changeNetwork(L1_NETWORK)
 
-  await initializeBridgeL1(
+  await upgradeBridgeL1(
     l1BridgeProxyAddress,
     L1_OP_MESSANGER_ADDRESS,
     l2BridgeProxyAddress,
