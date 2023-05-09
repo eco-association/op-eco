@@ -1,8 +1,6 @@
 import hre from 'hardhat'
 import { L1ECOBridge } from '../typechain-types'
 
-const bridgeAmount = '500000' // in full ECO
-
 const l1BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
 const l1Network = 'goerli'
 
