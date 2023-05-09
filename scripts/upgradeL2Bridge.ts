@@ -28,7 +28,7 @@ async function main() {
 
   const owner = await l2ProxyAdmin.owner()
   if (owner !== l2BridgeProxyAddress) {
-    throw('the bridge must own itself to run this script')
+    throw('the bridge must own the proxy admin to run this script')
   }
 
   const oldImpl = await l2ProxyAdmin.getProxyImplementation(l2BridgeProxyAddress)
