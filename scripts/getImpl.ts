@@ -1,17 +1,13 @@
-import { ethers } from 'hardhat'
+import { getProxyAdmin } from '../test/utils/fixtures'
+
+const address: string = process.env[2] || ''
 
 async function main() {
-  const ProxyAdminContract = await ethers.getContractFactory('ProxyAdmin')
-  const proxyAdmin = ProxyAdminContract.attach(
-    process.env.PROXY_ADMIN_ADDRESS || ''
-  )
+  const proxyAdmin = await getProxyAdmin()
 
-  const bridgeAddress = await proxyAdmin.getProxyImplementation(
-    process.env.L1_BRIDGE_ADDRESS || ''
-    // process.env.L2_BRIDGE_ADDRESS || ""
-  )
+  const implAddress = await proxyAdmin.getProxyImplementation(address)
 
-  console.log(`Bridge deployed to: ${bridgeAddress}`)
+  console.log(`impl at : ${implAddress}`)
 }
 
 main().catch((error) => {

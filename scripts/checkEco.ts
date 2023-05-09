@@ -6,8 +6,7 @@ const L2_NETWORK = 'goerliOptimism'
 
 async function main() {
   hre.changeNetwork(L2_NETWORK)
-  const L2ECOBridgeContract = await hre.ethers.getContractFactory('L2ECOBridge')
-  const bridge = (L2ECOBridgeContract.attach(l2BridgeProxyAddress)) as L2ECOBridge
+  const bridge = await hre.ethers.getContractAt('L2ECOBridge',l2BridgeProxyAddress) as L2ECOBridge
 
   console.log(`l1TokenBridge ${await bridge.l1TokenBridge()}`)
   console.log(`l2EcoToken ${await bridge.l2EcoToken()}`)

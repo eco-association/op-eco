@@ -12,12 +12,8 @@ const l2gas = '10'
 
 async function main() {
   hre.changeNetwork(l1Network)
-  const L1ECOBridgeContract = await hre.ethers.getContractFactory('L1ECOBridge')
-  const bridge = (await L1ECOBridgeContract.attach(
-    l1BridgeProxyAddress
-  )) as L1ECOBridge
-  const ECOContract = await hre.ethers.getContractFactory('ECO')
-  const eco = (ECOContract.attach(L1_ECO_ADDRESS)) as ECO
+  const bridge = await hre.ethers.getContractAt('L1ECOBridge',l1BridgeProxyAddress) as L1ECOBridge
+  const eco = await hre.ethers.getContractAt('ECO',L1_ECO_ADDRESS) as ECO
 
   const weiAmount = hre.ethers.utils.parseEther(bridgeAmount)
 
