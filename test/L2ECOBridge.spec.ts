@@ -11,7 +11,7 @@ import { NON_NULL_BYTES32, NON_ZERO_ADDRESS } from './utils/constants'
 import { getContractInterface } from './utils/contracts'
 import { expect } from 'chai'
 import { ERROR_STRINGS } from './utils/errors'
-import { deployL2Test, transferOwnership } from './utils/fixtures'
+import { deployL2Test, transferOwnershipTest } from './utils/fixtures'
 import { L2ECO, L2ECOBridge, ProxyAdmin } from '../typechain-types'
 const hre = require('hardhat')
 
@@ -378,7 +378,7 @@ describe('L2ECOBridge tests', () => {
         DUMMY_L1_BRIDGE_ADDRESS
       )
 
-      await transferOwnership(l2EcoBridge.address)
+      await transferOwnershipTest(l2EcoBridge.address)
 
       await expect(
         l2EcoBridge
@@ -438,7 +438,7 @@ describe('L2ECOBridge tests', () => {
         DUMMY_L1_BRIDGE_ADDRESS
       )
 
-      await transferOwnership(l2EcoBridge.address)
+      await transferOwnershipTest(l2EcoBridge.address)
       const bridgeBefore = await proxyAdmin.getProxyImplementation(
         l2EcoBridge.address
       )

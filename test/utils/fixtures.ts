@@ -1,4 +1,5 @@
-import { ethers, upgrades } from 'hardhat'
+import hre from 'hardhat'
+const { ethers, upgrades } = hre
 import {
   L2ECO,
   L1ECOBridge,
@@ -203,6 +204,24 @@ export async function getProxyAdmin(
 }
 
 export async function transferOwnership(
+  network: string,
+  proxy: Address,
+): Promise<void> {
+  hre.changeNetwork(network)
+
+  const proxyAdmin = await getProxyAdmin()
+
+  const currentOwner = await proxyAdmin.owner()
+  const [me] = await hre.ethers.getSigners()
+  if ((await me.getAddress()) !== currentOwner) {
+    throw new Error('you need to own the proxy admin to run this script')
+  }
+
+  await proxyAdmin.transferOwnership(proxy)
+  console.log(`admin owner changed to ${proxy}`)
+}
+
+export async function transferOwnershipTest(
   newOwnerAddress: Address
 ): Promise<void> {
   const [owner] = await ethers.getSigners()

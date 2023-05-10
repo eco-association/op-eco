@@ -14,7 +14,7 @@ import {
 import { getContractInterface } from './utils/contracts'
 import { ERROR_STRINGS } from './utils/errors'
 import { L1ECOBridge, ProxyAdmin } from '../typechain-types'
-import { deployL1Test, transferOwnership } from './utils/fixtures'
+import { deployL1Test, transferOwnershipTest } from './utils/fixtures'
 
 const DUMMY_L2_ERC20_ADDRESS = '0xaBBAABbaaBbAABbaABbAABbAABbaAbbaaBbaaBBa'
 const DUMMY_L2_BRIDGE_ADDRESS = '0xACDCacDcACdCaCDcacdcacdCaCdcACdCAcDcaCdc'
@@ -527,7 +527,7 @@ describe('L1ECOBridge', () => {
     })
 
     it('should upgrade the implementation and emit an event', async () => {
-      await transferOwnership(l1EcoBridge.address)
+      await transferOwnershipTest(l1EcoBridge.address)
       const bridgeBefore = await proxyAdmin.getProxyImplementation(
         l1EcoBridge.address
       )
