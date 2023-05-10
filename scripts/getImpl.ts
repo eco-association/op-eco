@@ -1,6 +1,6 @@
 import { getProxyAdmin } from '../test/utils/fixtures'
 
-const address: string = process.env[2] || ''
+const address = '0x54bBECeA38ff36D32323f8A754683C1F5433A89f'
 
 async function main() {
   const proxyAdmin = await getProxyAdmin()
