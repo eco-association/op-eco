@@ -6,7 +6,10 @@ const l2gas = '10'
 
 async function main() {
   hre.changeNetwork(L1_NETWORK)
-  const bridge = await hre.ethers.getContractAt('L1ECOBridge',l1BridgeProxyAddress) as L1ECOBridge
+  const bridge = (await hre.ethers.getContractAt(
+    'L1ECOBridge',
+    l1BridgeProxyAddress
+  )) as L1ECOBridge
 
   const tx = await bridge.rebase(l2gas)
   await tx.wait()

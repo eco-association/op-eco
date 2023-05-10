@@ -12,7 +12,7 @@ async function main() {
   const currentOwner = await proxyAdmin.owner()
   const [me] = await hre.ethers.getSigners()
   if ((await me.getAddress()) !== currentOwner) {
-    throw('you need to own the proxy admin to run this script')
+    throw new Error('you need to own the proxy admin to run this script')
   }
 
   await proxyAdmin.transferOwnership(l1BridgeProxyAddress)

@@ -7,7 +7,14 @@ import {
   upgradeBridgeL2,
   upgradeEcoL2,
 } from '../test/utils/fixtures'
-import { L1_ECO_ADDRESS, L1_NETWORK, L1_OP_MESSANGER_ADDRESS, L2_NETWORK, L2_OP_MESSANGER_ADDRESS, UPGRADER_ADDRESS } from './constants'
+import {
+  L1_ECO_ADDRESS,
+  L1_NETWORK,
+  L1_OP_MESSANGER_ADDRESS,
+  L2_NETWORK,
+  L2_OP_MESSANGER_ADDRESS,
+  UPGRADER_ADDRESS,
+} from './constants'
 
 async function main() {
   hre.changeNetwork(L1_NETWORK)
