@@ -1,5 +1,10 @@
 import { transferOwnership } from '../test/utils/fixtures'
-import { L1_NETWORK, L2_NETWORK, l1BridgeProxyAddress, l2BridgeProxyAddress } from './constants'
+import {
+  L1_NETWORK,
+  L2_NETWORK,
+  l1BridgeProxyAddress,
+  l2BridgeProxyAddress,
+} from './constants'
 
 // this script is for transferring ownership of the proxy admin to the proxy
 

@@ -1,5 +1,4 @@
 import hre from 'hardhat'
-const { ethers, upgrades } = hre
 import {
   L2ECO,
   L1ECOBridge,
@@ -7,6 +6,7 @@ import {
   ProxyAdmin,
 } from '../../typechain-types'
 import { Address } from '@eth-optimism/core-utils'
+const { ethers, upgrades } = hre
 
 export async function deployL1Test(
   l1CrossDomainMessenger: Address,
@@ -205,7 +205,7 @@ export async function getProxyAdmin(
 
 export async function transferOwnership(
   network: string,
-  proxy: Address,
+  proxy: Address
 ): Promise<void> {
   hre.changeNetwork(network)
 
