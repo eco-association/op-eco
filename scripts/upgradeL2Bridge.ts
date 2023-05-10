@@ -44,11 +44,6 @@ async function main() {
   const tx = await bridge.upgradeL2Bridge(newL2ECOBridgeImpl.address, l2gas)
   await tx.wait()
   console.log(`L2 Bridge upgraded`)
-
-  hre.changeNetwork(L2_NETWORK)
-
-  const newImpl = await l2ProxyAdmin.getProxyImplementation(l2BridgeProxyAddress)
-  console.log(`new implementation is: ${newImpl}`)
 }
 
 main().catch((error) => {
