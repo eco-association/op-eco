@@ -1,12 +1,7 @@
 import hre from 'hardhat'
 import { getProxyAdmin } from '../test/utils/fixtures'
-import { L1ECOBridge, L2ECOBridge } from '../typechain-types'
-
-const L1_NETWORK = 'goerli'
-const L2_NETWORK = 'goerliOptimism'
-
-const l1BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
-const l2BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
+import { L1ECOBridge } from '../typechain-types'
+import { L1_NETWORK, L2_NETWORK, l1BridgeProxyAddress, l2BridgeProxyAddress } from './constants'
 
 const l2gas = '10'
 

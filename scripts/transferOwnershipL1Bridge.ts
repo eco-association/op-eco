@@ -1,9 +1,6 @@
 import hre from 'hardhat'
 import { getProxyAdmin } from '../test/utils/fixtures'
-
-const L1_NETWORK = 'goerli'
-
-const l1BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
+import { L1_NETWORK, l1BridgeProxyAddress } from './constants'
 
 // this script is for transferring ownership of the proxy admin to the proxy
 

@@ -1,10 +1,7 @@
 import hre from 'hardhat'
 import { getProxyAdmin } from '../test/utils/fixtures'
 import { L1ECOBridge } from '../typechain-types'
-
-const L1_NETWORK = 'goerli'
-
-const l1BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
+import { L1_NETWORK, l1BridgeProxyAddress } from './constants'
 
 async function main() {
   hre.changeNetwork(L1_NETWORK)

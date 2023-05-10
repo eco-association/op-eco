@@ -1,17 +1,13 @@
 import hre from 'hardhat'
 import { L1ECOBridge, ECO } from '../typechain-types'
+import { L1_ECO_ADDRESS, L1_NETWORK, l1BridgeProxyAddress, l2EcoProxyAddress } from './constants'
 
 const bridgeAmount = '500000' // in full ECO
-
-const l1BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
-const l1Network = 'goerli'
-const L1_ECO_ADDRESS = '0x3E87d4d9E69163E7590f9b39a70853cf25e5ABE3'
-const l2EcoProxyAddress = '0x54bBECeA38ff36D32323f8A754683C1F5433A89f'
 
 const l2gas = '10'
 
 async function main() {
-  hre.changeNetwork(l1Network)
+  hre.changeNetwork(L1_NETWORK)
   const bridge = await hre.ethers.getContractAt('L1ECOBridge',l1BridgeProxyAddress) as L1ECOBridge
   const eco = await hre.ethers.getContractAt('ECO',L1_ECO_ADDRESS) as ECO
 

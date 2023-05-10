@@ -2,13 +2,9 @@ import hre from 'hardhat'
 import { L2ECOBridge } from '../typechain-types'
 import { CrossChainMessenger, MessageStatus } from "@eth-optimism/sdk"
 import { ContractTransaction } from 'ethers'
+import { L1_NETWORK, L2_NETWORK, l2BridgeProxyAddress, l2EcoProxyAddress } from './constants'
 
 const bridgeAmount = '50' // in full ECO
-
-const l2BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
-const l1Network = 'goerli'
-const l2Network = 'goerliOptimism'
-const l2EcoProxyAddress = '0x54bBECeA38ff36D32323f8A754683C1F5433A89f'
 
 const l1gas = '1000'
 
@@ -29,7 +25,7 @@ async function main() {
 }
 
 async function initiateWithdrawal(_bridgeAmount: string): Promise<ContractTransaction> {
-  hre.changeNetwork(l2Network)
+  hre.changeNetwork(L2_NETWORK)
 
   const bridge = await hre.ethers.getContractAt('L2ECOBridge',l2BridgeProxyAddress) as L2ECOBridge
 
@@ -46,10 +42,10 @@ async function initiateWithdrawal(_bridgeAmount: string): Promise<ContractTransa
 }
 
 async function setupOP(): Promise<CrossChainMessenger> {
-  hre.changeNetwork(l2Network)
+  hre.changeNetwork(L2_NETWORK)
   const l2ChainId = hre.network.config.chainId
   const [l2Wallet] = await hre.ethers.getSigners()
-  hre.changeNetwork(l1Network)
+  hre.changeNetwork(L1_NETWORK)
   const l1ChainId = hre.network.config.chainId
   const [l1Wallet] = await hre.ethers.getSigners()
   

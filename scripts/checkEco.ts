@@ -1,8 +1,6 @@
 import hre from 'hardhat'
 import { L2ECOBridge } from '../typechain-types'
-
-const l2BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
-const L2_NETWORK = 'goerliOptimism'
+import { L2_NETWORK, l2BridgeProxyAddress } from './constants'
 
 async function main() {
   hre.changeNetwork(L2_NETWORK)
