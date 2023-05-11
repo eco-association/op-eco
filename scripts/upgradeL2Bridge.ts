@@ -49,6 +49,8 @@ async function main() {
   const tx = await bridge.upgradeL2Bridge(newL2ECOBridgeImpl.address, l2gas)
   await tx.wait()
   console.log(`L2 Bridge upgraded`)
+
+  // cannot check updated implementation in the script because of message transmission time
 }
 
 main().catch((error) => {
