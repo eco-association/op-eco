@@ -2,11 +2,11 @@
 pragma solidity 0.8.19;
 
 import {ERC20Upgradeable} from "./ERC20Upgradeable.sol";
-import {DelegatePermitUpgradeable} from "../cryptography/DelegatePermitUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC20.sol";
 
-contract L2ECO is ERC20Upgradeable, DelegatePermitUpgradeable, IERC165 {
+contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
     uint256 public constant INITIAL_INFLATION_MULTIPLIER = 1e18;
 
     uint256 public linearInflationMultiplier;
