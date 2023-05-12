@@ -1,10 +1,12 @@
-import { ethers } from 'hardhat'
+import hre from 'hardhat'
 import { L2ECOBridge } from '../typechain-types'
+import { L2_NETWORK, l2BridgeProxyAddress } from './constants'
 
 async function main() {
-  const L2ECOBridgeContract = await ethers.getContractFactory('L2ECOBridge')
-  const bridge = (await L2ECOBridgeContract.attach(
-    process.env.L2_BRIDGE_ADDRESS || ''
+  hre.changeNetwork(L2_NETWORK)
+  const bridge = (await hre.ethers.getContractAt(
+    'L2ECOBridge',
+    l2BridgeProxyAddress
   )) as L2ECOBridge
 
   console.log(`l1TokenBridge ${await bridge.l1TokenBridge()}`)

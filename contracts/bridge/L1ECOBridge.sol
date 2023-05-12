@@ -116,6 +116,27 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
+     * @dev Upgrades the L2ECOBridge implementation address, by sending
+     *      a cross domain message to the L2 Bridge via the L1 Messenger
+     * @param _impl L2 contract address.
+     * @param _l2Gas Gas limit for the L2 message.
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
+     */
+    function upgradeL2Bridge(address _impl, uint32 _l2Gas)
+        external
+        virtual
+        onlyUpgrader
+    {
+        bytes memory message = abi.encodeWithSelector(
+            L2ECOBridge.upgradeSelf.selector,
+            _impl
+        );
+
+        sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
+        emit UpgradeL2Bridge(_impl);
+    }
+
+    /**
      * @dev Upgrades this contract implementation by passing the new implementation address to the ProxyAdmin.
      * @param _newBridgeImpl The new L1ECOBridge implementation address.
      * @custom:oz-upgrades-unsafe-allow-reachable delegatecall

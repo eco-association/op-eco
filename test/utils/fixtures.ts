@@ -1,4 +1,4 @@
-import { ethers, upgrades } from 'hardhat'
+import hre from 'hardhat'
 import {
   L2ECO,
   L1ECOBridge,
@@ -6,6 +6,7 @@ import {
   ProxyAdmin,
 } from '../../typechain-types'
 import { Address } from '@eth-optimism/core-utils'
+const { ethers, upgrades } = hre
 
 export async function deployL1Test(
   l1CrossDomainMessenger: Address,
@@ -17,7 +18,7 @@ export async function deployL1Test(
   const l1BridgeProxyAddress = await deployBridgeProxy()
   const proxyAdmin = await getProxyAdmin()
 
-  const l1BridgeProxy = await initializeBridgeL1(
+  const l1BridgeProxy = await upgradeBridgeL1(
     l1BridgeProxyAddress,
     l1CrossDomainMessenger,
     l2Bridge,
@@ -39,13 +40,13 @@ export async function deployL2Test(
   const l2EcoProxyAddress = await deployTokenProxy()
   const proxyAdmin = await getProxyAdmin()
 
-  const l2EcoProxy = await initializeEcoL2(
+  const l2EcoProxy = await upgradeEcoL2(
     l2EcoProxyAddress,
     l1Token,
     l2BridgeProxyAddress
   )
 
-  const l2BridgeProxy = await initializeBridgeL2(
+  const l2BridgeProxy = await upgradeBridgeL2(
     l2BridgeProxyAddress,
     l2CrossDomainMessenger,
     l1Bridge,
@@ -56,7 +57,7 @@ export async function deployL2Test(
   return [l2EcoProxy as L2ECO, l2BridgeProxy as L2ECOBridge, proxyAdmin]
 }
 
-export async function initializeBridgeL1(
+export async function upgradeBridgeL1(
   l1BridgeProxyAddress: Address,
   l1messenger: Address,
   l2BridgeAddress: Address,
@@ -86,7 +87,7 @@ export async function initializeBridgeL1(
   return l1BridgeProxy as L1ECOBridge
 }
 
-export async function initializeBridgeL2(
+export async function upgradeBridgeL2(
   l2BridgeProxyAddress: Address,
   l2messenger: Address,
   l1BridgeAddress: Address,
@@ -109,7 +110,7 @@ export async function initializeBridgeL2(
   return l2BridgeProxy as L2ECOBridge
 }
 
-export async function initializeEcoL2(
+export async function upgradeEcoL2(
   l2EcoProxyAddress: Address,
   l1EcoToken: Address,
   l2BridgeAddress: Address
@@ -203,6 +204,24 @@ export async function getProxyAdmin(
 }
 
 export async function transferOwnership(
+  network: string,
+  proxy: Address
+): Promise<void> {
+  hre.changeNetwork(network)
+
+  const proxyAdmin = await getProxyAdmin()
+
+  const currentOwner = await proxyAdmin.owner()
+  const [me] = await hre.ethers.getSigners()
+  if ((await me.getAddress()) !== currentOwner) {
+    throw new Error('you need to own the proxy admin to run this script')
+  }
+
+  await proxyAdmin.transferOwnership(proxy)
+  console.log(`admin owner changed to ${proxy}`)
+}
+
+export async function transferOwnershipTest(
   newOwnerAddress: Address
 ): Promise<void> {
   const [owner] = await ethers.getSigners()

@@ -10,7 +10,10 @@ interface IL1ECOBridge is IL1ERC20Bridge {
     // Event for when the L2ECO token implementation is upgraded
     event UpgradeL2ECO(address _newEcoImpl);
 
-    // Event for when the L2ECOBridge authority is transferred to a new bridge address
+    // Event for when the L2ECOBridge token implementation is upgraded
+    event UpgradeL2Bridge(address _newBridgeImpl);
+
+    // Event for when this contract's token implementation is upgraded
     event UpgradeSelf(address _newBridgeImpl);
 
     // Event for when failed withdrawal needs to be u-turned
