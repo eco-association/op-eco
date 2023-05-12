@@ -1,7 +1,8 @@
 [profile.default]
 src = "src"
 out = "artifacts"
-libs = ["node_modules"]
+libs = ["node_modules", "lib"]
+solc = "0.8.19"
 remappings = [
     "@ensdomains/=node_modules/@ensdomains/",
     "@eth-optimism/=node_modules/@eth-optimism/",
