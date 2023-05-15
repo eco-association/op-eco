@@ -20,16 +20,22 @@ import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.s
 
 /**
  * @title L1ECOBridge
- * @dev The L1 ETH and ERC20 Bridge is a contract which stores deposited L1 funds and standard
- * tokens that are in use on L2. It synchronizes a corresponding L2 Bridge, informing it of deposits
+ * @dev The L1 ECO Bridge is a contract which stores deposited L1 ECO
+ * that is in use on L2. It synchronizes a corresponding L2 Bridge, informing it of deposits
  * and listening to it for newly finalized withdrawals.
- *
+ * It also acts as the authorized source of L1 governance decisions as seen by the L2.
+ * All governance related data and decisions are passed through this contract so that the
+ * L2 contracts can maintain and trust a single source of L1 messages.
  */
 contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
-    // L2 side of the bridge
+    /**
+     * @dev L2 side of the bridge
+     */
     address public l2TokenBridge;
 
-    // L1 ECO address
+    /**
+     * @dev L1 ECO address
+     */
     address public ecoAddress;
 
     /**
@@ -37,10 +43,14 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
      */
     ProxyAdmin public l1ProxyAdmin;
 
-    // L2 upgrader role
+    /**
+     * @dev L2 upgrader role
+     */
     address public upgrader;
 
-    // Current inflation multiplier
+    /**
+     * @dev Current inflation multiplier
+     */
     uint256 public inflationMultiplier;
 
     /**
@@ -73,11 +83,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * @param _l1messenger L1 Messenger address being used for cross-chain communications.
-     * @param _l2TokenBridge L2 standard bridge address.
-     * @param _ecoAddress address of L1 ECO contract.
-     * @param _l1ProxyAdmin address of ProxyAdmin contract for the L1 Bridge.
-     * @param _upgrader address that can perform upgrades.
+     * @inheritdoc IL1ECOBridge
      */
     function initialize(
         address _l1messenger,
