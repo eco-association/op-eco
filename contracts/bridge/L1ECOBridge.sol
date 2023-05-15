@@ -66,8 +66,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
 
     /**
      * Disable the implementation contract
+     * @custom:oz-upgrades-unsafe-allow constructor
      */
-    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
@@ -99,10 +99,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * @dev Upgrades the L2ECO token implementation address, by sending
-     *      a cross domain message to the L2 Bridge via the L1 Messenger
-     * @param _impl L2 contract address.
-     * @param _l2Gas Gas limit for the L2 message.
+     * @inheritdoc IL1ECOBridge
      * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
     function upgradeECO(address _impl, uint32 _l2Gas)
@@ -120,10 +117,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * @dev Upgrades the L2ECOBridge implementation address, by sending
-     *      a cross domain message to the L2 Bridge via the L1 Messenger
-     * @param _impl L2 contract address.
-     * @param _l2Gas Gas limit for the L2 message.
+     * @inheritdoc IL1ECOBridge
      * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
     function upgradeL2Bridge(address _impl, uint32 _l2Gas)
@@ -140,9 +134,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         emit UpgradeL2Bridge(_impl);
     }
 
-    /**
-     * @dev Upgrades this contract implementation by passing the new implementation address to the ProxyAdmin.
-     * @param _newBridgeImpl The new L1ECOBridge implementation address.
+     /**
+     * @inheritdoc IL1ECOBridge
      * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
     function upgradeSelf(address _newBridgeImpl) external virtual onlyUpgrader {
@@ -202,6 +195,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
 
     /**
      * @inheritdoc IL1ERC20Bridge
+     * @param _l1Token Ignores this input, only services the ECO L1 token address.
+     * @param _l2Token Does not ignore this value, but only accepts the stored l2Bridge
      */
     function finalizeERC20Withdrawal(
         address _l1Token,
