@@ -8,7 +8,9 @@ gen
 
 #Compiler files
 cache
+cache-forge
 artifacts
+artifacts-forge
 out
 
 # Ignores development broadcast logs

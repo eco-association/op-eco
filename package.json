@@ -37,7 +37,8 @@
     "depcheck": "depcheck --ignore-bin-package --ignores @openzeppelin/contracts,@openzeppelin/contracts-upgradeable,prettier-plugin-solidity,solhint-plugin-eco,concurrently,@types/mocha",
     "lint": "yarn format",
     "deploy": "hardhat run scripts/deploy.ts",
-    "getImpl": "hardhat run scripts/getImpl.ts --network goerliOptimism"
+    "getImpl": "hardhat run scripts/getImpl.ts --network goerliOptimism",
+    "storage": "./scripts/utils/storage_snapshot.sh"
   },
   "dependencies": {
     "@eth-optimism/contracts": "^0.5.40",

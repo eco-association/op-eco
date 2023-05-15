@@ -1,0 +1,97 @@
+=======================
+👁👁 STORAGE LAYOUT snapshot 👁👁
+=======================
+
+=======================
+➡ contracts/bridge/CrossDomainEnabledUpgradeable.sol:CrossDomainEnabledUpgradeable
+=======================
+
+| Name          | Type    | Slot | Offset | Bytes | Contract                                                                         |
+|---------------|---------|------|--------|-------|----------------------------------------------------------------------------------|
+| _initialized  | uint8   | 0    | 0      | 1     | contracts/bridge/CrossDomainEnabledUpgradeable.sol:CrossDomainEnabledUpgradeable |
+| _initializing | bool    | 0    | 1      | 1     | contracts/bridge/CrossDomainEnabledUpgradeable.sol:CrossDomainEnabledUpgradeable |
+| messenger     | address | 0    | 2      | 20    | contracts/bridge/CrossDomainEnabledUpgradeable.sol:CrossDomainEnabledUpgradeable |
+
+=======================
+➡ contracts/bridge/InitialBridge.sol:InitialBridge
+=======================
+
+| Name | Type | Slot | Offset | Bytes | Contract |
+|------|------|------|--------|-------|----------|
+
+=======================
+➡ contracts/bridge/L1ECOBridge.sol:L1ECOBridge
+=======================
+
+| Name                | Type                | Slot | Offset | Bytes | Contract                                     |
+|---------------------|---------------------|------|--------|-------|----------------------------------------------|
+| _initialized        | uint8               | 0    | 0      | 1     | contracts/bridge/L1ECOBridge.sol:L1ECOBridge |
+| _initializing       | bool                | 0    | 1      | 1     | contracts/bridge/L1ECOBridge.sol:L1ECOBridge |
+| messenger           | address             | 0    | 2      | 20    | contracts/bridge/L1ECOBridge.sol:L1ECOBridge |
+| l2TokenBridge       | address             | 1    | 0      | 20    | contracts/bridge/L1ECOBridge.sol:L1ECOBridge |
+| ecoAddress          | address             | 2    | 0      | 20    | contracts/bridge/L1ECOBridge.sol:L1ECOBridge |
+| l1ProxyAdmin        | contract ProxyAdmin | 3    | 0      | 20    | contracts/bridge/L1ECOBridge.sol:L1ECOBridge |
+| upgrader            | address             | 4    | 0      | 20    | contracts/bridge/L1ECOBridge.sol:L1ECOBridge |
+| inflationMultiplier | uint256             | 5    | 0      | 32    | contracts/bridge/L1ECOBridge.sol:L1ECOBridge |
+
+=======================
+➡ contracts/bridge/L2ECOBridge.sol:L2ECOBridge
+=======================
+
+| Name                | Type                | Slot | Offset | Bytes | Contract                                     |
+|---------------------|---------------------|------|--------|-------|----------------------------------------------|
+| _initialized        | uint8               | 0    | 0      | 1     | contracts/bridge/L2ECOBridge.sol:L2ECOBridge |
+| _initializing       | bool                | 0    | 1      | 1     | contracts/bridge/L2ECOBridge.sol:L2ECOBridge |
+| messenger           | address             | 0    | 2      | 20    | contracts/bridge/L2ECOBridge.sol:L2ECOBridge |
+| l1TokenBridge       | address             | 1    | 0      | 20    | contracts/bridge/L2ECOBridge.sol:L2ECOBridge |
+| inflationMultiplier | uint256             | 2    | 0      | 32    | contracts/bridge/L2ECOBridge.sol:L2ECOBridge |
+| l2EcoToken          | contract L2ECO      | 3    | 0      | 20    | contracts/bridge/L2ECOBridge.sol:L2ECOBridge |
+| l2ProxyAdmin        | contract ProxyAdmin | 4    | 0      | 20    | contracts/bridge/L2ECOBridge.sol:L2ECOBridge |
+
+=======================
+➡ contracts/token/ERC20Upgradeable.sol:ERC20Upgradeable
+=======================
+
+| Name          | Type                                            | Slot | Offset | Bytes | Contract                                              |
+|---------------|-------------------------------------------------|------|--------|-------|-------------------------------------------------------|
+| _initialized  | uint8                                           | 0    | 0      | 1     | contracts/token/ERC20Upgradeable.sol:ERC20Upgradeable |
+| _initializing | bool                                            | 0    | 1      | 1     | contracts/token/ERC20Upgradeable.sol:ERC20Upgradeable |
+| __gap         | uint256[50]                                     | 1    | 0      | 1600  | contracts/token/ERC20Upgradeable.sol:ERC20Upgradeable |
+| _balances     | mapping(address => uint256)                     | 51   | 0      | 32    | contracts/token/ERC20Upgradeable.sol:ERC20Upgradeable |
+| _allowances   | mapping(address => mapping(address => uint256)) | 52   | 0      | 32    | contracts/token/ERC20Upgradeable.sol:ERC20Upgradeable |
+| _totalSupply  | uint256                                         | 53   | 0      | 32    | contracts/token/ERC20Upgradeable.sol:ERC20Upgradeable |
+| _name         | string                                          | 54   | 0      | 32    | contracts/token/ERC20Upgradeable.sol:ERC20Upgradeable |
+| _symbol       | string                                          | 55   | 0      | 32    | contracts/token/ERC20Upgradeable.sol:ERC20Upgradeable |
+| __gap         | uint256[45]                                     | 56   | 0      | 1440  | contracts/token/ERC20Upgradeable.sol:ERC20Upgradeable |
+
+=======================
+➡ contracts/token/L2ECO.sol:L2ECO
+=======================
+
+| Name                      | Type                                            | Slot | Offset | Bytes | Contract                        |
+|---------------------------|-------------------------------------------------|------|--------|-------|---------------------------------|
+| _initialized              | uint8                                           | 0    | 0      | 1     | contracts/token/L2ECO.sol:L2ECO |
+| _initializing             | bool                                            | 0    | 1      | 1     | contracts/token/L2ECO.sol:L2ECO |
+| __gap                     | uint256[50]                                     | 1    | 0      | 1600  | contracts/token/L2ECO.sol:L2ECO |
+| _balances                 | mapping(address => uint256)                     | 51   | 0      | 32    | contracts/token/L2ECO.sol:L2ECO |
+| _allowances               | mapping(address => mapping(address => uint256)) | 52   | 0      | 32    | contracts/token/L2ECO.sol:L2ECO |
+| _totalSupply              | uint256                                         | 53   | 0      | 32    | contracts/token/L2ECO.sol:L2ECO |
+| _name                     | string                                          | 54   | 0      | 32    | contracts/token/L2ECO.sol:L2ECO |
+| _symbol                   | string                                          | 55   | 0      | 32    | contracts/token/L2ECO.sol:L2ECO |
+| __gap                     | uint256[45]                                     | 56   | 0      | 1440  | contracts/token/L2ECO.sol:L2ECO |
+| _HASHED_NAME              | bytes32                                         | 101  | 0      | 32    | contracts/token/L2ECO.sol:L2ECO |
+| _HASHED_VERSION           | bytes32                                         | 102  | 0      | 32    | contracts/token/L2ECO.sol:L2ECO |
+| __gap                     | uint256[50]                                     | 103  | 0      | 1600  | contracts/token/L2ECO.sol:L2ECO |
+| linearInflationMultiplier | uint256                                         | 153  | 0      | 32    | contracts/token/L2ECO.sol:L2ECO |
+| tokenRoleAdmin            | address                                         | 154  | 0      | 20    | contracts/token/L2ECO.sol:L2ECO |
+| l1Token                   | address                                         | 155  | 0      | 20    | contracts/token/L2ECO.sol:L2ECO |
+| minters                   | mapping(address => bool)                        | 156  | 0      | 32    | contracts/token/L2ECO.sol:L2ECO |
+| burners                   | mapping(address => bool)                        | 157  | 0      | 32    | contracts/token/L2ECO.sol:L2ECO |
+| rebasers                  | mapping(address => bool)                        | 158  | 0      | 32    | contracts/token/L2ECO.sol:L2ECO |
+
+=======================
+➡ contracts/token/TokenInitial.sol:TokenInitial
+=======================
+
+| Name | Type | Slot | Offset | Bytes | Contract |
+|------|------|------|--------|-------|----------|

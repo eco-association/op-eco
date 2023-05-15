@@ -1,8 +1,9 @@
 [profile.default]
 src = "contracts"
-out = "artifacts"
+out = 'artifacts-forge'
 libs = ["node_modules", "lib"]
 solc = "0.8.19"
+cache_path  = "cache-forge"
 remappings = [
     "@ensdomains/=node_modules/@ensdomains/",
     "@eth-optimism/=node_modules/@eth-optimism/",
