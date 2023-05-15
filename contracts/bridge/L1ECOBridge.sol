@@ -5,6 +5,7 @@ pragma solidity 0.8.19;
 import {IL1ECOBridge} from "../interfaces/bridge/IL1ECOBridge.sol";
 import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
 import {IL2ERC20Bridge} from "@eth-optimism/contracts/L2/messaging/IL2ERC20Bridge.sol";
+import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
 import {L2ECOBridge} from "../bridge/L2ECOBridge.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -52,6 +53,9 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         _;
     }
 
+    /**
+     * @dev Modifier for gating upgrade functionality behind an authorized ECO protocol governace contract
+     */
     modifier onlyUpgrader() {
         require(
             msg.sender == upgrader,
@@ -154,6 +158,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
+     * @inheritdoc IL1ERC20Bridge
      */
     function depositERC20(
         address,//_l1Token
@@ -174,6 +179,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
+     * @inheritdoc IL1ERC20Bridge
      */
     function depositERC20To(
         address,//_l1Token
@@ -195,7 +201,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * When a withdrawal is finalized on L1, the L1 Bridge transfers the funds to the withdrawer
+     * @inheritdoc IL1ERC20Bridge
      */
     function finalizeERC20Withdrawal(
         address _l1Token,
@@ -254,6 +260,9 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         }
     }
 
+    /**
+     * @inheritdoc IL1ECOBridge
+     */
     function rebase(uint32 _l2Gas) external {
         inflationMultiplier = IECO(ecoAddress).getPastLinearInflation(
             block.number
@@ -266,14 +275,6 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
 
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
     }
-
-    /**
-     * @dev Adds ETH balance to the account. This is meant to allow for ETH
-     * to be migrated from an old gateway to a new gateway.
-     * NOTE: This is left for one upgrade only so we are able to receive the migrated ETH from the
-     * old contract
-     */
-    function donateETH() external payable {}
 
     /**
      * @dev Performs the logic for deposits by informing the L2 Deposited Token
