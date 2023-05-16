@@ -6,23 +6,30 @@ import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
 import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
 import {L2ECO} from "../token/L2ECO.sol";
 import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
+import {IL2ERC20Bridge} from "@eth-optimism/contracts/L2/messaging/IL2ERC20Bridge.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 /**
  * @title L2ECOBridge
- * @dev The L2 Standard bridge is a contract which works together with the L1 Standard bridge to
- * enable ETH and ERC20 transitions between L1 and L2.
+ * @dev The L2 ECO bridge is a contract which works together with the L1 ECO bridge to
+ * enable ECO transport between L1 and L2 as well as the enaction of upgrades (as directed by the L1)
  * This contract acts as a minter for new tokens when it hears about deposits into the L1 Standard
  * bridge.
  * This contract also acts as a burner of the tokens intended for withdrawal, informing the L1
  * bridge to release L1 funds.
+ * This contract enacts rebases as directed by the L1 bridge
+ * This contract performs upgrades of the ECO token on the L2 (and itself) as directed by the L1 bridge
  */
 contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
-    // L1 bridge contract. This is the only address that can call `finalizeDeposit` on this contract.
+    /**
+     * @dev L1 bridge contract. This is the only address (crossdomain only) that can call most functions on this contract.
+     */
     address public l1TokenBridge;
 
-    // current inflation multiplier
+    /**
+     * @dev current inflation multiplier
+     */
     uint256 public inflationMultiplier;
 
     /**
@@ -48,7 +55,8 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * @dev Modifier to check that the L1 token is the same as the L2 token's L1 token address
+     * @dev Modifier to check that the L1 token is the same as the predefined L2 token's L1 token address
+     * @param _l1Token L1 token address to check
      */
     modifier tokensMatch(address _l1Token) {
         require(
@@ -60,6 +68,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
 
     /**
      * @dev Modifier to check that the inflation multiplier is non-zero
+     * @param _inflationMutiplier inflation multiplier to check
      */
     modifier validRebaseMultiplier(uint256 _inflationMutiplier) {
         require(
@@ -71,18 +80,14 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
 
     /**
      * Disable the implementation contract
+     * @custom:oz-upgrades-unsafe-allow constructor
      */
-    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
     /**
-     * @dev Initializer that sets the L2 messanger to use, L1 bridge address and the L2 token address
-     * @param _l2CrossDomainMessenger Cross-domain messenger used by this contract on L2
-     * @param _l1TokenBridge Address of the L1 bridge deployed to L1 chain
-     * @param _l2EcoToken Address of the L2 ECO token deployed to L2 chain
-     * @param _l2ProxyAdmin Address of the L2 proxy admin that manages the upgrade of the L2 token implementation
+     * @inheritdoc IL2ECOBridge
      */
     function initialize(
         address _l2CrossDomainMessenger,
@@ -100,11 +105,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * @dev Withdraws tokens from L2 to L1 for the caller
-     * @param _l2Token L2 token address to withdraw
-     * @param _amount Amount of tokens to withdraw
-     * @param _l1Gas Gas limit for the L1 transaction
-     * @param _data Optional data to include when calling the L1 bridge
+     * @inheritdoc IL2ERC20Bridge
      */
     function withdraw(
         address _l2Token,
@@ -116,12 +117,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * @dev Withdraws tokens from L2 to L1 to the address the caller specifies
-     * @param _l2Token L2 token address to withdraw
-     * @param _to Address to send the tokens to on L1
-     * @param _amount Amount of tokens to withdraw
-     * @param _l1Gas Gas limit for the L1 transaction
-     * @param _data Optional data to include when calling the L1 bridge
+     * @inheritdoc IL2ERC20Bridge
      */
     function withdrawTo(
         address _l2Token,
@@ -134,7 +130,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * @dev Finallizes a deposit by minting the correct amount of L2 tokens to the recipient's address
+     * @inheritdoc IL2ERC20Bridge
      */
     function finalizeDeposit(
         address _l1Token,
@@ -158,8 +154,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * @dev Notifies the L2 token that the inflation multiplier has changed.
-     * @param _inflationMultiplier The new inflation multiplier.
+     * @inheritdoc IL2ECOBridge
      */
     function rebase(uint256 _inflationMultiplier)
         external
@@ -173,8 +168,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * @dev Upgrades the L2ECO token implementation address.
-     * @param _newEcoImpl The new L2ECO implementation address.
+     * @inheritdoc IL2ECOBridge
      * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
     function upgradeECO(address _newEcoImpl)
@@ -194,8 +188,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * @dev Upgrades this contract implementation by passing the new implementation address to the ProxyAdmin.
-     * @param _newBridgeImpl The new L2ECOBridge implementation address.
+     * @inheritdoc IL2ECOBridge
      * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
     function upgradeSelf(address _newBridgeImpl)
@@ -221,9 +214,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
      * @param _to Account to give the withdrawal to on L1.
      * @param _amount Amount of the token to withdraw.
      * @param _l1Gas Unused, but included for potential forward compatibility considerations.
-     * @param _data Optional data to forward to L1. This data is provided
-     *        solely as a convenience for external contracts. Aside from enforcing a maximum
-     *        length, these contracts provide no guarantees about its content.
+     * @param _data Optional data to forward to L1.
      */
     function _initiateWithdrawal(
         address _from,
