@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 /* Interface Imports */
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC20.sol";
 
 /* Contract Imports */
@@ -23,7 +22,7 @@ import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/crypt
  * No generational timing.
  * The token contract trusts the sources of admin actions and doesn't keep any internal timing.
  */
-contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
+contract L2ECO is ERC20Upgradeable, EIP712Upgradeable {
     /**
      * @dev Constant for setting the initial inflation multiplier
      */
@@ -254,23 +253,6 @@ contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
     {
         _rebase(_newLinearInflationMultiplier);
         emit NewInflationMultiplier(_newLinearInflationMultiplier);
-    }
-
-    /**
-     * @dev function to utilize ERC165 to signal compliance to an Optimism network system
-     * IERC165 and IL2StandardERC20 are the supported interfaces
-     * @param _interfaceId the ID hash of the interface
-     */
-    function supportsInterface(bytes4 _interfaceId)
-        external
-        pure
-        returns (bool)
-    {
-        bytes4 firstSupportedInterface = type(IERC165).interfaceId; // ERC165
-        bytes4 secondSupportedInterface = type(IL2StandardERC20).interfaceId; // compliant to OP's IL2StandardERC20
-        return
-            _interfaceId == firstSupportedInterface ||
-            _interfaceId == secondSupportedInterface;
     }
 
     /**
