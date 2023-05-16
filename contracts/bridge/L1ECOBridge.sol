@@ -8,10 +8,10 @@ import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
 import {IL2ERC20Bridge} from "@eth-optimism/contracts/L2/messaging/IL2ERC20Bridge.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IECO} from "@helix-foundation/currency/contracts/currency/IECO.sol";
-
-/* Library Imports */
-import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
 import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
+/* Contract Imports */
+import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
 /**
