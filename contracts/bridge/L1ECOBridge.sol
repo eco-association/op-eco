@@ -3,17 +3,13 @@ pragma solidity 0.8.19;
 
 /* Interface Imports */
 import {IL1ECOBridge} from "../interfaces/bridge/IL1ECOBridge.sol";
+import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
 import {IL2ECOBridge} from "../interfaces/bridge/IL2ECOBridge.sol";
 import {IL2ERC20Bridge} from "@eth-optimism/contracts/L2/messaging/IL2ERC20Bridge.sol";
-import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
-import {L2ECOBridge} from "../bridge/L2ECOBridge.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IECO} from "@helix-foundation/currency/contracts/currency/IECO.sol";
 
 /* Library Imports */
-import {CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/CrossDomainEnabled.sol";
-import {Lib_PredeployAddresses} from "@eth-optimism/contracts/libraries/constants/Lib_PredeployAddresses.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {IECO} from "@helix-foundation/currency/contracts/currency/IECO.sol";
 import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
 import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
@@ -59,7 +55,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
      */
     modifier onlyEOA() {
         // Used to stop deposits from contracts (avoid accidentally lost tokens)
-        require(!Address.isContract(msg.sender), "Account not EOA");
+        require(msg.sender.code.length == 0, "Account not EOA");
         _;
     }
 
@@ -114,7 +110,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         onlyUpgrader
     {
         bytes memory message = abi.encodeWithSelector(
-            L2ECOBridge.upgradeECO.selector,
+            IL2ECOBridge.upgradeECO.selector,
             _impl
         );
 
@@ -132,7 +128,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         onlyUpgrader
     {
         bytes memory message = abi.encodeWithSelector(
-            L2ECOBridge.upgradeSelf.selector,
+            IL2ECOBridge.upgradeSelf.selector,
             _impl
         );
 
@@ -270,7 +266,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         );
 
         bytes memory message = abi.encodeWithSelector(
-            L2ECOBridge.rebase.selector,
+            IL2ECOBridge.rebase.selector,
             inflationMultiplier
         );
 
@@ -307,7 +303,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
 
         // Construct calldata for _l2Token.finalizeDeposit(_to, _amount)
         bytes memory message = abi.encodeWithSelector(
-            //call parent interface of IL2ERC20Bridge to get the selector
+            //call parent interface IL2ERC20Bridge to get the selector
             IL2ERC20Bridge.finalizeDeposit.selector,
             _l1Token,
             _l2Token,
