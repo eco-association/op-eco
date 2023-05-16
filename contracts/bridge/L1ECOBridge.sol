@@ -278,18 +278,16 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     }
 
     /**
-     * @dev Performs the logic for deposits by informing the L2 Deposited Token
-     * contract of the deposit and calling a handler to lock the L1 funds. (e.g. transferFrom)
+     * @dev Performs the logic for deposits by informing the L2 ECO token
+     * contract of the deposit and pulling in the L1 funds from the depositor
      *
-     * @param _l1Token Address of the L1 ERC20 we are depositing
-     * @param _l2Token Address of the L1 respective L2 ERC20
+     * @param _l1Token Address of the L1 ECO token contract
+     * @param _l2Token Address of the L2 ECO token contract
      * @param _from Account to pull the deposit from on L1
      * @param _to Account to give the deposit to on L2
-     * @param _amount Amount of the ERC20 to deposit.
+     * @param _amount Amount of ECO to pull and deposit.
      * @param _l2Gas Gas limit required to complete the deposit on L2.
-     * @param _data Optional data to forward to L2. This data is provided
-     *        solely as a convenience for external contracts. Aside from enforcing a maximum
-     *        length, these contracts provide no guarantees about its content.
+     * @param _data Optional data to forward to L2.
      */
     function _initiateERC20Deposit(
         address _l1Token,
