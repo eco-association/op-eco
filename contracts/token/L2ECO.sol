@@ -6,6 +6,20 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC20.sol";
 
+/**
+ * @title L2ECO
+ * @dev The L2 ECO token is all tokens that have been bridge via the L1ECOBridge and L2ECOBridge
+ * It differens in a few key ways from the L1 ECO token:
+ * Balances are not checkpointed.
+ * There is no voting on the L2 and therefore significant gas is saved by not saving balances.
+ * Obviously with no voting, there is no delegation.
+ * Permissions are handled differently.
+ * Instead of updated via governance, there are granular roles gating minting, burning, and rebasing
+ * These roles are stored on the contract instead of managed through ERC1820
+ * Because of this there is no root policy address.
+ * No generational timing.
+ * The token contract trusts the sources of admin actions and doesn't keep any internal timing.
+ */
 contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
     /**
      * @dev Constant for setting the initial inflation multiplier
