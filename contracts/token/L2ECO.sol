@@ -283,16 +283,4 @@ contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
         emit BaseValueTransfer(from, to, amount);
         return amount;
     }
-
-    /**
-     * @dev unused hook
-     * @param from address sending the tokens
-     * @param to address recieving the tokens
-     * @param amount the amount of tokens to be transferred
-     */
-    function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual override {}
 }
