@@ -60,7 +60,7 @@ contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
     /**
      * @dev Event for recording the transfer amounts after _beforeTokenTransfer applies the inflation multiplier
      * @param from Address sending tokens
-     * @param to Address recieving tokens
+     * @param to Address receive tokens
      * @param value This is in the base (unchanging) amounts the currency is stored in (gons)
      */
     event BaseValueTransfer(
@@ -71,7 +71,7 @@ contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
 
     /**
      * @dev Event for minted tokens
-     * @param _account Address recieving tokens
+     * @param _account Address receive tokens
      * @param _amount Amount of tokens being created
      */
     event Mint(address indexed _account, uint256 _amount);
@@ -223,7 +223,7 @@ contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
 
     /**
      * @dev Mint tokens for an address. Only callable by minter role addresses
-     * @param _to the address to recieve tokens
+     * @param _to the address to receive tokens
      * @param _amount the amount of tokens to be created
      */
     function mint(address _to, uint256 _amount) external onlyMinterRole {
@@ -285,7 +285,7 @@ contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
      * @dev overrides the ERC20 hook to account for the rebasing factor in all transactions
      * emits an event showing the base value (ERC20 emits the inputted value)
      * @param from address sending the tokens
-     * @param to address recieving the tokens
+     * @param to address receive the tokens
      * @param amount the amount of tokens to be transferred
      */
     function _beforeTokenTransfer(

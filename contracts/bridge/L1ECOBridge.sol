@@ -281,7 +281,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
      * @param _l2Token Address of the L2 ECO token contract
      * @param _from Account to pull the deposit from on L1
      * @param _to Account to give the deposit to on L2
-     * @param _amount Amount of ECO to pull and deposit.
+     * @param _amount Amount of ECO being deposited.
      * @param _l2Gas Gas limit required to complete the deposit on L2.
      * @param _data Optional data to forward to L2.
      */
