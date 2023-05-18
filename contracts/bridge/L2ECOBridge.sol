@@ -38,7 +38,12 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     /**
      * @dev L2 token address
      */
-    L2ECO public l2EcoToken;
+    L2ECO public l2Eco;
+
+    /**
+     * @dev L2 token address
+     */
+    address public l1Eco;
 
     /**
      * @dev L2 proxy admin that manages the upgrade of L2 token implementation
@@ -51,8 +56,8 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
      */
     modifier isL2EcoToken(address _l2Token) {
         require(
-            _l2Token == address(l2EcoToken),
-            "L2ECOBridge: invalid L2ECO token address"
+            _l2Token == address(l2Eco),
+            "L2ECOBridge: invalid L2 token address"
         );
         _;
     }
@@ -61,9 +66,9 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
      * @dev Modifier to check that the L1 token is the same as the predefined L2 token's L1 token address
      * @param _l1Token L1 token address to check
      */
-    modifier tokensMatch(address _l1Token) {
+    modifier isL1EcoToken(address _l1Token) {
         require(
-            _l1Token == l2EcoToken.l1Token(),
+            _l1Token == l1Eco,
             "L2ECOBridge: invalid L1 token address"
         );
         _;
@@ -95,16 +100,18 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     function initialize(
         address _l2CrossDomainMessenger,
         address _l1TokenBridge,
-        address _l2EcoToken,
+        address _l2Eco,
+        address _l1Eco,
         address _l2ProxyAdmin
     ) public initializer {
         CrossDomainEnabledUpgradeable.__CrossDomainEnabledUpgradeable_init(
             _l2CrossDomainMessenger
         );
         l1TokenBridge = _l1TokenBridge;
-        l2EcoToken = L2ECO(_l2EcoToken);
+        l2Eco = L2ECO(_l2Eco);
+        l1Eco = _l1Eco;
         l2ProxyAdmin = ProxyAdmin(_l2ProxyAdmin);
-        inflationMultiplier = l2EcoToken.INITIAL_INFLATION_MULTIPLIER();
+        inflationMultiplier = l2Eco.INITIAL_INFLATION_MULTIPLIER();
     }
 
     /**
@@ -147,7 +154,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
         isL2EcoToken(_l2Token)
-        tokensMatch(_l1Token)
+        isL1EcoToken(_l1Token)
     {
         // When a deposit is finalized, we convert the transferred gons to ECO using the current
         // inflation multiplier, then we credit the account on L2 with the same amount of tokens.
@@ -166,7 +173,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         validRebaseMultiplier(_inflationMultiplier)
     {
         inflationMultiplier = _inflationMultiplier;
-        l2EcoToken.rebase(_inflationMultiplier);
+        l2Eco.rebase(_inflationMultiplier);
         emit RebaseInitiated(_inflationMultiplier);
     }
 
@@ -179,8 +186,8 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
     {
-        //cast to a payable address since l2EcoToken is the proxy address of a ITransparentUpgradeableProxy contract
-        address payable proxyAddr = payable(address(l2EcoToken));
+        //cast to a payable address since l2Eco is the proxy address of a ITransparentUpgradeableProxy contract
+        address payable proxyAddr = payable(address(l2Eco));
 
         ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
             proxyAddr
@@ -199,7 +206,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
     {
-        //cast to a payable address since l2EcoToken is the proxy address of a ITransparentUpgradeableProxy contract
+        //cast to a payable address since l2Eco is the proxy address of a ITransparentUpgradeableProxy contract
         address payable proxyAddr = payable(address(this));
 
         ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
@@ -227,16 +234,16 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         bytes calldata _data
     ) internal {
         // Burn the withdrawn tokens from L2
-        l2EcoToken.burn(msg.sender, _amount);
+        l2Eco.burn(msg.sender, _amount);
 
         // Construct calldata for l1TokenBridge.finalizeERC20Withdrawal(_to, _amount)
-        address l1Token = l2EcoToken.l1Token();
+        address l1Token = l2Eco.l1Token();
         _amount = _amount * inflationMultiplier;
         bytes memory message = abi.encodeWithSelector(
             //call parent interface of IL1ECOBridge to get the selector
             IL1ERC20Bridge.finalizeERC20Withdrawal.selector,
             l1Token,
-            l2EcoToken,
+            l2Eco,
             _from,
             _to,
             _amount,
@@ -249,7 +256,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         // Emit event to notify L2 of withdrawal
         emit WithdrawalInitiated(
             l1Token,
-            address(l2EcoToken),
+            address(l2Eco),
             msg.sender,
             _to,
             _amount,

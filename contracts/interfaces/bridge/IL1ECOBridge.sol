@@ -29,14 +29,16 @@ interface IL1ECOBridge is IL1ERC20Bridge {
     /**
      * @param _l1messenger L1 Messenger address being used for cross-chain communications.
      * @param _l2TokenBridge L2 ECO bridge address.
-     * @param _ecoAddress address of L1 ECO contract.
+     * @param _l1Eco address of L1 ECO contract.
+     * @param _l2Eco address of L2 ECO contract.
      * @param _l1ProxyAdmin address of ProxyAdmin contract for the L1 Bridge.
      * @param _upgrader address that can perform upgrades.
      */
     function initialize(
         address _l1messenger,
         address _l2TokenBridge,
-        address _ecoAddress,
+        address _l1Eco,
+        address _l2Eco,
         address _l1ProxyAdmin,
         address _upgrader
     ) external;

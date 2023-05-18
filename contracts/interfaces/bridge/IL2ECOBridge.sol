@@ -20,13 +20,15 @@ interface IL2ECOBridge is IL2ERC20Bridge {
      * @dev Initializer that sets the L2 messanger to use, L1 bridge address, the L2 token address, and the proxy admin address
      * @param _l2CrossDomainMessenger Cross-domain messenger used by this contract on L2
      * @param _l1TokenBridge Address of the L1 bridge deployed to L1 chain
-     * @param _l2EcoToken Address of the L2 ECO token deployed to L2 chain
+     * @param _l2Eco Address of the L2 ECO token deployed to L2 chain
+     * @param _l1Eco Address of the L1 ECO token deployed to L1 chain
      * @param _l2ProxyAdmin Address of the L2 proxy admin that manages the upgrade of the L2 token implementation
      */
     function initialize(
         address _l2CrossDomainMessenger,
         address _l1TokenBridge,
-        address _l2EcoToken,
+        address _l2Eco,
+        address _l1Eco,
         address _l2ProxyAdmin
     ) external;
 
