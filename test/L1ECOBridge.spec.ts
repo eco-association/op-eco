@@ -85,6 +85,7 @@ describe('L1ECOBridge', () => {
       Fake__L1CrossDomainMessenger.address,
       DUMMY_L2_BRIDGE_ADDRESS,
       L1ERC20.address,
+      DUMMY_L2_ERC20_ADDRESS,
       DUMMY_PROXY_ADMIN_ADDRESS,
       alice.address
     )
@@ -509,6 +510,7 @@ describe('L1ECOBridge', () => {
         Fake__L1CrossDomainMessenger.address,
         DUMMY_L2_BRIDGE_ADDRESS,
         L1ERC20.address,
+        DUMMY_L2_ERC20_ADDRESS,
         alice.address
       )
       newBridgeImpl = await (await smock.mock('L1ECOBridge')).deploy()
@@ -538,7 +540,7 @@ describe('L1ECOBridge', () => {
         .to.emit(l1EcoBridge, 'UpgradeSelf')
         .withArgs(newBridgeImpl.address)
 
-      expect(await l1EcoBridge.ecoAddress()).to.eq(L1ERC20.address)
+      expect(await l1EcoBridge.l1Eco()).to.eq(L1ERC20.address)
       // check that the old implementation address is not the new implementation address
       expect(bridgeBefore).to.not.eq(newBridgeImpl.address)
       // check the implementation address against the new implementation

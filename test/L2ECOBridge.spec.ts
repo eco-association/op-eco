@@ -53,6 +53,7 @@ describe('L2ECOBridge tests', () => {
       Fake__L2CrossDomainMessenger.address,
       DUMMY_L1_BRIDGE_ADDRESS,
       MOCK_L2ECO.address,
+      DUMMY_L1_ERC20_ADDRESS,
       AddressZero
     )
 
@@ -114,7 +115,7 @@ describe('L2ECOBridge tests', () => {
             from: Fake__L2CrossDomainMessenger.address,
           }
         )
-      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_L2ECO_ADDRESS)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_L2_ADDRESS)
     })
 
     it('should validate the L2 and L1 tokens match', async () => {
@@ -192,7 +193,7 @@ describe('L2ECOBridge tests', () => {
           0,
           NON_NULL_BYTES32
         )
-      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_L2ECO_ADDRESS)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_L2_ADDRESS)
     })
 
     it('withdraw() burns and sends the correct withdrawal message', async () => {
@@ -451,7 +452,7 @@ describe('L2ECOBridge tests', () => {
         .to.emit(l2EcoBridge, 'UpgradeSelf')
         .withArgs(newBridgeImpl.address)
 
-      expect(await l2EcoBridge.l2EcoToken()).to.eq(l2Eco.address)
+      expect(await l2EcoBridge.l2Eco()).to.eq(l2Eco.address)
       // check that the old implementation address is not the new implementation address
       expect(bridgeBefore).to.not.eq(newBridgeImpl.address)
       // check the implementation address against the new implementation

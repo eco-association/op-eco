@@ -12,6 +12,7 @@ export async function deployL1Test(
   l1CrossDomainMessenger: Address,
   l2Bridge: Address,
   l1Token: Address,
+  l2Token: Address,
   upgrader: Address
 ): Promise<[L1ECOBridge, ProxyAdmin]> {
   // const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
@@ -23,6 +24,7 @@ export async function deployL1Test(
     l1CrossDomainMessenger,
     l2Bridge,
     l1Token,
+    l2Token,
     proxyAdmin.address,
     upgrader
   )
@@ -51,6 +53,7 @@ export async function deployL2Test(
     l2CrossDomainMessenger,
     l1Bridge,
     l2EcoProxyAddress,
+    l1Token,
     proxyAdmin.address
   )
 
@@ -61,7 +64,8 @@ export async function upgradeBridgeL1(
   l1BridgeProxyAddress: Address,
   l1messenger: Address,
   l2BridgeAddress: Address,
-  ecoAddress: Address,
+  l1ECO: Address,
+  l2ECO: Address,
   l1ProxyAdmin: Address,
   upgrader: Address
 ) {
@@ -76,7 +80,8 @@ export async function upgradeBridgeL1(
         args: [
           l1messenger,
           l2BridgeAddress,
-          ecoAddress,
+          l1ECO,
+          l2ECO,
           l1ProxyAdmin,
           upgrader,
         ],
@@ -91,7 +96,8 @@ export async function upgradeBridgeL2(
   l2BridgeProxyAddress: Address,
   l2messenger: Address,
   l1BridgeAddress: Address,
-  l2EcoToken: Address,
+  l2Eco: Address,
+  l1Eco: Address,
   l2ProxyAdmin: Address
 ): Promise<L2ECOBridge> {
   const L2ECOBridgeContract = await ethers.getContractFactory('L2ECOBridge')
@@ -102,7 +108,7 @@ export async function upgradeBridgeL2(
     {
       call: {
         fn: 'initialize',
-        args: [l2messenger, l1BridgeAddress, l2EcoToken, l2ProxyAdmin],
+        args: [l2messenger, l1BridgeAddress, l2Eco, l1Eco, l2ProxyAdmin],
       },
     }
   )

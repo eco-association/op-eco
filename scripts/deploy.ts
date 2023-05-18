@@ -44,6 +44,7 @@ async function main() {
     L2_OP_MESSANGER_ADDRESS,
     l1BridgeProxyAddress,
     l2EcoProxyAddress,
+    L1_ECO_ADDRESS,
     l2ProxyAdmin.address
   )
   console.log(`L2 Bridge initialized`)
@@ -55,6 +56,7 @@ async function main() {
     L1_OP_MESSANGER_ADDRESS,
     l2BridgeProxyAddress,
     L1_ECO_ADDRESS,
+    l2EcoProxyAddress,
     l1ProxyAdmin.address,
     UPGRADER_ADDRESS
   )
