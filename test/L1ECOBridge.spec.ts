@@ -184,7 +184,7 @@ describe('L1ECOBridge', () => {
           FINALIZATION_GAS,
           NON_NULL_BYTES32
         )
-      ).to.be.revertedWith('Account not EOA')
+      ).to.be.revertedWith('L1ECOBridge: Account not EOA')
     })
   })
 

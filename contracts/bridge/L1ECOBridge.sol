@@ -55,7 +55,19 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
      */
     modifier onlyEOA() {
         // Used to stop deposits from contracts (avoid accidentally lost tokens)
-        require(msg.sender.code.length == 0, "Account not EOA");
+        require(msg.sender.code.length == 0, "L1ECOBridge: Account not EOA");
+        _;
+    }
+
+    /**
+     * @dev Modifier to check that the L1 token is the same as the one set in the constructor
+     * @param _l1Token L1 token address to check
+     */
+    modifier isL1EcoToken(address _l1Token) {
+        require(
+            _l1Token == ecoAddress,
+            "L1ECOBridge: invalid L2ECO token address"
+        );
         _;
     }
 
@@ -154,16 +166,17 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
 
     /**
      * @inheritdoc IL1ERC20Bridge
+     * @param _l1Token must be the ECO L1 token address.
      */
     function depositERC20(
-        address,//_l1Token
+        address _l1Token,
         address _l2Token,
         uint256 _amount,
         uint32 _l2Gas,
         bytes calldata _data
-    ) external virtual onlyEOA {
+    ) external virtual onlyEOA isL1EcoToken(_l1Token) {
         _initiateERC20Deposit(
-            ecoAddress,
+            _l1Token,
             _l2Token,
             msg.sender,
             msg.sender,
@@ -175,17 +188,18 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
 
     /**
      * @inheritdoc IL1ERC20Bridge
+     * @param _l1Token must be the ECO L1 token address.
      */
     function depositERC20To(
-        address,//_l1Token
+        address _l1Token,
         address _l2Token,
         address _to,
         uint256 _amount,
         uint32 _l2Gas,
         bytes calldata _data
-    ) external virtual {
+    ) external virtual isL1EcoToken(_l1Token) {
         _initiateERC20Deposit(
-            ecoAddress,
+            _l1Token,
             _l2Token,
             msg.sender,
             _to,
@@ -197,8 +211,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
 
     /**
      * @inheritdoc IL1ERC20Bridge
-     * @param _l1Token Ignores this input, only services the ECO L1 token address.
-     * @param _l2Token Does not ignore this value, but only accepts the stored l2Bridge
+     * @param _l1Token is always the ECO L1 token address.
+     * @param _l2Token Does not ignore this value, should be the l2Eco address to succeed
      */
     function finalizeERC20Withdrawal(
         address _l1Token,
@@ -210,13 +224,13 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
         uint256 _amount = _gonsAmount / inflationMultiplier;
 
-        // equivalent to IECO(ecoAddress).transfer(_to, _amount); but is revert safe
+        // equivalent to IECO(_l1Token).transfer(_to, _amount); but is revert safe
         bytes memory _ecoTransferMessage = abi.encodeWithSelector(
             IERC20.transfer.selector,
             _to,
             _amount
         );
-        (bool success, bytes memory returnData) = ecoAddress.call{value: 0}(
+        (bool success, bytes memory returnData) = _l1Token.call{value: 0}(
             _ecoTransferMessage
         );
 
@@ -224,7 +238,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         if (success && abi.decode(returnData, (bool))) {
             // if successful, emit an event
             emit ERC20WithdrawalFinalized(
-                ecoAddress,
+                _l1Token,
                 _l2Token,
                 _from,
                 _to,
