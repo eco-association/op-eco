@@ -52,8 +52,8 @@ describe('L2ECOBridge tests', () => {
     await L2ECOBridge.initialize(
       Fake__L2CrossDomainMessenger.address,
       DUMMY_L1_BRIDGE_ADDRESS,
-      MOCK_L2ECO.address,
       DUMMY_L1_ERC20_ADDRESS,
+      MOCK_L2ECO.address,
       AddressZero
     )
 
