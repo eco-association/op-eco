@@ -154,41 +154,6 @@ export async function deployTokenProxy(): Promise<Address> {
   return proxyInitial.address
 }
 
-//   const L2ECOBridgeContract = await ethers.getContractFactory('L2ECOBridge')
-//   const l2BridgeProxy = await upgrades.deployProxy(
-//     L2ECOBridgeContract,
-//     [
-//       l2CrossDomainMessenger,
-//       l1Bridge,
-//       proxyInitial.address,
-//       proxyAdmin.address,
-//     ],
-//     {
-//       initializer: 'initialize',
-//     }
-//   )
-//   await l2BridgeProxy.deployed()
-
-//   const L2EcoContract = await ethers.getContractFactory('L2ECO')
-//   const l2EcoProxy = await upgrades.upgradeProxy(
-//     proxyInitial.address,
-//     L2EcoContract,
-//     {
-//       call: {
-//         fn: 'initialize',
-//         args: [l1Token, l2BridgeProxy.address] as L2EcoContract,
-//       },
-//     }
-//   )
-
-//   if (opts.adminBridge) {
-//     // transferOwnership(l2BridgeProxy.address)
-//     // console.log("ProxyAdmin Owner: ", await proxyAdmin.owner())
-//   }
-
-//   return [l2EcoProxy as L2ECO, l2BridgeProxy as L2ECOBridge, proxyAdmin]
-// }
-
 export async function getProxyAdmin(
   verbose: boolean = false
 ): Promise<ProxyAdmin> {
