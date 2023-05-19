@@ -43,6 +43,7 @@ async function main() {
     l2BridgeProxyAddress,
     L2_OP_MESSANGER_ADDRESS,
     l1BridgeProxyAddress,
+    L1_ECO_ADDRESS,
     l2EcoProxyAddress,
     l2ProxyAdmin.address
   )
@@ -55,6 +56,7 @@ async function main() {
     L1_OP_MESSANGER_ADDRESS,
     l2BridgeProxyAddress,
     L1_ECO_ADDRESS,
+    l2EcoProxyAddress,
     l1ProxyAdmin.address,
     UPGRADER_ADDRESS
   )
