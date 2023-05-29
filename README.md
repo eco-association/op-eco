@@ -32,8 +32,298 @@ If you believe you've identified a security vulnerability in the Eco Currency co
 ## Background
 The currency deployed here is the Optimism version of ECO, the mainnet implementation and associated governance can be found [here](https://github.com/helix-foundation/currency). The bridges can be used to move value between the Ethereum mainnet system and the Optimism one. 
 
-### OP-ECO vs Mainnet ECO
-OP-ECO as it stands today only retains the ECO contract from mainnet, as its primary purpose is to give users the ability to transfer ECO cheaply and efficiently. OP-ECO does not have its own community governance - an abbreviated set of upgrades can be made by using the Mainnet governance system and then propagating those changes via the bridge. OP-ECO's monetary policy has been pared down to reflect only one of Mainnet ECO's three levers - linear inflation. Inflation rate changes must also originate from Mainnet and be propagated to OP-ECO via the bridge. 
+OP-ECO as it stands today only retains the ECO contract from mainnet, as its primary purpose is to give users the ability to transfer ECO cheaply and efficiently. OP-ECO does not have its own community governance - an abbreviated set of upgrades can be made by using the Mainnet governance system and then propagating those changes via the bridge. OP-ECO's monetary policy has been pared down to only one lever, linear inflation, and that rate is pegged to the rate set on the mainnet implementation by elected trustees. Inflation rate changes made on mainnet propagate to OP-ECO via the bridge.
+
+## API
+
+### L1ECOBridge
+This bridge contract lives on the L1 and serves as the entrypoint for ECO destined for L2 as well as changes to L2 contracts. It implements Optimism's [IL1ERC20Bridge](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts/contracts/L1/messaging/IL1ERC20Bridge.sol) along with a few other methods specific to how ECO operates. 
+
+#### Events
+##### UpgradeL2ECO
+Arguments:
+- `_newEcoImpl` (address) - the new implementation of the L2 Eco contract
+
+Emitted when initiating an upgrade to the L2 Eco contract.
+
+##### UpgradeL2Bridge
+Arguments:
+- `_newBridgeImpl` (address) - the new implementation of the L2 side of the ECO bridge
+
+Emitted when initiating an upgrade to the L2 bridge contract.
+
+##### UpgradeSelf
+Arguments:
+- `_newBridgeImpl` (address) - the new implementation of the L1 side of the ECO bridge
+
+Emitted when the L1 Eco Bridge contract is upgraded and now points to a different implementation.
+
+##### WithdrawalFailed
+Arguments:
+- `l1Token` (address) - address of the L1 token being withdrawn (should always be the L1 ECO address)
+- `l2Token` (address) - address of the L2 token being exchanged (should always be the L2 ECO address)
+- `_from` (address) - address depositing the L2 token to be exchanged
+- `__to_` (address) - address attempting to withdraw the L1 token
+- `_amount` (uint256) - amount of L1 token attempting to be withdrawn
+- `_data` (bytes) - other transaction data
+
+Emitted when a withdraw call fails.
+
+#### initialize
+Arguments: 
+- `_l1messenger` (address) - address of the L1 portion of the cross-domain messenger
+- `_l2TokenBridge` (address) - address of the L2 side of the bridge
+- `_l1Eco` (address) - address of the L1 ECO currency
+- `_l2Eco` (address) - address of the L2 ECO currency
+- `_l1ProxyAdmin` (address) - address of the proxy admin for this contract
+- `_upgrader` (address) - address with permission to call this contract's upgrade methods
+
+This method sets all the initial values for the contract's state variables.
+
+##### Security notes
+This method can only be called once, as it is subject to the 'initializer' modifier.
+
+#### upgradeEco
+Arguments:
+- `_impl` (address) - the new implementation for ECO on L2
+- `_l2Gas` (uint32) - amount of gas required for tx completion on L2
+
+This method is used to upgrade the implementation of the L2 ECO currency. Storage variables will not change as they are stored on the proxy. It also emits UpgradeL2ECO(_impl).
+
+##### Security notes
+This method can only be called by the upgrader address.
+
+#### upgradeL2Bridge
+Arguments:
+- `_impl` (address) - the new implementation for the L2 part of the bridge
+- `_l2Gas` (uint32) - amount of gas required for tx completion on L2
+
+This method is used to upgrade the implementation of the L2 part of the bridge. It also emits UpgradeL2Bridge(_impl).
+
+##### Security notes
+This method can only be called by the upgrader address.
+
+#### upgradeSelf
+Arguments:
+- `_impl` (address) - the new implementation for the L1 part of the bridge
+
+This method is used to upgrade the implementation of the L1 part of the bridge. It also emits UpgradeSelf(_impl).
+
+##### Security notes
+This method can only be called by the upgrader address.
+
+#### depositERC20
+Arguments:
+- `_l1Token` (address) - address of the token being deposited on L1
+- `_l2Token` (address) - address of the token being minted on L2 in exchange for deposit
+- `_amount` (uint256) - amount of tokens being deposited
+- `_l2Gas` (uint32) - amount of gas required for tx completion on L2
+- `_data` (bytes) - other transaction data
+
+This method is used to deposit ECO in order to mint a corresponding amount of L2 ECO to the sender's address. 
+
+##### Security notes
+This method demands that _l1Token be the address of the L1 ECO token and _l2Token be the address of the L2 ECO token. Failing to comply with either of these will result in the call being reverted. All validity restrictions for transfers are also enforced.
+
+#### depositERC20To
+Arguments:
+- `_l1Token` (address) - address of the token being deposited on L1
+- `_l2Token` (address) - address of the token being minted on L2 in exchange for deposit
+- `_to` (address) - destination address for L2 tokens
+- `_amount` (uint256) - amount of tokens being deposited
+- `_l2Gas` (uint32) - amount of gas required for tx completion on L2
+- `_data` (bytes) - other transaction data
+
+This method is used to deposit ECO in order to mint a corresponding amount of L2 ECO to the _to address. 
+
+##### Security notes
+This method demands that _l1Token be the address of the L1 ECO token and _l2Token be the address of the L2 ECO token. Failing to comply with either of these wil result in the call being reverted. All validity restrictions for transfers are also enforced.
+
+#### finalizeERC20Withdrawal
+Arguments:
+- `_l1Token` (address) - address of the L1 token being withdrawn
+- `_l2Token` (address) - address of the token being deposited on L2 in exchange for the L1 token
+- `_from` (address) - depositor address on L2
+- `_to` (address) - destination address on L1
+- `_gonsAmount` (uint256) - amount of tokens to be withdrawn on L1, not yet subjected to inflation multiplier
+- `_data` (bytes) - other transaction data
+
+This method finalizes a withdrawal transaction initiated by the _from address on L2 and transfers the commensurate amount of ECO to the _to address.
+
+##### Security notes
+This method can only be called by the cross-domain messenger. While there is no modifier forcing the _l1Token and _l2Tokens address to be those of ECO, the cross-domain messenger will only ever call them with the correct arguments. 
+
+#### rebase
+Arguments:
+- `_l2Gas` (uint32) - amount of gas required for tx completion on L2
+
+This method transmits the current inflation multiplier to the L2 portion of the ECO system.
+
+##### Security notes
+This method cannot be maliciously called since it looks up the correct inflation multiplier before sending it.
+
+### L2ECOBridge
+This bridge contract lives on the L2 and serves as the L2 ECO system's source for all information on changes on L1, and the gateway for all tokens incoming from L1. It implements Optimism's [IL2ERC20Bridge](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts/contracts/L2/messaging/IL2ERC20Bridge.sol) along with a few other methods specific to how ECO operates. 
+
+#### Events
+##### RebaseInitiated
+Arguments:
+- `_inflationMultiplier` (uint256) - new inflation multiplier
+
+Emitted when rebase is called and the inflation multiplier is updated to _inflationMultiplier
+
+##### UpgradeECOImplementation
+Arguments:
+- `_newEcoImpl` (address) - the new implementation of the L2 Eco contract
+
+Emitted when the L2 Eco contract is upgraded and now points to a different implementation.
+
+##### UpgradeSelf
+Arguments:
+- `_newBridgeImpl` (address) - the new implementation of the L2 side of the ECO bridge
+
+Emitted when the L2 Eco Bridge contract is upgraded and now points to a different implementation.
+
+#### initialize
+Arguments: 
+- `_l2CrossDomainMessenger` (address) - address of the L2 portion of the cross-domain messenger
+- `_l1TokenBridge` (address) - address of the L1 side of the bridge
+- `_l1Eco` (address) - address of the L1 ECO currency
+- `_l2Eco` (address) - address of the L2 ECO currency
+- `_l1ProxyAdmin` (address) - address of the proxy admin for this contract
+
+This method sets all the initial values for the contract's state variables.
+
+##### Security notes
+This method can only be called once, as it is subject to the 'initializer' modifier.
+
+#### withdraw
+Arguments:
+- `_l2Token` (address) - address of the token being deposited
+- `_amount` (uint256) - amount of tokens being deposited
+- `_l1Gas` (uint32) - amount of gas required for tx completion on L1
+- `_data` (bytes) - other transaction data
+
+This method is used to deposit L2 ECO in order to release a corresponding amount of L2 ECO to the sender's address. 
+
+##### Security notes
+This method demands that _l2Token be the address of the L2 ECO token. Failing to comply with either of these will result in the call being reverted. All validity restrictions for transfers are also enforced.
+
+#### withdrawTo
+Arguments:
+- `_l2Token` (address) - address of the token being deposited
+- `_to` (address) - destination address for L1 tokens
+- `_amount` (uint256) - amount of tokens being deposited
+- `_l1Gas` (uint32) - amount of gas required for tx completion on L1
+- `_data` (bytes) - other transaction data
+
+This method is used to deposit L2 ECO in order to release a corresponding amount of L2 ECO to the _to address. 
+
+##### Security notes
+This method demands that _l2Token be the address of the L2 ECO token. Failing to comply with either of these will result in the call being reverted. All validity restrictions for transfers are also enforced.
+
+#### finalizeDeposit
+Arguments:
+- `_l1Token` (address) - address of the L1 token being deposited
+- `_l2Token` (address) - address of the L2 token being minted on L2 in exchange for the L1 token
+- `_from` (address) - depositor address on L1
+- `_to` (address) - destination address on L2
+- `_amount` (uint256) - amount of tokens to be minted on L2, not yet subjected to inflation multiplier
+- `_data` (bytes) - other transaction data
+
+This method finalizes a deposit transaction initiated by the _from address on L1 and transfers the commensurate amount of L2 ECO to the _to address.
+
+##### Security notes
+This method can only be called by the cross-domain messenger. This method also demands that the _l1Token and _l2Token arguments correspond to the L1 and L2 implementations of ECO respectively, reverting if either of these conditions is not met. 
+
+#### rebase
+Arguments:
+- `_inflationMultiplier` (uint256) - new inflation multiplier to be used
+
+This method accepts the new inflation multiplier and updates the L2 values. It also emits RebaseInitiated(_inflationMultiplier)
+
+##### Security notes
+This method can only be called by the cross-domain messenger. Additionally, this method will revert in the unlikely event that the _inflationMultiplier argument is invalid. 
+
+#### upgradeECO
+Arguments:
+- `_newEcoImpl` (address) - the new implementation for ECO on L2
+
+This method upgrades the implementation of the L2 ECO currency. Storage variables will not change as they are stored on the proxy. It also emits UpgradeECOImplementation(_newEcoimpl).
+
+##### Security notes
+This method can only be called by the cross-domain messenger.
+
+#### upgradeSelf
+Arguments:
+- `_newBridgeImpl` (address) - the new implementation for the L2 part of the bridge
+
+This method is used to upgrade the implementation of the L2 part of the bridge. It also emits UpgradeSelf(_newBridgeImpl).\
+
+### L2ECO
+This contract implements ECO on L2. It allows for rebasing functionality, with a linear inflation multiplier that changes according to governance executed on L1 and propagated to L2 via the bridge.
+
+#### Events
+##### BaseValueTransfer
+Arguments:
+- `from` (address) - origin address
+- `to` (address) - destination address
+- `value` (uint256) - amount of tokens being transferred, has not yet been subjected to inflation multiplier
+
+Emitted in the _beforeTokenTransfer hook. Uninflated value is used for consistency
+
+##### Mint
+Arguments:
+- `_account` (address) - recipient address of minted tokens
+- `_amount` (uint256) - amount of tokens minted
+
+Emitted upon the minting of L2 ECO.
+
+##### Burn
+Arguments:
+- `_account` (address) - address whose tokens were burned
+- `_amount` (uint256) - amount of tokens burned
+
+Emitted upon the burning of L2 ECO.
+
+##### NewInflationMultiplier
+Arguments:
+- `inflationMultiplier` (uint256) - the new inflation multiplier
+
+Emitted upon rebase of L2 ECO.
+
+#### initialize
+Arguments:
+- `_l1Token` (address) - address of L1 ECO
+- `_l2Bridge` (address) - adddress of L2 bridge
+
+This method sets all the initial values for the contract's state variables.
+
+##### Security notes
+This method can only be called once, as it is subject to the 'initializer' modifier.
+
+#### balanceOf
+
+#### totalSupply
+
+#### updateMinters
+
+#### updateBurners
+
+#### updateRebasers
+
+#### updateTokenRoleAdmin
+
+#### mint
+
+#### burn
+
+#### rebase
+
+#### supportsInterface
+
+##### Security notes
+This method can only be called by the cross-domain messenger.
 
 #### Tokens (/currency)
 ##### The Base Currency
