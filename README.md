@@ -16,7 +16,7 @@ The project is organized into components:
  - [Background](#background)
  - [Install](#install)
  - [Usage](#usage)
- - [Components](#components)
+ - [API](#API)
  - [Contributing](#contributing)
  - [License](#license)
 
@@ -33,6 +33,56 @@ If you believe you've identified a security vulnerability in the Eco Currency co
 The currency deployed here is the Optimism version of ECO, the mainnet implementation and associated governance can be found [here](https://github.com/helix-foundation/currency). The bridges can be used to move value between the Ethereum mainnet system and the Optimism one. 
 
 OP-ECO as it stands today only retains the ECO contract from mainnet, as its primary purpose is to give users the ability to transfer ECO cheaply and efficiently. OP-ECO does not have its own community governance - an abbreviated set of upgrades can be made by using the Mainnet governance system and then propagating those changes via the bridge. OP-ECO's monetary policy has been pared down to only one lever, linear inflation, and that rate is pegged to the rate set on the mainnet implementation by elected trustees. Inflation rate changes made on mainnet propagate to OP-ECO via the bridge.
+
+## Install
+To use the code you'll need the proper tools. Make sure you have a recent version of [Node.JS](https://nodejs.org), and a recent version of [NPM](https://npmjs.com).
+
+Once Node and NPM are installed you can use the `npm` command to install additional dependencies:
+```
+npm ci
+```
+
+## Usage
+These contracts are intended for deployment to the Ethereum and Optimism chains (L1EcoBridge to Eth mainnet and the rest to OP). Once deployed, you can interact with the contracts using the standard Ethereum RPC mechanisms.
+
+### Running the Linter, Tests and Coverage Report
+The commands below provide the basics to get set up developing as well as outlining conventions and standards - all code should pass the linter and prettier, all tests should pass, and code coverage should not decrease.
+
+#### Linting + prettier
+`eslint` and `solhint` are used to lint the code in this repository. Additionally, the prettier enforces a clean code style for readability. You can run the linter and prettier using:
+```
+npm run lint
+```
+and
+```
+npm run format
+``` 
+respectively. 
+
+#### Testing
+You can run the test suite by invoking:
+```
+npm run test
+```
+
+The test suite is extensive and can take some time to run.
+
+#### Coverage Reporting
+Coverage reports are generated separated for Solidity and JavaScript code:
+```
+npm run coverage:js
+npm run coverage:sol
+```
+
+Or, aliased for convenience when running both:
+```
+npm run coverage
+```
+
+### Running a deployment
+Once the repo is cloned and all the libraries are installed, the project can be deployed by running `npm run deploy` from the root directory. Running this deploy command recompiles all contracts and then attempts to deploy them via the deployment script found at `scripts/deploy.ts`. Configuration variables are pulled from scripts/constants.ts
+
+This script assumes that an L1 implementation of ECO already exists, more information on deploy an L1 instance of ECO can be found [here](https://github.com/helix-foundation/currency)
 
 ## API
 
@@ -261,7 +311,7 @@ Arguments:
 This method is used to upgrade the implementation of the L2 part of the bridge. It also emits UpgradeSelf(_newBridgeImpl).\
 
 ### L2ECO
-This contract implements ECO on L2. It allows for rebasing functionality, with a linear inflation multiplier that changes according to governance executed on L1 and propagated to L2 via the bridge.
+This contract implements ECO on L2. It allows for rebasing functionality, with a linear inflation multiplier that changes according to governance executed on L1 and propagated to L2 via the bridge. It inherits from ERC20Upgradeable.
 
 #### Events
 ##### BaseValueTransfer
@@ -303,70 +353,189 @@ This method sets all the initial values for the contract's state variables.
 This method can only be called once, as it is subject to the 'initializer' modifier.
 
 #### balanceOf
+Arguments:
+- `_owner` (address) - the address whose balance is being queried
+
+This method returns the L2 ECO balance of _owner after inflation.
 
 #### totalSupply
+Arguments:
+None
+
+This method returns the total L2 ECO supply after inflation. 
 
 #### updateMinters
+Arguments:
+- `_key` (address) - the address whose minter permission is being changed
+- `_value` (bool) - _key's permission to mint
 
-#### updateBurners
-
-#### updateRebasers
-
-#### updateTokenRoleAdmin
-
-#### mint
-
-#### burn
-
-#### rebase
-
-#### supportsInterface
+This method updates the set of addresses with permission to mint L2 ECO.
 
 ##### Security notes
-This method can only be called by the cross-domain messenger.
+This method can only be called by the TokenRoleAdmin.
 
-#### Tokens (/currency)
-##### The Base Currency
-ECO is a variable supply base currency. The token (ECO) implementation provides the code driving the ERC20 token. It takes responsibility for storing balances for all account holders, transferring funds between accounts, creating and destroying tokens, and providing the interfaces that token holders will typically interact with.
+#### updateBurners
+Arguments:
+- `_key` (address) - the address whose burner permission is being changed
+- `_value` (bool) - _key's permission to burner
 
-##### The Secondary Token
-The secondary token (ECOx) is a deflationary supply asset intended to incentivize long-term holders and bootstrap governance and an open market signaling expectations for ECO adoption. It is also an ERC20 token. Its initial main functionality, aside from governance, is being convertible to an amount of ECO proportionally based on percentage of the total supply of each token.
+This method updates the set of addresses with permission to burn L2 ECO.
 
-#### The Governance System (/governance)
-The Governance module contains the monetary and community governance submodules, as well as the general governance logic for pushing the ECOsystem into a new generation. Monetary and community governance operate on a timescale defined by this logic.
+##### Security notes
+This method can only be called by the TokenRoleAdmin.
 
-##### Monetary Governance (/governance/monetary)
-The monetary governance submodule allows community-elected trustees to make decisions about the monetary supply in the economy. It initially involves 3 possible actions: minting tokens and distributing them at random (Random Inflation), minting tokens and using them as rewards for lockup contracts (Lockups), and re-scaling each account balance equally (Linear Inflation).
+#### updateRebasers
+Arguments:
+- `_key` (address) - the address whose rebase permission is being changed
+- `_value` (bool) - _key's permission to rebase
+
+This method updates the set of addresses with permission to rebase L2 ECO.
+
+##### Security notes
+This method can only be called by the TokenRoleAdmin.
+
+#### updateTokenRoleAdmin
+Arguments:
+- `_newAdmin` (address) - the new address to become the TokenRoleAdmin
+
+This method updates the TokenRoleAdmin address.
+
+##### Security notes
+This method can only be called by the TokenRoleAdmin.
+
+#### mint
+Arguments:
+- `_to` (address) - the address to which tokens will be minted
+- `_amount` (uint256) - the amount of tokens to be minted
+
+This method mints _amount tokens to address _to.
+
+##### Security notes
+This method can only be called by addresses with minter permissions.
+
+#### burn
+Arguments:
+- `_from` (address) - the address whose tokens will be burned
+- `_amount` (uint256) - the amount of tokens to be burned
+
+This method burns _amount tokens from address _from.
+
+##### Security notes
+This method can only be called by addresses with burner permissions.
+
+#### rebase
+Arguments:
+- `_newLinearInflationMultiplier` (uint256) - the new linear inflation multiplier
+
+This method updates the linearInflationMultiplier field.
+
+##### Security notes
+This method can only be called by addresses with rebaser permissions.
+
+#### supportsInterface
+Arguments:
+- `_interfaceId` (bytes4) - the ID of the interface being checked for.
+
+This method returns true if this contract supports the interface with ID _interfaceId. For this contract this is true for @openzeppelin's IERC165 and @eth-optimism's IL2StandardERC20.
+
+### ERC20Upgradeable
+
+This contract can be thought of as a representation of uninflated values for L2ECO, which the L2ECO interfaces with in order to get the correct balance, approval, and total supply numbers given the current linearInflationMultiplier. 
+
+This contract takes and modifies the openzeppelin ERC20Upgradeable to restore support to _beforeTokenTransfer hooks modifying the transfer amount. The OZ contract cannot be inherited for this change because of its extensive use of private vars. This implementation is agnostic to the way tokens are created. This means that a supply mechanism has to be added in a derived contract using {_mint}.
+
+We have followed general OpenZeppelin Contracts guidelines: functions revert instead returning `false` on failure. This behavior is nonethelessconventional and does not conflict with the expectations of ERC20 applications.
+
+Additionally, an {Approval} event is emitted on calls to {transferFrom}. This allows applications to reconstruct the allowance for all accounts just by listening to said events. Other implementations of the EIP may not emit these events, as it isn't required by the specification.
+Finally, the non-standard {decreaseAllowance} and {increaseAllowance} functions have been added to mitigate the well-known issues around setting allowances. See {IERC20-approve}.
+
+#### Events
+None
+
+#### name
+Arguments:
+None
+
+Returns the name of the token.
+
+#### symbol
+Arguments:
+None
+
+Returns the symbol of the token.
+
+#### decimals
+Arguments:
+None
+
+Returns the number of decimals of the token.
+
+#### totalSupply
+Arguments:
+None
+
+Returns the total supply of the token.
+
+#### balanceOf
+Arguments:
+- `account` (address) - the address whose balance is being queried
+
+Returns the balance of account.
+
+#### transfer
+Arguments:
+- `to` (address) - the destination of the tokens being transferred
+- `amount` (uint256) - the number of tokens being transferred
+
+Transfers `amount` tokens from sender to address `to`.
+
+#### allowance
+Arguments:
+- `owner` (address) - the address that has allowed tokens to be used by another party
+- `spender` (address) - the address that has been approved to spend some of `owner`s tokens
+
+Returns the amount of tokens `owner` has approved `spender` to spend.
+
+#### approve
+Arguments:
+- `spender` (address) - the address being granted access to sender's tokens
+- `amount` (uint256) - the amount of tokens to which sender is granting `spender` access
+
+Allows `spender` to control `amount` of sender's tokens.
+
+#### transferFrom
+Arguments:
+- `from` (address) - the origin of the tokens being transferred
+- `to` (address) - the destination of the tokens being transferred
+- `amount` (uint256) - the number of tokens being transferred
+
+Transfers `amount` tokens from address `from` to address `to`.
+
+##### Security notes
+This method is limited by the amount of tokens `from` has approved the sender to spend on their behalf.
+
+#### increaseAllowance
+Arguments:
+- `spender` (address) - the address whose allowance is being changed
+- `addedValue` (uint256) - the additional amount `spender` is approved for
+
+Increases `spender`s approval from sender by `addedValue`.
+
+#### decreaseAllowance
+Arguments:
+- `spender` (address) - the address whose allowance is being changed
+- `subtracteValue` (uint256) - the amount by which `spender`s approval is being lessened
+
+Decreases `spender`s approval from sender by `subtractedValue`.
 
 
-##### Community Governance (/governance/community)
-The community governance submodule allows anyone with tokens (ECO or ECOx) to propose arbitrary changes to contracts and then participate in a vote on those changes, all  facilitated to by the policy framework. This allows for the ECOsystem to adapt to changing economic circumstances and evolve to meet users' needs and giving users direct influence over the economy in which they all participate.
-
-### Infrastructure
-Outside of these core modules there are a few major infrastructure components that underlie the system, but whose use is primarily abstracted away from the user:
-
-#### The Policies Framework (/policy)
-The policies framework provides the core contract logic that facilitates upgradability, and is used to enforce access control and permissions between contracts. This framework also uses the clone component (/clone) to efficiently deploy clones of core contracts on generation increase.
-
-#### The Proxy Framework (/proxy)
-The proxy framework, combined with the ERC1820 registry, allow contracts to be upgraded while keeping their state intact and maintaining accessibility without the need to publicize a new address.
-
-#### The VDF Implementation (/VDF)
-Eco uses a VDF as a critical component of the the Random Inflation process (part  of the monetary governance module), and the VDF component provides most of that functionality. It allows incremental proving of a Verifiable Delay Function, and the demonstration of a proof to the governance system.
 
 #### The Deployment Tooling (/deploy)
 The deployment tooling is used to bootstrap the other contracts when first deployed to an Ethereum network. It includes the functionality necessary to configure the system, and also provides faucet and cleanup contracts for use in testing.
 
-## Install
-To use the code you'll need the proper tools. Make sure you have a recent version of [Node.JS](https://nodejs.org), and a recent version of [NPM](https://npmjs.com).
 
-Once Node and NPM are installed you can use the `npm` command to install additional dependencies:
-```
-npm ci
-```
 
-## Usage
-These contracts are intended for deployment to the Ethereum and Optimism chains (L1EcoBridge to Eth mainnet and the rest to OP). Once deployed, you can interact with the contracts using the standard Ethereum RPC mechanisms.
+
 
 ### Running the Linter, Tests and Coverage Report
 The commands below provide the basics to get set up developing as well as outlining conventions and standards - all code should pass the linter and prettier, all tests should pass, and code coverage should not decrease.
@@ -413,15 +582,6 @@ Common deploy issues and solutions (use verbose flag):
 - if experiencing errors indicating that the gas limit is too low, try slightly increasing the bootstrapGas value (in tools/deploy) and/or the gasMultiplier (in the config or tools/deploy). 
 - tracking the deploy address on a block explorer may provide more useful error info, but in the event that the deploy still fails, try again from a private key. 
 
-## Components
- - [Currency Implementation](./contracts/currency)
- - [Governance](./contracts/governance)
-    - [Community governance](./contracts/governance/community)
-    - [Monetary governance](./contracts/governance/monetary)
- - [Policy Framework](./contracts/policy)
- - [Proxy Framework](./contracts/proxy)
- - [Deployment Tools](./contracts/deploy)
- - [The Verifiable Delay Function](./contracts/VDF)
 
 ## Contributing
 Contributions are welcome. Please submit any issues as issues on GitHub, and open a pull request with any contributions.
