@@ -116,6 +116,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
 
     /**
      * @inheritdoc IL2ERC20Bridge
+     * @param _l1Gas The minimum gas limit required for an L1 address finalizing the transation
      */
     function withdraw(
         address _l2Token,
@@ -128,6 +129,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
 
     /**
      * @inheritdoc IL2ERC20Bridge
+     * @param _l1Gas The minimum gas limit required for an L1 address finalizing the transation
      */
     function withdrawTo(
         address _l2Token,
