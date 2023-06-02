@@ -402,6 +402,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_ERC20_ADDRESS,
         FINALIZATION_GAS
       )
+      const blockNumber = await ethers.provider.getBlockNumber()
 
       expect(
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
@@ -409,7 +410,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS,
         (await getContractInterface('L2ECOBridge')).encodeFunctionData(
           'upgradeECO',
-          [DUMMY_L2_ERC20_ADDRESS]
+          [DUMMY_L2_ERC20_ADDRESS, blockNumber]
         ),
         FINALIZATION_GAS,
       ])
@@ -442,6 +443,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS,
         FINALIZATION_GAS
       )
+      const blockNumber = await ethers.provider.getBlockNumber()
 
       expect(
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
@@ -449,7 +451,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS,
         (await getContractInterface('L2ECOBridge')).encodeFunctionData(
           'upgradeSelf',
-          [DUMMY_L2_BRIDGE_ADDRESS]
+          [DUMMY_L2_BRIDGE_ADDRESS, blockNumber]
         ),
         FINALIZATION_GAS,
       ])
