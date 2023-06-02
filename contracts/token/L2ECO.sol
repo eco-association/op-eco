@@ -6,8 +6,7 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC20.sol";
 
 /* Contract Imports */
-import {ERC20Upgradeable} from "./ERC20Upgradeable.sol";
-import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import {ERC20PermitUpgradeable} from "./ERC20PermitUpgradeable.sol";
 
 /**
  * @title L2ECO
@@ -23,7 +22,7 @@ import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/crypt
  * No generational timing.
  * The token contract trusts the sources of admin actions and doesn't keep any internal timing.
  */
-contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
+contract L2ECO is ERC20PermitUpgradeable, IERC165 {
     /**
      * @dev Constant for setting the initial inflation multiplier
      */
@@ -147,11 +146,7 @@ contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
         address _l1Token,
         address _l2Bridge
     ) public initializer {
-        ERC20Upgradeable.__ERC20_init(
-            "ECO",
-            "ECO"
-        );
-        EIP712Upgradeable.__EIP712_init("ECO", "1");
+        ERC20PermitUpgradeable.__ERC20Permit_init("ECO");
         linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
         minters[_l2Bridge] = true;
         burners[_l2Bridge] = true;
