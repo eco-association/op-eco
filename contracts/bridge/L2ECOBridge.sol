@@ -223,7 +223,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
      * @param _from Account to pull the withdrawal from on L2.
      * @param _to Account to give the withdrawal to on L1.
      * @param _amount Amount of the token to withdraw.
-     * @param _l1Gas Unused, but included for potential forward compatibility considerations.
+     * @param _l1Gas The minimum gas limit required for an L1 address finalizing the transation
      * @param _data Optional data to forward to L1.
      */
     function _initiateWithdrawal(
