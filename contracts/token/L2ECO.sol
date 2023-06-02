@@ -151,6 +151,7 @@ contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
             "ECO",
             "ECO"
         );
+        EIP712Upgradeable.__EIP712_init("ECO", "1");
         linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
         minters[_l2Bridge] = true;
         burners[_l2Bridge] = true;
