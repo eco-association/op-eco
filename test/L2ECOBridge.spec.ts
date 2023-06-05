@@ -152,7 +152,7 @@ describe('L2ECOBridge tests', () => {
           alice.address,
           bob.address,
           BigNumber.from(depositAmount).mul(
-            await L2ECOBridge.inflationMultiplier()
+            await MOCK_L2ECO.linearInflationMultiplier()
           ),
           NON_NULL_BYTES32,
           {
@@ -216,7 +216,7 @@ describe('L2ECOBridge tests', () => {
             alice.address,
             alice.address,
             BigNumber.from(withdrawAmount).mul(
-              await L2ECOBridge.inflationMultiplier()
+              await MOCK_L2ECO.linearInflationMultiplier()
             ),
             NON_NULL_BYTES32,
           ]
@@ -256,7 +256,7 @@ describe('L2ECOBridge tests', () => {
             alice.address,
             bob.address,
             BigNumber.from(withdrawAmount).mul(
-              await L2ECOBridge.inflationMultiplier()
+              await MOCK_L2ECO.linearInflationMultiplier()
             ),
             NON_NULL_BYTES32,
           ]
