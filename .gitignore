@@ -22,7 +22,7 @@ yarn-error.log*
 lerna-debug.log* 
 
 # OpenZeppelin
-.openzeppelin/unknown-*.json
+.openzeppelin
 
 # Generated
 dist
