@@ -134,7 +134,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     {
         bytes memory message = abi.encodeWithSelector(
             IL2ECOBridge.upgradeECO.selector,
-            _impl
+            _impl,
+            block.number
         );
 
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
@@ -152,7 +153,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     {
         bytes memory message = abi.encodeWithSelector(
             IL2ECOBridge.upgradeSelf.selector,
-            _impl
+            _impl,
+            block.number
         );
 
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
