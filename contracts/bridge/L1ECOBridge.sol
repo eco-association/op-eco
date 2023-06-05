@@ -233,7 +233,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         uint256 _gonsAmount,
         bytes calldata _data
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
-        uint256 _amount = _gonsAmount / IECO(_l1Eco).getPastLinearInflation(
+        uint256 _amount = _gonsAmount / IECO(l1Eco).getPastLinearInflation(
             block.number
         );
 
