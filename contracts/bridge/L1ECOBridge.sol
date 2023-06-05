@@ -178,6 +178,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     /**
      * @inheritdoc IL1ERC20Bridge
      * @param _l1Token must be the ECO L1 token address.
+     * @param _l2Gas The minimum gas limit required for an L2 address finalizing the transation
      */
     function depositERC20(
         address _l1Token,
@@ -200,6 +201,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     /**
      * @inheritdoc IL1ERC20Bridge
      * @param _l1Token must be the ECO L1 token address.
+     * @param _l2Gas The minimum gas limit required for an L2 address finalizing the transation
      */
     function depositERC20To(
         address _l1Token,
