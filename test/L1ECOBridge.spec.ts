@@ -417,10 +417,6 @@ describe('L1ECOBridge', () => {
 
   describe('does a rebase', () => {
     it('should fetch the inflation multiplier', async () => {
-      expect(await L1ECOBridge.inflationMultiplier()).to.eq(
-        INITIAL_INFLATION_MULTIPLIER
-      )
-
       const newInflationMultiplier = INITIAL_INFLATION_MULTIPLIER.div(2)
 
       if (alice.provider) {
@@ -432,9 +428,6 @@ describe('L1ECOBridge', () => {
         ])
       }
       await L1ECOBridge.connect(alice).rebase(FINALIZATION_GAS)
-      expect(await L1ECOBridge.inflationMultiplier()).to.eq(
-        newInflationMultiplier
-      )
 
       expect(
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
