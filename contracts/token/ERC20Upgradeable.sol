@@ -33,12 +33,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract ERC20Upgradeable is
-    Initializable,
-    ContextUpgradeable,
-    IERC20Upgradeable,
-    IERC20MetadataUpgradeable
-{
+contract ERC20Upgradeable is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20MetadataUpgradeable {
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
@@ -57,17 +52,11 @@ contract ERC20Upgradeable is
      * All two of these values are immutable: they can only be set once during
      * construction.
      */
-    function __ERC20_init(
-        string memory name_,
-        string memory symbol_
-    ) internal onlyInitializing {
+    function __ERC20_init(string memory name_, string memory symbol_) internal onlyInitializing {
         __ERC20_init_unchained(name_, symbol_);
     }
 
-    function __ERC20_init_unchained(
-        string memory name_,
-        string memory symbol_
-    ) internal onlyInitializing {
+    function __ERC20_init_unchained(string memory name_, string memory symbol_) internal onlyInitializing {
         _name = name_;
         _symbol = symbol_;
     }
@@ -114,9 +103,7 @@ contract ERC20Upgradeable is
     /**
      * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(
-        address account
-    ) public view virtual override returns (uint256) {
+    function balanceOf(address account) public view virtual override returns (uint256) {
         return _balances[account];
     }
 
@@ -128,10 +115,7 @@ contract ERC20Upgradeable is
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(
-        address to,
-        uint256 amount
-    ) public virtual override returns (bool) {
+    function transfer(address to, uint256 amount) public virtual override returns (bool) {
         address owner = _msgSender();
         _transfer(owner, to, amount);
         return true;
@@ -140,10 +124,7 @@ contract ERC20Upgradeable is
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(
-        address owner,
-        address spender
-    ) public view virtual override returns (uint256) {
+    function allowance(address owner, address spender) public view virtual override returns (uint256) {
         return _allowances[owner][spender];
     }
 
@@ -157,10 +138,7 @@ contract ERC20Upgradeable is
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(
-        address spender,
-        uint256 amount
-    ) public virtual override returns (bool) {
+    function approve(address spender, uint256 amount) public virtual override returns (bool) {
         address owner = _msgSender();
         _approve(owner, spender, amount);
         return true;
@@ -205,10 +183,7 @@ contract ERC20Upgradeable is
      *
      * - `spender` cannot be the zero address.
      */
-    function increaseAllowance(
-        address spender,
-        uint256 addedValue
-    ) public virtual returns (bool) {
+    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
         address owner = _msgSender();
         _approve(owner, spender, allowance(owner, spender) + addedValue);
         return true;
@@ -228,16 +203,10 @@ contract ERC20Upgradeable is
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(
-        address spender,
-        uint256 subtractedValue
-    ) public virtual returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
         address owner = _msgSender();
         uint256 currentAllowance = allowance(owner, spender);
-        require(
-            currentAllowance >= subtractedValue,
-            "ERC20: decreased allowance below zero"
-        );
+        require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
         unchecked {
             _approve(owner, spender, currentAllowance - subtractedValue);
         }
@@ -270,10 +239,7 @@ contract ERC20Upgradeable is
         uint256 gonsAmount = _beforeTokenTransfer(from, to, amount);
 
         uint256 fromBalance = _balances[from];
-        require(
-            fromBalance >= gonsAmount,
-            "ERC20: transfer amount exceeds balance"
-        );
+        require(fromBalance >= gonsAmount, "ERC20: transfer amount exceeds balance");
         unchecked {
             _balances[from] = fromBalance - gonsAmount;
             // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
@@ -327,10 +293,7 @@ contract ERC20Upgradeable is
         uint256 gonsAmount = _beforeTokenTransfer(account, address(0), amount);
 
         uint256 accountBalance = _balances[account];
-        require(
-            accountBalance >= gonsAmount,
-            "ERC20: burn amount exceeds balance"
-        );
+        require(accountBalance >= gonsAmount, "ERC20: burn amount exceeds balance");
         unchecked {
             _balances[account] = accountBalance - gonsAmount;
             // Overflow not possible: amount <= accountBalance <= totalSupply.
@@ -382,10 +345,7 @@ contract ERC20Upgradeable is
     ) internal virtual {
         uint256 currentAllowance = allowance(owner, spender);
         if (currentAllowance != type(uint256).max) {
-            require(
-                currentAllowance >= amount,
-                "ERC20: insufficient allowance"
-            );
+            require(currentAllowance >= amount, "ERC20: insufficient allowance");
             unchecked {
                 _approve(owner, spender, currentAllowance - amount);
             }
@@ -408,7 +368,7 @@ contract ERC20Upgradeable is
         address from,
         address to,
         uint256 amount
-    ) internal virtual returns (uint256) {
+    ) internal virtual returns(uint256) {
         return amount;
     }
 
