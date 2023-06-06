@@ -7,6 +7,7 @@ import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC
 
 /* Contract Imports */
 import {ERC20PermitUpgradeable} from "./ERC20PermitUpgradeable.sol";
+import {ERC20Upgradeable} from "./ERC20Upgradeable.sol";
 
 /**
  * @title L2ECO
@@ -146,6 +147,7 @@ contract L2ECO is ERC20PermitUpgradeable, IERC165 {
         address _l1Token,
         address _l2Bridge
     ) public initializer {
+        ERC20Upgradeable.__ERC20_init("ECO", "ECO");
         ERC20PermitUpgradeable.__ERC20Permit_init("ECO");
         linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
         minters[_l2Bridge] = true;
