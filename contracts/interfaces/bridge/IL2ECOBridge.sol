@@ -34,9 +34,10 @@ interface IL2ECOBridge is IL2ERC20Bridge {
 
     /**
      * @dev Passes the inflation multiplier to the L2Eco token.
-     * @param _inflationMultiplier The inflation multiplier to rebase the
+     * @param _inflationMultiplier The inflation multiplier to rebase the token with
+     * @param _blockNumber The block number of the L1 call that initiated the rebase. Used to prevent replay attacks on failed rebase calls
      */
-    function rebase(uint256 _inflationMultiplier) external;
+    function rebase(uint256 _inflationMultiplier, uint256 _blockNumber) external;
 
     /**
      * @dev Sets the L2ECO token proxy to a new implementation address for the L2ECO token.

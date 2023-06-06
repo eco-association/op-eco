@@ -289,7 +289,7 @@ describe('L2ECOBridge tests', () => {
 
   describe('rebase', () => {
     it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L2 account', async () => {
-      await expect(L2ECOBridge.rebase(2)).to.be.revertedWith(
+      await expect(L2ECOBridge.rebase(2, 1)).to.be.revertedWith(
         ERROR_STRINGS.OVM.INVALID_MESSENGER
       )
     })
@@ -300,7 +300,7 @@ describe('L2ECOBridge tests', () => {
       )
 
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(2)
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(2, 1)
       ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
     })
 
@@ -313,7 +313,7 @@ describe('L2ECOBridge tests', () => {
         DUMMY_L1_BRIDGE_ADDRESS
       )
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(2)
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(2, 1)
       ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_REBASER)
     })
 
@@ -322,7 +322,7 @@ describe('L2ECOBridge tests', () => {
         DUMMY_L1_BRIDGE_ADDRESS
       )
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(0)
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(0, 1)
       ).to.be.revertedWith(
         ERROR_STRINGS.L2ECOBridge.INVALID_INFLATION_MULTIPLIER
       )
@@ -335,7 +335,10 @@ describe('L2ECOBridge tests', () => {
       )
 
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(inflationMultiplier)
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(
+          inflationMultiplier,
+          1
+        )
       )
         .to.emit(L2ECOBridge, 'RebaseInitiated')
         .withArgs(inflationMultiplier)

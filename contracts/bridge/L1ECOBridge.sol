@@ -296,7 +296,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
             IL2ECOBridge.rebase.selector,
             IECO(l1Eco).getPastLinearInflation(
                 block.number
-            )
+            ),
+            block.number
         );
 
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);

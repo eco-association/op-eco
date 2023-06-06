@@ -481,7 +481,7 @@ describe('L1ECOBridge', () => {
           },
         ])
       }
-      await L1ECOBridge.connect(alice).rebase(FINALIZATION_GAS)
+      const tx = await L1ECOBridge.connect(alice).rebase(FINALIZATION_GAS)
 
       expect(
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
@@ -489,7 +489,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS,
         (await getContractInterface('L2ECOBridge')).encodeFunctionData(
           'rebase',
-          [newInflationMultiplier]
+          [newInflationMultiplier, tx.blockNumber]
         ),
         FINALIZATION_GAS,
       ])
