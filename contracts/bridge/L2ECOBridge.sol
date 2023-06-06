@@ -56,6 +56,11 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     uint256 public upgradeSelfBlock;
 
     /**
+     * @dev The block number on L1 of the most recent rebase call, used to prevent replay attacks on failed rebase calls
+     */
+    uint256 public rebaseBlock;
+
+    /**
      * @dev L2 proxy admin that manages the upgrade of L2 token implementation
      */
     ProxyAdmin public l2ProxyAdmin;
@@ -126,6 +131,20 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
             "L2ECOBridge: upgradeSelf block number must be greater than last upgrade block"
         );
         upgradeSelfBlock = _blockNumber;
+        _;
+    }
+
+
+    /**
+     * @dev Modifier to check that the rebase call has the correct L1 block number in order to
+     * prevent replay attacks on failed rebase calls
+     */
+    modifier validrebaseBlock(uint256 _blockNumber) {
+        require(
+            _blockNumber > rebaseBlock,
+            "L2ECOBridge: rebase block number must be greater than last upgrade block"
+        );
+        rebaseBlock = _blockNumber;
         _;
     }
 
@@ -210,12 +229,14 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
      * @inheritdoc IL2ECOBridge
      */
     function rebase(
-        uint256 _inflationMultiplier
+        uint256 _inflationMultiplier,
+        uint256 _blockNumber
     )
         external
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
         validRebaseMultiplier(_inflationMultiplier)
+        validrebaseBlock(_blockNumber)
     {
         inflationMultiplier = _inflationMultiplier;
         l2Eco.rebase(_inflationMultiplier);

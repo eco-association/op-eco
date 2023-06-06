@@ -302,7 +302,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
 
         bytes memory message = abi.encodeWithSelector(
             IL2ECOBridge.rebase.selector,
-            inflationMultiplier
+            inflationMultiplier,
+            block.number
         );
 
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
