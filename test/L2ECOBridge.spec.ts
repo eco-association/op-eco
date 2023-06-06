@@ -196,6 +196,17 @@ describe('L2ECOBridge tests', () => {
       ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_L2_ADDRESS)
     })
 
+    it('cannot withdraw from a contract account', async () => {
+      await expect(
+        L2ECOBridge.connect(l2MessengerImpersonator).withdraw(
+          MOCK_L2ECO.address,
+          withdrawAmount,
+          0,
+          NON_NULL_BYTES32
+        )
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_EOA_ONLY)
+    })
+
     it('withdraw() burns and sends the correct withdrawal message', async () => {
       await L2ECOBridge.connect(alice).withdraw(
         MOCK_L2ECO.address,

@@ -50,10 +50,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
      * @param _l1Token L1 token address to check
      */
     modifier isL1EcoToken(address _l1Token) {
-        require(
-            _l1Token == l1Eco,
-            "L2ECOBridge: invalid L1 token address"
-        );
+        require(_l1Token == l1Eco, "L2ECOBridge: invalid L1 token address");
         _;
     }
 
@@ -78,6 +75,16 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
             _inflationMutiplier > 0,
             "L2ECOBridge: invalid inflation multiplier"
         );
+        _;
+    }
+
+    /**
+     * @dev Modifier requiring sender to be EOA.  This check could be bypassed by a malicious
+     * contract via initcode, but it takes care of the user error we want to avoid.
+     */
+    modifier onlyEOA() {
+        // Used to stop deposits from contracts (avoid accidentally lost tokens)
+        require(msg.sender.code.length == 0, "L2ECOBridge: Account not EOA");
         _;
     }
 
@@ -116,7 +123,7 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         uint256 _amount,
         uint32 _l1Gas,
         bytes calldata _data
-    ) external virtual isL2EcoToken(_l2Token) {
+    ) external virtual onlyEOA isL2EcoToken(_l2Token) {
         _initiateWithdrawal(msg.sender, msg.sender, _amount, _l1Gas, _data);
     }
 
@@ -160,7 +167,9 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     /**
      * @inheritdoc IL2ECOBridge
      */
-    function rebase(uint256 _inflationMultiplier)
+    function rebase(
+        uint256 _inflationMultiplier
+    )
         external
         virtual
         onlyFromCrossDomainAccount(l1TokenBridge)
@@ -174,11 +183,9 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
      * @inheritdoc IL2ECOBridge
      * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
-    function upgradeECO(address _newEcoImpl)
-        external
-        virtual
-        onlyFromCrossDomainAccount(l1TokenBridge)
-    {
+    function upgradeECO(
+        address _newEcoImpl
+    ) external virtual onlyFromCrossDomainAccount(l1TokenBridge) {
         //cast to a payable address since l2Eco is the proxy address of a ITransparentUpgradeableProxy contract
         address payable proxyAddr = payable(address(l2Eco));
 
@@ -194,11 +201,9 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
      * @inheritdoc IL2ECOBridge
      * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
-    function upgradeSelf(address _newBridgeImpl)
-        external
-        virtual
-        onlyFromCrossDomainAccount(l1TokenBridge)
-    {
+    function upgradeSelf(
+        address _newBridgeImpl
+    ) external virtual onlyFromCrossDomainAccount(l1TokenBridge) {
         //cast to a payable address since l2Eco is the proxy address of a ITransparentUpgradeableProxy contract
         address payable proxyAddr = payable(address(this));
 

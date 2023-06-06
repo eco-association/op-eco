@@ -177,8 +177,8 @@ describe('L1ECOBridge', () => {
     })
 
     it('cannot depositERC20 from a contract account', async () => {
-      expect(
-        L1ECOBridge.depositERC20(
+      await expect(
+        L1ECOBridge.connect(l1MessengerImpersonator).depositERC20(
           L1ERC20.address,
           DUMMY_L2_ERC20_ADDRESS,
           depositAmount,
