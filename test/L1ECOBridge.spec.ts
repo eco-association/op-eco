@@ -299,28 +299,27 @@ describe('L1ECOBridge', () => {
         // L1ERC20.transfer.reverts('Pausable: paused') this doesn't work for some reason, smock doesn't apply to low level calls
         await L1ERC20.setVariable('_paused', true)
 
-        await expect(
-          L1ECOBridge.finalizeERC20Withdrawal(
-            L1ERC20.address,
-            DUMMY_L2_ERC20_ADDRESS,
-            NON_ZERO_ADDRESS,
-            NON_ZERO_ADDRESS,
-            withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
-            NON_NULL_BYTES32,
-            { from: Fake__L1CrossDomainMessenger.address }
-          )
+        await expect(L1ECOBridge.finalizeERC20Withdrawal(
+          L1ERC20.address,
+          DUMMY_L2_ERC20_ADDRESS,
+          NON_ZERO_ADDRESS,
+          NON_ZERO_ADDRESS,
+          withdrawalAmount.mul(INITIAL_INFLATION_MULTIPLIER),
+          NON_NULL_BYTES32,
+          { from: Fake__L1CrossDomainMessenger.address }
+        )).to.emit(L1ECOBridge, 'WithdrawalFailed')
+        .withArgs(
+          L1ERC20.address,
+          DUMMY_L2_ERC20_ADDRESS,
+          NON_ZERO_ADDRESS,
+          NON_ZERO_ADDRESS,
+          withdrawalAmount,
+          NON_NULL_BYTES32
         )
-          .to.emit(L1ECOBridge, 'WithdrawalFailed')
-          .withArgs(
-            L1ERC20.address,
-            DUMMY_L2_ERC20_ADDRESS,
-            NON_ZERO_ADDRESS,
-            NON_ZERO_ADDRESS,
-            withdrawalAmount,
-            NON_NULL_BYTES32
-          )
 
         expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
+
+        
       })
 
       it('should emit failed event on pause', async () => {
