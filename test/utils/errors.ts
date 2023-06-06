@@ -19,6 +19,10 @@ export const ERROR_STRINGS = {
     INVALID_L1_ADDRESS: 'L2ECOBridge: invalid L1 token address',
     INVALID_INFLATION_MULTIPLIER: 'L2ECOBridge: invalid inflation multiplier',
     INVALID_EOA_ONLY: 'L2ECOBridge: Account not EOA',
+    INVALID_UPGRADE_ECO_BLOCK:
+      'L2ECOBridge: upgradeEco block number must be greater than last',
+    INVALID_UPGRADE_SELF_BLOCK:
+      'L2ECOBridge: upgradeSelf block number must be greater than last upgrade block',
   },
   L2ECO: {
     UNAUTHORIZED_MINTER: 'L2ECO: not authorized to mint',

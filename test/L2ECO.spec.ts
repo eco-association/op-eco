@@ -36,6 +36,14 @@ describe('L2ECO tests', () => {
         eco.initialize(AddressZero, NON_ZERO_ADDRESS)
       ).to.be.revertedWith(ERROR_STRINGS.UPGRADES.ALREADY_INITIALIZED)
     })
+
+    it('Should set the symbol and name correctly', async () => {
+      expect((await eco.name()) === 'ECO').to.be.true
+      expect((await eco.symbol()) === 'ECO').to.be.true
+      const tx = await eco.eip712Domain()
+      expect(tx.name === 'ECO').to.be.true
+      expect(tx.version === '1').to.be.true
+    })
   })
 
   describe('optimism standards', () => {

@@ -41,7 +41,7 @@ async function main() {
   const L2ECOTokenFactory = await hre.ethers.getContractFactory('L2ECO')
   const newL2ECOTokenImpl = await L2ECOTokenFactory.deploy()
   await newL2ECOTokenImpl.deployed()
-  console.log(`new L2 Bridge deployed to ${newL2ECOTokenImpl.address}`)
+  console.log(`new L2 ECO deployed to ${newL2ECOTokenImpl.address}`)
 
   hre.changeNetwork(L1_NETWORK)
 

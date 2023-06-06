@@ -6,11 +6,11 @@ import "@helix-foundation/currency/contracts/policy/Policed.sol";
 import "@helix-foundation/currency/contracts/governance/community/proposals/Proposal.sol";
 import "../bridge/L1ECOBridge.sol";
 
-/** @title Upgrade L2Bridge or L2ECO
+/** @title Upgrade L2Bridge
  * A proposal to trigger the upgrade cycle on the L2
  */
-contract TriggerL2Upgrade is Policy, Proposal {
-    // The address to be targeted by the new notifier tx data
+contract TriggerL2BridgeUpgrade is Policy, Proposal {
+    // The address to be targeted by the proposal
     L1ECOBridge public immutable l1Bridge;
 
     // The L2 address for the new implementation
@@ -44,7 +44,7 @@ contract TriggerL2Upgrade is Policy, Proposal {
     /** A description of what the proposal does.
      */
     function description() public pure override returns (string memory) {
-        return "This proposal upgrades the L2 ECO on Optimism"; // can be adapted to L2 bridge upgrade probably
+        return "This proposal upgrades the L2 Bridge on Optimism"; // can be adapted to L2 bridge upgrade probably
     }
 
     /** A URL where more details can be found.
@@ -57,6 +57,6 @@ contract TriggerL2Upgrade is Policy, Proposal {
      * this function only accepts calls via governance by the root policy
      */
     function enacted(address) public override {
-        l1Bridge.upgradeECO(l2Impl, l2Gas);
+        l1Bridge.upgradeL2Bridge(l2Impl, l2Gas);
     }
 }
