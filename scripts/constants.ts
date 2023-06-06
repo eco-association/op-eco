@@ -1,16 +1,18 @@
-const UPGRADER_ADDRESS = '0x71D536c7d9E65AF36AFAA28016618a8C3Ea32952'
+//change these for different networks
+//GOERLI address
 const L1_OP_MESSANGER_ADDRESS = '0x5086d1eEF304eb5284A0f6720f79403b4e9bE294'
 const L2_OP_MESSANGER_ADDRESS = '0x4200000000000000000000000000000000000007'
 const L1_ECO_ADDRESS = '0x3E87d4d9E69163E7590f9b39a70853cf25e5ABE3'
 const L1_NETWORK = 'goerli'
 const L2_NETWORK = 'goerliOptimism'
 
-const l1BridgeProxyAddress = '0x8881e29DF6e33811a386663c1c8cffA64ccFC5A2'
-const l2BridgeProxyAddress = '0xe10ED47E6B0963A9FF7232192813b1FF684Cc64c'
-const l2EcoProxyAddress = '0xCF71a921301C41891118562c92c000B5C62E125a'
+//change these per deploys
+const l1BridgeProxyAddress = '0xBa8be7D566c1C57aEbe0f9a077146619186ad062'
+const l2BridgeProxyAddress = '0x8F854068Fd6E3a1c2ae175B33F703775Fe04CCf2'
+const l2EcoProxyAddress = '0xe6Ac2D9e9FEb17020721127777eb78afCdf47f00'
+const upgraderAddress = '0xafcE51A3bFEd22490343E25f66b10bD8677E22B9'
 
 export {
-  UPGRADER_ADDRESS,
   L1_ECO_ADDRESS,
   L1_OP_MESSANGER_ADDRESS,
   L2_OP_MESSANGER_ADDRESS,
@@ -19,4 +21,5 @@ export {
   l1BridgeProxyAddress,
   l2BridgeProxyAddress,
   l2EcoProxyAddress,
+  upgraderAddress,//eco root policy
 }
