@@ -335,7 +335,10 @@ describe('L2ECOBridge tests', () => {
       )
 
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(inflationMultiplier, 1)
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(
+          inflationMultiplier,
+          1
+        )
       )
         .to.emit(L2ECOBridge, 'RebaseInitiated')
         .withArgs(inflationMultiplier)
