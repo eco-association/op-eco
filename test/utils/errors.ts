@@ -8,15 +8,11 @@ export const ERROR_STRINGS = {
     INVALID_X_DOMAIN_MSG_SENDER:
       'OVM_XCHAIN: wrong sender of cross-domain message',
   },
-  L1ECO: {
-    PAUSED: 'Pausable: paused',
-  },
   L1ECOBridge: {
     INVALID_L2_ADDRESS: 'L1ECOBridge: invalid L2 token address',
     INVALID_L1_ADDRESS: 'L1ECOBridge: invalid L1 token address',
     UNAUTHORIZED_UPGRADER:
       'L1ECOBridge: caller not authorized to upgrade L2 contracts.',
-    FAILED_TO_TRANSFER: 'L1ECOBridge: Finalization transfer unsuccessful',
   },
   L2ECOBridge: {
     INVALID_L2_ADDRESS: 'L2ECOBridge: invalid L2 token address',
