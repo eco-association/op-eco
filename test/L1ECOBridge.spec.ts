@@ -485,7 +485,7 @@ describe('L1ECOBridge', () => {
           },
         ])
       }
-      await L1ECOBridge.connect(alice).rebase(FINALIZATION_GAS)
+      const tx = await L1ECOBridge.connect(alice).rebase(FINALIZATION_GAS)
       expect(await L1ECOBridge.inflationMultiplier()).to.eq(
         newInflationMultiplier
       )
@@ -496,7 +496,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS,
         (await getContractInterface('L2ECOBridge')).encodeFunctionData(
           'rebase',
-          [newInflationMultiplier]
+          [newInflationMultiplier, tx.blockNumber]
         ),
         FINALIZATION_GAS,
       ])
