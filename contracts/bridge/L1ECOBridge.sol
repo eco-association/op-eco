@@ -263,6 +263,19 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
                 _data
             );
         } else {
+            // if the transfer fails, create a return tx
+            bytes memory message = abi.encodeWithSelector(
+                IL2ERC20Bridge.finalizeDeposit.selector,
+                _l1Token,
+                _l2Token,
+                _to, // switched the _to and _from here to bounce back the deposit to the sender
+                _from,
+                _gonsAmount,
+                _data
+            );
+
+            // Send message up to L1 bridge
+            sendCrossDomainMessage(l2TokenBridge, 0, message);
             // Emit an event to signal success event listeners to expect failure
             emit WithdrawalFailed(
                 _l1Token,
