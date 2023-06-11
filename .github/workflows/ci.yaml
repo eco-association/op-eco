@@ -1,6 +1,6 @@
 name: OP-ECO CI Tests
 
-on:
+on: 
   push:
     branches: [main]
   pull_request:
@@ -8,6 +8,9 @@ on:
 
 jobs:
   lint:
+    strategy:
+      fail-fast: true
+      
     name: Eslint, prettier and solhint
     runs-on: ubuntu-latest
 
@@ -37,6 +40,9 @@ jobs:
           cmd: format # will run `yarn format` command
 
   tests:
+    strategy:
+      fail-fast: true
+
     name: Test Suite
     runs-on: ubuntu-latest
 
@@ -64,3 +70,32 @@ jobs:
         uses: borales/actions-yarn@v4
         with:
           cmd: test # will run `yarn build` command
+  check:
+    strategy:
+      fail-fast: true
+
+    name: Optimism Foundry Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+          
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run Forge build
+        run: |
+          forge --version
+          forge build --sizes
+        id: build
+
+      - name: Run Forge tests
+        run: |
+          forge test -vvv
+        id: test

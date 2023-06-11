@@ -6,9 +6,17 @@ typechain-types
 gen
 .DS_Store
 
-#Hardhat files
+#Compiler files
 cache
+cache-forge
 artifacts
+artifacts-forge
+out
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
 
 # VS Code workspace config
 workspace.code-workspace
