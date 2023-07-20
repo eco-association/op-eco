@@ -1,42 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity 0.8.19;
 
 /// ============ Imports ============
 
-import "./interfaces/IERC20.sol"; // ERC20 minified interface
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol"; // OZ: ERC721
+import "../interfaces/tokens/IERC20.sol"; // ERC20 minified interface
 
-/// @title MultiFaucet
+/// @title Faucet
 /// @author Anish Agnihotri
-/// @notice Drips ETH, DAI, wETH, and mints NFTs
-contract MultiFaucet is ERC721 {
+/// @notice Drips ECO to users that authenticate with a server via twitter. Does not allow repeat drips. 
+contract Faucet {
 
     /// ============ Immutable storage ============
 
     /// @notice ECO ERC20 token
     IERC20 public immutable ECO;
-    /// @notice wETH ERC20 token
-    IERC20 public immutable WETH;
 
     /// ============ Mutable storage ============
 
-    /// @notice Default NFT uri
-    string public URI;
-    /// @notice Count of minted NFTs
-    uint256 public nftsMinted;
-    /// @notice Number of ERC721 NFTs to mint
-    uint256 public NFT_COUNT = 5;
-    /// @notice ETH to disperse
-    uint256 public ETH_AMOUNT = 5e18;
-    /// @notice DAI to disperse
-    uint256 public DAI_AMOUNT = 5_000e18;
-    /// @notice wETH to disperse
-    uint256 public WETH_AMOUNT = 5e18;
+    /// @notice ECO to disperse
+    uint256 public DRIP_AMOUNT;
+
     /// @notice Addresses of approved operators
     mapping(address => bool) public approvedOperators;
     /// @notice Addresses of super operators
     mapping(address => bool) public superOperators;
-
+    /// @notice Mint status of each hashed socialID
     mapping(string => bool) public hasMinted;
 
     /// ============ Modifiers ============
@@ -80,17 +68,16 @@ contract MultiFaucet is ERC721 {
 
     /// ============ Constructor ============
 
-    /// @notice Creates a new MultiFaucet contract
-    /// @param _DAI address of DAI contract
-    /// @param _WETH address of wETH contract
-    /// @param _URI string of token URI
-    constructor(address _DAI, address _WETH, string memory _URI) 
-        ERC721("MultiFaucet NFT", "MFNFT") 
-    {
-        DAI = IERC20(_DAI);
-        WETH = IERC20(_WETH);
-        URI = _URI;
-        superOperators[msg.sender] = true;
+    /// @notice Creates a new faucet contract
+    /// @param _ECO address of ECO contract
+    constructor(address _ECO, uint256 _DRIP_AMOUNT, address _superOperator, address[] _approvedOperators) {
+        ECO = _ECO;
+        DRIP_AMOUNT = _DRIP_AMOUNT;
+        superOperators[_superOperator] = true;
+
+        for(uint i = 0; i < _approvedOperators.length; i++) {
+            approvedOperators[_approvedOperators[i]] = true;
+        }
     }
 
     /// ============ Functions ============
@@ -99,51 +86,16 @@ contract MultiFaucet is ERC721 {
     /// @param _recipient to drip tokens to
     function drip(string _socialHash, address _recipient) external isApprovedOperator {
         require(!hasMinted(_socialHash), "the owner of this social ID has already minted.");
-        // Drip Ether
-        (bool sent,) = _recipient.call{value: ETH_AMOUNT}("");
-        require(sent, "Failed dripping ETH");
 
-        // Drip DAI
-        require(DAI.transfer(_recipient, DAI_AMOUNT), "Failed dripping DAI");
-
-        // Drip wETH
-        require(WETH.transfer(_recipient, WETH_AMOUNT), "Failed dripping wETH");
-
-        // Mint NFTs
-        for (uint256 i = 1; i <= NFT_COUNT; i++) {
-            _mint(_recipient, nftsMinted + i);
-        }
-        nftsMinted += NFT_COUNT;
+        // Drip ECO
+        require(ECO.transfer(_recipient, DRIP_AMOUNT), "Failed dripping ECO");
 
         emit FaucetDripped(_recipient);
     }
 
-    /// @notice Returns number of available drips by token
-    /// @return ethDrips — available Ether drips
-    /// @return daiDrips — available DAI drips
-    /// @return wethDrips — available wETH drips
-    function availableDrips() public view 
-        returns (uint256 ethDrips, uint256 daiDrips, uint256 wethDrips) 
-    {
-        ethDrips = address(this).balance / ETH_AMOUNT;
-        daiDrips = DAI.balanceOf(address(this)) / DAI_AMOUNT;
-        wethDrips = WETH.balanceOf(address(this)) / WETH_AMOUNT;
-    }
-
-    /// @notice Allows super operator to drain contract of tokens
-    /// @param _recipient to send drained tokens to
     function drain(address _recipient) external isSuperOperator {
-        // Drain all Ether
-        (bool sent,) = _recipient.call{value: address(this).balance}("");
-        require(sent, "Failed draining ETH");
-
-        // Drain all DAI
-        uint256 daiBalance = DAI.balanceOf(address(this));
-        require(DAI.transfer(_recipient, daiBalance), "Failed draining DAI");
-
-        // Drain all wETH
-        uint256 wethBalance = WETH.balanceOf(address(this));
-        require(WETH.transfer(_recipient, wethBalance), "Failed dripping wETH");
+        uint256 ecoBalance = ECO.balanceOf(address(this));
+        require(ECO.transfer(_recipient, ecoBalance), "Failed to drain");
 
         emit FaucetDrained(_recipient);
     }
@@ -170,37 +122,11 @@ contract MultiFaucet is ERC721 {
         emit SuperOperatorUpdated(_operator, _status);
     }
 
-    /// @notice Override internal ERC721 function to return single image per NFT
-    /// @param tokenId of ERC721 NFT
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        // OpenZeppelin check: ensure token exists
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
-        return URI;
-    }
-
-    /// @notice Allows super operator to update NFT uri
-    /// @param _URI of collection
-    function updateTokenURI(string memory _URI) external isSuperOperator {
-        URI = _URI;
-    }
-
-    /// @notice Allows super operator to update drip amounts
-    /// @param _nftCount number of NFTs to mint per drip
-    /// @param _ethAmount ETH to drip
-    /// @param _daiAmount DAI to drip
-    /// @param _wethAmount wETH to drip
+    /// @notice Allows super operator to update drip amount
+    /// @param _dripAmount wETH to drip
     function updateDripAmounts(
-        uint256 _nftCount, 
-        uint256 _ethAmount,
-        uint256 _daiAmount,
-        uint256 _wethAmount
+        uint256 _dripAmount
     ) external isSuperOperator {
-        NFT_COUNT = _nftCount;
-        ETH_AMOUNT = _ethAmount;
-        DAI_AMOUNT = _daiAmount;
-        WETH_AMOUNT = _wethAmount;
+        DRIP_AMOUNT = _dripAmount;
     }
-
-    /// @notice Allows receiving ETH
-    receive() external payable {}
 }
