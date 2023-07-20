@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 /// ============ Imports ============
 
-import "../interfaces/tokens/IERC20.sol"; // ERC20 minified interface
+import "../interfaces/token/IERC20.sol"; // ERC20 minified interface
 
 /// @title Faucet
 /// @author Anish Agnihotri
@@ -66,12 +66,16 @@ contract Faucet {
     /// @param status new operator status
     event SuperOperatorUpdated(address indexed operator, bool status);
 
+    /// @notice Emitted after drip amount is updated
+    /// @param newDripAmount new drip amount
+    event DripAmountUpdated(uint256 newDripAmount);
+
     /// ============ Constructor ============
 
     /// @notice Creates a new faucet contract
     /// @param _ECO address of ECO contract
-    constructor(address _ECO, uint256 _DRIP_AMOUNT, address _superOperator, address[] _approvedOperators) {
-        ECO = _ECO;
+    constructor(address _ECO, uint256 _DRIP_AMOUNT, address _superOperator, address[] memory _approvedOperators) {
+        ECO = IERC20(_ECO);
         DRIP_AMOUNT = _DRIP_AMOUNT;
         superOperators[_superOperator] = true;
 
@@ -84,11 +88,13 @@ contract Faucet {
 
     /// @notice Drips and mints tokens to recipient
     /// @param _recipient to drip tokens to
-    function drip(string _socialHash, address _recipient) external isApprovedOperator {
-        require(!hasMinted(_socialHash), "the owner of this social ID has already minted.");
+    function drip(string memory _socialHash, address _recipient) external isApprovedOperator {
+        require(!hasMinted[_socialHash], "the owner of this social ID has already minted.");
 
         // Drip ECO
         require(ECO.transfer(_recipient, DRIP_AMOUNT), "Failed dripping ECO");
+
+        hasMinted[_socialHash] = true;
 
         emit FaucetDripped(_recipient);
     }
@@ -124,9 +130,11 @@ contract Faucet {
 
     /// @notice Allows super operator to update drip amount
     /// @param _dripAmount wETH to drip
-    function updateDripAmounts(
+    function updateDripAmount(
         uint256 _dripAmount
     ) external isSuperOperator {
         DRIP_AMOUNT = _dripAmount;
+
+        emit DripAmountUpdated(_dripAmount);
     }
 }
