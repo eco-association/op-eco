@@ -47,9 +47,7 @@ describe('L2ECO tests', () => {
       [bob.address, charlie.address]
     )
 
-    await eco
-      .connect(l2BridgeImpersonator)
-      .mint(faucet.address, 5 * DRIP_2)
+    await eco.connect(l2BridgeImpersonator).mint(faucet.address, 5 * DRIP_2)
   })
 
   describe('constructor', async () => {
@@ -89,7 +87,7 @@ describe('L2ECO tests', () => {
       expect(await eco.balanceOf(faucet.address)).to.eq(4 * DRIP_2)
 
       // should allow different socialID hash but same recipient address
-      // 
+      //
       await faucet.connect(alice).drip(hash2, alice.address, false)
       expect(await eco.balanceOf(alice.address)).to.eq(DRIP_2 + DRIP_1)
       expect(await eco.balanceOf(faucet.address)).to.eq(4 * DRIP_2 - DRIP_1)
@@ -174,8 +172,8 @@ describe('L2ECO tests', () => {
         .to.emit(faucet, 'DripAmountsUpdated')
         .withArgs(newDrip1, newDrip2)
 
-        expect(await faucet.DRIP_1()).to.eq(newDrip1)
-        expect(await faucet.DRIP_2()).to.eq(newDrip2)
+      expect(await faucet.DRIP_1()).to.eq(newDrip1)
+      expect(await faucet.DRIP_2()).to.eq(newDrip2)
     })
   })
 })
