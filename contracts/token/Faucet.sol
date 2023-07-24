@@ -18,10 +18,10 @@ contract Faucet {
     /// ============ Mutable storage ============
 
     /// @notice ECO to disperse (unverified)
-    uint256 public DRIP_1;
+    uint256 public DRIP_UNVERIFIED;
 
     /// @notice ECO to disperse (verified)
-    uint256 public DRIP_2;
+    uint256 public DRIP_VERIFIED;
 
     /// @notice Addresses of approved operators
     mapping(address => bool) public approvedOperators;
@@ -70,18 +70,18 @@ contract Faucet {
     event SuperOperatorUpdated(address indexed operator, bool status);
 
     /// @notice Emitted after drip amount is updated
-    /// @param newUnverifiedDrip new drip1 amount
-    /// @param newVerifiedDrip new drip2 amount
+    /// @param newUnverifiedDrip new drip_unverified amount
+    /// @param newVerifiedDrip new drip_verified amount
     event DripAmountsUpdated(uint256 newUnverifiedDrip, uint256 newVerifiedDrip);
 
     /// ============ Constructor ============
 
     /// @notice Creates a new faucet contract
     /// @param _ECO address of ECO contract
-    constructor(address _ECO, uint256 _DRIP_1, uint256 _DRIP_2, address _superOperator, address[] memory _approvedOperators) {
+    constructor(address _ECO, uint256 _DRIP_UNVERIFIED, uint256 _DRIP_VERIFIED, address _superOperator, address[] memory _approvedOperators) {
         ECO = IERC20(_ECO);
-        DRIP_1 = _DRIP_1;
-        DRIP_2 = _DRIP_2;
+        DRIP_UNVERIFIED = _DRIP_UNVERIFIED;
+        DRIP_VERIFIED = _DRIP_VERIFIED;
         superOperators[_superOperator] = true;
 
         for(uint i = 0; i < _approvedOperators.length; i++) {
@@ -96,7 +96,7 @@ contract Faucet {
     function drip(string memory _socialHash, address _recipient, bool _verified) external isApprovedOperator {
         require(!hasMinted[_socialHash], "the owner of this social ID has already minted.");
 
-        uint256 dripAmount = _verified ? DRIP_2 : DRIP_1;
+        uint256 dripAmount = _verified ? DRIP_VERIFIED : DRIP_UNVERIFIED;
         // Drip ECO
         require(ECO.transfer(_recipient, dripAmount), "Failed dripping ECO");
 
@@ -135,14 +135,14 @@ contract Faucet {
     }
 
     /// @notice Allows super operator to update drip amount
-    /// @param unverifiedDrip new drip1 amount
-    /// @param verifiedDrip new drip2 amount
+    /// @param unverifiedDrip new drip_unverified amount
+    /// @param verifiedDrip new drip_verified amount
     function updateDripAmount(
         uint256 unverifiedDrip,
         uint256 verifiedDrip
     ) external isSuperOperator {
-        DRIP_1 = unverifiedDrip;
-        DRIP_2 = verifiedDrip;
-        emit DripAmountsUpdated(DRIP_1, DRIP_2);
+        DRIP_UNVERIFIED = unverifiedDrip;
+        DRIP_VERIFIED = verifiedDrip;
+        emit DripAmountsUpdated(DRIP_UNVERIFIED, DRIP_VERIFIED);
     }
 }
