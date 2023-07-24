@@ -14,7 +14,8 @@ describe('L2ECO tests', () => {
   let eco: L2ECO
   let faucet: Faucet
 
-  const dripAmount: number = 1000
+  const DRIP_UNVERIFIED: number = 30
+  const DRIP_VERIFIED: number = 650
 
   const hash1: any = ethers.utils.keccak256('0xdeadbeef')
   const hash2 = ethers.utils.keccak256('0xbadf00d1')
@@ -40,20 +41,22 @@ describe('L2ECO tests', () => {
     //   console.log(faucetFactory)
     faucet = await faucetFactory.deploy(
       eco.address,
-      dripAmount,
+      DRIP_UNVERIFIED,
+      DRIP_VERIFIED,
       alice.address,
       [bob.address, charlie.address]
     )
 
     await eco
       .connect(l2BridgeImpersonator)
-      .mint(faucet.address, 5 * dripAmount)
+      .mint(faucet.address, 5 * DRIP_VERIFIED)
   })
 
   describe('constructor', async () => {
     it('sets correctly', async () => {
       expect(await faucet.ECO()).to.eq(eco.address)
-      expect(await faucet.DRIP_AMOUNT()).to.eq(dripAmount)
+      expect(await faucet.DRIP_UNVERIFIED()).to.eq(DRIP_UNVERIFIED)
+      expect(await faucet.DRIP_VERIFIED()).to.eq(DRIP_VERIFIED)
       expect(await faucet.superOperators(alice.address)).to.be.true
       expect(await faucet.superOperators(bob.address)).to.be.false
       expect(await faucet.approvedOperators(alice.address)).to.be.false
@@ -65,36 +68,41 @@ describe('L2ECO tests', () => {
   describe('lets test the drip! (drip drip)', async () => {
     it('doesnt allow non-approved operators to use drip', async () => {
       await expect(
-        faucet.connect(dave).drip(hash1, dave.address)
+        faucet.connect(dave).drip(hash1, dave.address, true)
       ).to.be.revertedWith('Not approved operator')
     })
     it('allows approved operators to use drip, but cannot drip to the same socialID hash more than once', async () => {
       expect(await eco.balanceOf(alice.address)).to.eq(0)
-      expect(await eco.balanceOf(faucet.address)).to.eq(5 * dripAmount)
+      expect(await eco.balanceOf(faucet.address)).to.eq(5 * DRIP_VERIFIED)
 
-      await expect(faucet.connect(alice).drip(hash1, alice.address))
+      await expect(faucet.connect(alice).drip(hash1, alice.address, true))
         .to.emit(faucet, 'FaucetDripped')
         .withArgs(alice.address)
-      expect(await eco.balanceOf(alice.address)).to.eq(dripAmount)
-      expect(await eco.balanceOf(faucet.address)).to.eq(4 * dripAmount)
+      expect(await eco.balanceOf(alice.address)).to.eq(DRIP_VERIFIED)
+      expect(await eco.balanceOf(faucet.address)).to.eq(4 * DRIP_VERIFIED)
 
       await expect(
-        faucet.connect(alice).drip(hash1, alice.address)
+        faucet.connect(alice).drip(hash1, alice.address, true)
       ).to.be.revertedWith('the owner of this social ID has already minted.')
 
-      expect(await eco.balanceOf(alice.address)).to.eq(dripAmount)
-      expect(await eco.balanceOf(faucet.address)).to.eq(4 * dripAmount)
+      expect(await eco.balanceOf(alice.address)).to.eq(DRIP_VERIFIED)
+      expect(await eco.balanceOf(faucet.address)).to.eq(4 * DRIP_VERIFIED)
 
       // should allow different socialID hash but same recipient address
-      await faucet.connect(alice).drip(hash2, alice.address)
-      expect(await eco.balanceOf(alice.address)).to.eq(2 * dripAmount)
-      expect(await eco.balanceOf(faucet.address)).to.eq(3 * dripAmount)
+      //
+      await faucet.connect(alice).drip(hash2, alice.address, false)
+      expect(await eco.balanceOf(alice.address)).to.eq(
+        DRIP_VERIFIED + DRIP_UNVERIFIED
+      )
+      expect(await eco.balanceOf(faucet.address)).to.eq(
+        4 * DRIP_VERIFIED - DRIP_UNVERIFIED
+      )
     })
   })
 
   describe('drain', async () => {
     it('only allows superOperators to drain', async () => {
-      expect(await eco.balanceOf(faucet.address)).to.eq(5 * dripAmount)
+      expect(await eco.balanceOf(faucet.address)).to.eq(5 * DRIP_VERIFIED)
       expect(await eco.balanceOf(alice.address)).to.eq(0)
 
       await expect(faucet.connect(bob).drain(bob.address)).to.be.revertedWith(
@@ -105,7 +113,7 @@ describe('L2ECO tests', () => {
         .to.emit(faucet, 'FaucetDrained')
         .withArgs(alice.address)
       expect(await eco.balanceOf(faucet.address)).to.eq(0)
-      expect(await eco.balanceOf(alice.address)).to.eq(5 * dripAmount)
+      expect(await eco.balanceOf(alice.address)).to.eq(5 * DRIP_VERIFIED)
     })
   })
 
@@ -118,14 +126,18 @@ describe('L2ECO tests', () => {
       await expect(
         faucet.connect(charlie).updateSuperOperator(charlie.address, true)
       ).to.be.revertedWith('Not super operator')
-      const newDripAmount = 1001
+      const newUnverifiedDrip = 50
+      const newVerifiedDrip = 900
       await expect(
-        faucet.connect(charlie).updateDripAmount(newDripAmount)
+        faucet
+          .connect(charlie)
+          .updateDripAmount(newUnverifiedDrip, newVerifiedDrip)
       ).to.be.revertedWith('Not super operator')
 
       expect(await faucet.approvedOperators(bob.address)).to.be.true
       expect(await faucet.superOperators(charlie.address)).to.be.false
-      expect(await faucet.DRIP_AMOUNT()).to.not.eq(newDripAmount)
+      expect(await faucet.DRIP_UNVERIFIED()).to.not.eq(newUnverifiedDrip)
+      expect(await faucet.DRIP_VERIFIED()).to.not.eq(newVerifiedDrip)
     })
 
     it('updates approvedOperators', async () => {
@@ -159,14 +171,21 @@ describe('L2ECO tests', () => {
     })
 
     it('updates drip amount', async () => {
-      const newDripAmount = 1001
-      expect(await faucet.DRIP_AMOUNT()).to.eq(dripAmount)
+      const newUnverifiedDrip = 50
+      const newVerifiedDrip = 900
+      expect(await faucet.DRIP_UNVERIFIED()).to.eq(DRIP_UNVERIFIED)
+      expect(await faucet.DRIP_VERIFIED()).to.eq(DRIP_VERIFIED)
 
-      await expect(faucet.connect(alice).updateDripAmount(newDripAmount))
-        .to.emit(faucet, 'DripAmountUpdated')
-        .withArgs(newDripAmount)
+      await expect(
+        faucet
+          .connect(alice)
+          .updateDripAmount(newUnverifiedDrip, newVerifiedDrip)
+      )
+        .to.emit(faucet, 'DripAmountsUpdated')
+        .withArgs(newUnverifiedDrip, newVerifiedDrip)
 
-      expect(await faucet.DRIP_AMOUNT()).to.eq(newDripAmount)
+      expect(await faucet.DRIP_UNVERIFIED()).to.eq(newUnverifiedDrip)
+      expect(await faucet.DRIP_VERIFIED()).to.eq(newVerifiedDrip)
     })
   })
 })
