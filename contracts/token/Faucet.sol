@@ -7,9 +7,8 @@ import "../interfaces/token/IERC20.sol"; // ERC20 minified interface
 
 /// @title Faucet
 /// @author Anish Agnihotri
-/// @notice Drips ECO to users that authenticate with a server via twitter. Does not allow repeat drips. 
+/// @notice Drips ECO to users that authenticate with a server via twitter. Does not allow repeat drips.
 contract Faucet {
-
     /// ============ Immutable storage ============
 
     /// @notice ECO ERC20 token
@@ -43,7 +42,7 @@ contract Faucet {
     modifier isApprovedOperator() {
         // Ensure sender is in approved operators or is super operator
         require(
-            approvedOperators[msg.sender] || superOperators[msg.sender], 
+            approvedOperators[msg.sender] || superOperators[msg.sender],
             "Not approved operator"
         );
         _;
@@ -72,19 +71,33 @@ contract Faucet {
     /// @notice Emitted after drip amount is updated
     /// @param newUnverifiedDrip new drip_unverified amount
     /// @param newVerifiedDrip new drip_verified amount
-    event DripAmountsUpdated(uint256 newUnverifiedDrip, uint256 newVerifiedDrip);
+    event DripAmountsUpdated(
+        uint256 newUnverifiedDrip,
+        uint256 newVerifiedDrip
+    );
+
+    /// @notice Emitted after the air batch drip function is called
+    /// @param recipients number of recipients
+    /// @param totalAmount total amount dripped
+    event BatchDrip(uint256 recipients, uint256 totalAmount);
 
     /// ============ Constructor ============
 
     /// @notice Creates a new faucet contract
     /// @param _ECO address of ECO contract
-    constructor(address _ECO, uint256 _DRIP_UNVERIFIED, uint256 _DRIP_VERIFIED, address _superOperator, address[] memory _approvedOperators) {
+    constructor(
+        address _ECO,
+        uint256 _DRIP_UNVERIFIED,
+        uint256 _DRIP_VERIFIED,
+        address _superOperator,
+        address[] memory _approvedOperators
+    ) {
         ECO = IERC20(_ECO);
         DRIP_UNVERIFIED = _DRIP_UNVERIFIED;
         DRIP_VERIFIED = _DRIP_VERIFIED;
         superOperators[_superOperator] = true;
 
-        for(uint i = 0; i < _approvedOperators.length; i++) {
+        for (uint i = 0; i < _approvedOperators.length; i++) {
             approvedOperators[_approvedOperators[i]] = true;
         }
     }
@@ -93,8 +106,15 @@ contract Faucet {
 
     /// @notice Drips and mints tokens to recipient
     /// @param _recipient to drip tokens to
-    function drip(string memory _socialHash, address _recipient, bool _verified) external isApprovedOperator {
-        require(!hasMinted[_socialHash], "the owner of this social ID has already minted.");
+    function drip(
+        string memory _socialHash,
+        address _recipient,
+        bool _verified
+    ) external isApprovedOperator {
+        require(
+            !hasMinted[_socialHash],
+            "the owner of this social ID has already minted."
+        );
 
         uint256 dripAmount = _verified ? DRIP_VERIFIED : DRIP_UNVERIFIED;
         // Drip ECO
@@ -103,6 +123,76 @@ contract Faucet {
         hasMinted[_socialHash] = true;
 
         emit FaucetDripped(_recipient);
+    }
+
+    /**
+     * @notice Drip ERC20 tokens to a list of addresses as a batch to decrease gas costs.
+     * There is no check to see if the addresses have already been dripped to. Use with caution.
+     * @dev This function is a modified version of the airdropERC20 function from GasliteDrop.sol https://etherscan.io/address/0x09350f89e2d7b6e96ba730783c2d76137b045fef#code
+     *
+     * @param _token The address of the ERC20 contract
+     * @param _addresses The addresses to airdrop to
+     * @param _amounts The amounts to airdrop
+     * @param _totalAmount The total amount to airdrop
+     */
+    function batchDrip(
+        address _token,
+        address[] calldata _addresses,
+        uint256[] calldata _amounts,
+        uint256 _totalAmount
+    ) external payable isApprovedOperator {
+        emit BatchDrip(_addresses.length, _totalAmount);
+
+        assembly {
+            // Check that the number of addresses matches the number of amounts
+            if iszero(eq(_amounts.length, _addresses.length)) {
+                revert(0, 0)
+            }
+
+            // transferFrom(address from, address to, uint256 amount)
+            mstore(0x00, hex"23b872dd")
+            // from address
+            mstore(0x04, caller())
+            // to address (this contract)
+            mstore(0x24, address())
+            // total amount
+            mstore(0x44, _totalAmount)
+
+            // transfer total amount to this contract
+            if iszero(call(gas(), _token, 0, 0x00, 0x64, 0, 0)) {
+                revert(0, 0)
+            }
+
+            // transfer(address to, uint256 value)
+            mstore(0x00, hex"a9059cbb")
+
+            // end of array
+            let end := add(_addresses.offset, shl(5, _addresses.length))
+            // diff = _addresses.offset - _amounts.offset
+            let diff := sub(_addresses.offset, _amounts.offset)
+
+            // Loop through the addresses
+            for {
+                let addressOffset := _addresses.offset
+            } 1 {
+
+            } {
+                // to address
+                mstore(0x04, calldataload(addressOffset))
+                // amount
+                mstore(0x24, calldataload(sub(addressOffset, diff)))
+                // transfer the tokens
+                if iszero(call(gas(), _token, 0, 0x00, 0x64, 0, 0)) {
+                    revert(0, 0)
+                }
+                // increment the address offset
+                addressOffset := add(addressOffset, 0x20)
+                // if addressOffset >= end, break
+                if iszero(lt(addressOffset, end)) {
+                    break
+                }
+            }
+        }
     }
 
     function drain(address _recipient) external isSuperOperator {
@@ -115,10 +205,10 @@ contract Faucet {
     /// @notice Allows super operator to update approved drip operator status
     /// @param _operator address to update
     /// @param _status of operator to toggle (true == allowed to drip)
-    function updateApprovedOperator(address _operator, bool _status) 
-        external 
-        isSuperOperator 
-    {
+    function updateApprovedOperator(
+        address _operator,
+        bool _status
+    ) external isSuperOperator {
         approvedOperators[_operator] = _status;
         emit OperatorUpdated(_operator, _status);
     }
@@ -126,10 +216,10 @@ contract Faucet {
     /// @notice Allows super operator to update super operator
     /// @param _operator address to update
     /// @param _status of operator to toggle (true === is super operator)
-    function updateSuperOperator(address _operator, bool _status) 
-        external
-        isSuperOperator
-    {
+    function updateSuperOperator(
+        address _operator,
+        bool _status
+    ) external isSuperOperator {
         superOperators[_operator] = _status;
         emit SuperOperatorUpdated(_operator, _status);
     }

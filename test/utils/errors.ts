@@ -32,4 +32,7 @@ export const ERROR_STRINGS = {
   OWNABLE: {
     NOT_OWNER: 'Ownable: caller is not the owner',
   },
+  FAUCET: {
+    INVALID_OPERATOR: 'Not approved operator',
+  },
 }
