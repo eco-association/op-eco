@@ -124,7 +124,7 @@ contract Faucet {
 
         emit FaucetDripped(_recipient);
     }
-
+    
     /**
      * @notice Drip ERC20 tokens to a list of addresses as a batch to decrease gas costs.
      * There is no check to see if the addresses have already been dripped to. Use with caution.
@@ -141,14 +141,14 @@ contract Faucet {
         uint256[] calldata _amounts,
         uint256 _totalAmount
     ) external payable isApprovedOperator {
+        // Check that the number of addresses matches the number of amounts
+        require(_addresses.length == _amounts.length, "Addresses and amounts must be of same size");
         emit BatchDrip(_addresses.length, _totalAmount);
-
+        string
+            memory invalidAllowance = "Faucet contract is not approved to transfer tokens";
+        string
+            memory invalidTransfer = "Tokens failed to transfer to recipient";
         assembly {
-            // Check that the number of addresses matches the number of amounts
-            if iszero(eq(_amounts.length, _addresses.length)) {
-                revert(0, 0)
-            }
-
             // transferFrom(address from, address to, uint256 amount)
             mstore(0x00, hex"23b872dd")
             // from address
@@ -160,7 +160,7 @@ contract Faucet {
 
             // transfer total amount to this contract
             if iszero(call(gas(), _token, 0, 0x00, 0x64, 0, 0)) {
-                revert(0, 0)
+                revert(add(invalidAllowance, 32), mload(invalidAllowance))
             }
 
             // transfer(address to, uint256 value)
@@ -183,7 +183,7 @@ contract Faucet {
                 mstore(0x24, calldataload(sub(addressOffset, diff)))
                 // transfer the tokens
                 if iszero(call(gas(), _token, 0, 0x00, 0x64, 0, 0)) {
-                    revert(0, 0)
+                    revert(add(invalidTransfer, 32), mload(invalidTransfer))
                 }
                 // increment the address offset
                 addressOffset := add(addressOffset, 0x20)

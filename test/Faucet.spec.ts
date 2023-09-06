@@ -108,6 +108,12 @@ describe('L2ECO tests', () => {
   })
 
   describe('batchDrip', async () => {
+    beforeEach(async () => {
+      // clear tokens that the contract is given in initial setup so we can test it failing
+      await faucet.drain(alice.address)
+      expect(await eco.balanceOf(faucet.address)).to.be.equal(0)
+    })
+
     it('should not allow non-approved operators to use batch drip', async () => {
       await expect(
         faucet.connect(dave).batchDrip(eco.address, [], [], 0)
@@ -117,24 +123,25 @@ describe('L2ECO tests', () => {
     it("should revert if the addresses and amounts arrays aren't the same size", async () => {
       await expect(
         faucet.connect(evan).batchDrip(eco.address, [], [1], 0)
-      ).to.be.revertedWith('')
+      ).to.be.revertedWith(ERROR_STRINGS.FAUCET.INVALID_PARAM_SIZE)
     })
 
     it('should revert if the total tokens for the call cannot be transfered to the faucet contract', async () => {
       await expect(
         faucet.connect(evan).batchDrip(eco.address, [bob.address], [1], 1)
-      ).to.be.revertedWith('')
+      ).to.be.revertedWith(ERROR_STRINGS.FAUCET.INVALID_ALLOWANCE)
     })
 
     it('should revert if there are not enough tokens to transfer to all the recipients', async () => {
       const totalAmount = 10
       const overdrip = totalAmount + 5
-      await eco.approve(faucet.address, totalAmount)
+      await eco.connect(evan).approve(faucet.address, totalAmount)
+      expect(await eco.balanceOf(bob.address)).to.be.equal(0)
       await expect(
         faucet
           .connect(evan)
-          .batchDrip(eco.address, [bob.address], [overdrip], overdrip)
-      ).to.be.reverted
+          .batchDrip(eco.address, [bob.address], [overdrip], totalAmount)
+      ).to.be.revertedWith(ERROR_STRINGS.FAUCET.FAILED_TRANSFER)
       expect(await eco.balanceOf(bob.address)).to.be.equal(0)
     })
 

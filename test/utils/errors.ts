@@ -1,3 +1,6 @@
+import { HashZero } from '@ethersproject/constants'
+import { concat, hexlify, toUtf8Bytes } from 'ethers/lib/utils'
+
 /**
  * @notice Contains all error strings used in the contracts.
  * Should be exported in package
@@ -34,5 +37,25 @@ export const ERROR_STRINGS = {
   },
   FAUCET: {
     INVALID_OPERATOR: 'Not approved operator',
+    INVALID_PARAM_SIZE: 'Addresses and amounts must be of same size',
+    INVALID_ALLOWANCE: formatBytesToString(
+      'Faucet contract is not approved to transfer tokens'
+    ),
+    FAILED_TRANSFER: formatBytesToString(
+      'Tokens failed to transfer to recipient'
+    ),
   },
+}
+
+/**
+ * Converts a string into bytes
+ * @param text the text to convert
+ * @returns
+ */
+export function formatBytesToString(text: string): string {
+  // Get the bytes
+  const bytes = toUtf8Bytes(text)
+
+  // Zero-pad (implicitly null-terminates)
+  return hexlify(concat([bytes, HashZero]).slice(0, bytes.length))
 }
