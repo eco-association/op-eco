@@ -76,7 +76,7 @@ describe('L2ECO tests', () => {
     it('doesnt allow non-approved operators to use drip', async () => {
       await expect(
         faucet.connect(dave).drip(hash1, dave.address, true)
-      ).to.be.revertedWith('Not approved operator')
+      ).to.be.revertedWith(ERROR_STRINGS.FAUCET.INVALID_OPERATOR)
     })
     it('allows approved operators to use drip, but cannot drip to the same socialID hash more than once', async () => {
       expect(await eco.balanceOf(alice.address)).to.eq(0)
