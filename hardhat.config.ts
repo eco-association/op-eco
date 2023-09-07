@@ -26,6 +26,7 @@ const config: HardhatUserConfig = {
         },
       },
     ],
+
     settings: {
       metadata: {
         bytecodeHash: 'none',

@@ -4,26 +4,29 @@ import { AddressZero } from '@ethersproject/constants'
 import { expect } from './utils/setup'
 import { L2ECO } from '../typechain-types/contracts/token/L2ECO'
 import { Faucet } from '../typechain-types/contracts/token/Faucet'
+import { ERROR_STRINGS } from './utils/errors'
+import { Address } from '@eth-optimism/core-utils'
 
 describe('L2ECO tests', () => {
   let alice: SignerWithAddress
   let bob: SignerWithAddress
   let charlie: SignerWithAddress
   let dave: SignerWithAddress
+  let evan: SignerWithAddress
   let l2BridgeImpersonator: SignerWithAddress
   let eco: L2ECO
   let faucet: Faucet
 
   const DRIP_UNVERIFIED: number = 30
   const DRIP_VERIFIED: number = 650
-
+  const EVAN_START_BALANCE: number = 1_000_000
   const hash1: any = ethers.utils.keccak256('0xdeadbeef')
   const hash2 = ethers.utils.keccak256('0xbadf00d1')
 
   const baseInflationMult = 10
 
   beforeEach(async () => {
-    ;[alice, bob, charlie, dave, l2BridgeImpersonator] =
+    ;[alice, bob, charlie, dave, evan, l2BridgeImpersonator] =
       await ethers.getSigners()
     const ecoFactory = await ethers.getContractFactory('L2ECO')
     eco = (await upgrades.deployProxy(
@@ -44,12 +47,16 @@ describe('L2ECO tests', () => {
       DRIP_UNVERIFIED,
       DRIP_VERIFIED,
       alice.address,
-      [bob.address, charlie.address]
+      [bob.address, charlie.address, evan.address]
     )
 
     await eco
       .connect(l2BridgeImpersonator)
       .mint(faucet.address, 5 * DRIP_VERIFIED)
+
+    await eco
+      .connect(l2BridgeImpersonator)
+      .mint(evan.address, EVAN_START_BALANCE)
   })
 
   describe('constructor', async () => {
@@ -69,7 +76,7 @@ describe('L2ECO tests', () => {
     it('doesnt allow non-approved operators to use drip', async () => {
       await expect(
         faucet.connect(dave).drip(hash1, dave.address, true)
-      ).to.be.revertedWith('Not approved operator')
+      ).to.be.revertedWith(ERROR_STRINGS.FAUCET.INVALID_OPERATOR)
     })
     it('allows approved operators to use drip, but cannot drip to the same socialID hash more than once', async () => {
       expect(await eco.balanceOf(alice.address)).to.eq(0)
@@ -97,6 +104,68 @@ describe('L2ECO tests', () => {
       expect(await eco.balanceOf(faucet.address)).to.eq(
         4 * DRIP_VERIFIED - DRIP_UNVERIFIED
       )
+    })
+  })
+
+  describe('batchDrip', async () => {
+    beforeEach(async () => {
+      // clear tokens that the contract is given in initial setup so we can test it failing
+      await faucet.drain(alice.address)
+      expect(await eco.balanceOf(faucet.address)).to.be.equal(0)
+    })
+
+    it('should not allow non-approved operators to use batch drip', async () => {
+      await expect(
+        faucet.connect(dave).batchDrip(eco.address, [], [], 0)
+      ).to.be.revertedWith(ERROR_STRINGS.FAUCET.INVALID_OPERATOR)
+    })
+
+    it("should revert if the addresses and amounts arrays aren't the same size", async () => {
+      await expect(
+        faucet.connect(evan).batchDrip(eco.address, [], [1], 0)
+      ).to.be.revertedWith(ERROR_STRINGS.FAUCET.INVALID_PARAM_SIZE)
+    })
+
+    it('should revert if the total tokens for the call cannot be transfered to the faucet contract', async () => {
+      await expect(
+        faucet.connect(evan).batchDrip(eco.address, [bob.address], [1], 1)
+      ).to.be.revertedWith(ERROR_STRINGS.FAUCET.INVALID_ALLOWANCE)
+    })
+
+    it('should revert if there are not enough tokens to transfer to all the recipients', async () => {
+      const totalAmount = 10
+      const overdrip = totalAmount + 5
+      await eco.connect(evan).approve(faucet.address, totalAmount)
+      expect(await eco.balanceOf(bob.address)).to.be.equal(0)
+      await expect(
+        faucet
+          .connect(evan)
+          .batchDrip(eco.address, [bob.address], [overdrip], totalAmount)
+      ).to.be.revertedWith(ERROR_STRINGS.FAUCET.FAILED_TRANSFER)
+      expect(await eco.balanceOf(bob.address)).to.be.equal(0)
+    })
+
+    it('should succeed and emit the BatchDrip event', async () => {
+      const addresses: Address[] = []
+      const amounts: number[] = []
+      const accounts = 600
+      const amount = 2
+      Array(accounts)
+        .fill(0)
+        .forEach(() => {
+          addresses.push(bob.address)
+          amounts.push(amount)
+        })
+      await eco.connect(evan).approve(faucet.address, accounts * amount)
+
+      await expect(
+        faucet
+          .connect(evan)
+          .batchDrip(eco.address, addresses, amounts, accounts * amount)
+      )
+        .to.emit(faucet, 'BatchDrip')
+        .withArgs(accounts, accounts * amount)
+      expect(await eco.balanceOf(bob.address)).to.be.equal(accounts * amount)
     })
   })
 
