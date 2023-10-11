@@ -1,4 +1,4 @@
-import { ethers, upgrades } from "hardhat"
+import { ethers } from 'hardhat'
 import { Faucet } from '../typechain-types/contracts/token/Faucet'
 
 async function main() {
@@ -10,9 +10,10 @@ async function main() {
     0,
     0,
     '0xDD1834f5116c4E2DCE952220dE5641cc775FdaaD',
-    ['0xDD1834f5116c4E2DCE952220dE5641cc775FdaaD'])
+    ['0xDD1834f5116c4E2DCE952220dE5641cc775FdaaD']
+  )
 
-  console.log("Faucet deployed to:", faucet.address)
+  console.log('Faucet deployed to:', faucet.address)
 }
 
 main().catch((error) => {

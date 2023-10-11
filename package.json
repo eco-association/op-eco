@@ -37,7 +37,7 @@
     "depcheck": "depcheck --ignore-bin-package --ignores @openzeppelin/contracts,@openzeppelin/contracts-upgradeable,prettier-plugin-solidity,solhint-plugin-eco,concurrently,@types/mocha",
     "lint": "yarn format",
     "deploy": "hardhat run scripts/deploy.ts",
-    "faucet": "hardhat run scripts/faucetDeploy.ts --network optimism",  
+    "faucet": "hardhat run scripts/faucetDeploy.ts --network optimism",
     "getImpl": "hardhat run scripts/getImpl.ts --network goerliOptimism",
     "verifyFaucetEtherscan": "npx hardhat verify --network optimism --constructor-args arguments.js 0x1A5150F7f86EF1E84B54BCF85c7c44D893DBb3Ba"
   },
