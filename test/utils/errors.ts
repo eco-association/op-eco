@@ -24,10 +24,13 @@ export const ERROR_STRINGS = {
     INVALID_EOA_ONLY: 'L2ECOBridge: Account not EOA',
   },
   L2ECO: {
-    UNAUTHORIZED_MINTER: 'L2ECO: not authorized to mint',
-    UNAUTHORIZED_BURNER: 'L2ECO: not authorized to burn',
     UNAUTHORIZED_REBASER: 'L2ECO: not authorized to rebase',
-    UNAUTHORIZED_TOKEN_ROLE_ADMIN: 'L2ECO: not authorized to edit roles',
+  },
+  L2ERC20Mintable: {
+    UNAUTHORIZED_MINTER: 'L2ERC20Mintable: not authorized to mint',
+    UNAUTHORIZED_BURNER: 'L2ERC20Mintable: not authorized to burn',
+    UNAUTHORIZED_TOKEN_ROLE_ADMIN:
+      'L2ERC20Mintable: not authorized to edit roles',
   },
   UPGRADES: {
     ALREADY_INITIALIZED: 'Initializable: contract is already initialized',
