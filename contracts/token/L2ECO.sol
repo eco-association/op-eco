@@ -6,7 +6,8 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IL2StandardERC20} from "@eth-optimism/contracts/standards/IL2StandardERC20.sol";
 
 /* Contract Imports */
-import {L2ERC20Mintable} from "./L2ERC20Mintable.sol";
+import {ERC20Upgradeable} from "./ERC20Upgradeable.sol";
+import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 
 /**
  * @title L2ECO
@@ -22,7 +23,7 @@ import {L2ERC20Mintable} from "./L2ERC20Mintable.sol";
  * No generational timing.
  * The token contract trusts the sources of admin actions and doesn't keep any internal timing.
  */
-contract L2ECO is L2ERC20Mintable {
+contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
     /**
      * @dev Constant for setting the initial inflation multiplier
      */
@@ -34,9 +35,53 @@ contract L2ECO is L2ERC20Mintable {
     uint256 public linearInflationMultiplier;
 
     /**
+     * @dev Address which has the ability to change permission roles
+     */
+    address public tokenRoleAdmin;
+
+    /**
+     * @dev Address of the L1 token contract
+     */
+    address public l1Token;
+
+    /**
+     * @dev Mapping storing contracts able to mint tokens
+     */
+    mapping(address => bool) public minters;
+    /**
+     * @dev Mapping storing contracts able to burn tokens
+     */
+    mapping(address => bool) public burners;
+    /**
      * @dev Mapping storing contracts able to rebase the token
      */
     mapping(address => bool) public rebasers;
+
+    /**
+     * @dev Event for recording the transfer amounts after _beforeTokenTransfer applies the inflation multiplier
+     * @param from Address sending tokens
+     * @param to Address receive tokens
+     * @param value This is in the base (unchanging) amounts the currency is stored in (gons)
+     */
+    event BaseValueTransfer(
+        address indexed from,
+        address indexed to,
+        uint256 value
+    );
+
+    /**
+     * @dev Event for minted tokens
+     * @param _account Address receive tokens
+     * @param _amount Amount of tokens being created
+     */
+    event Mint(address indexed _account, uint256 _amount);
+
+    /**
+     * @dev Event for burned tokens
+     * @param _account Address losing tokens
+     * @param _amount Amount of tokens being destroyed
+     */
+    event Burn(address indexed _account, uint256 _amount);
 
     /** 
      * @dev Emitted when notified by L1 of a new inflation multiplier.
@@ -46,10 +91,42 @@ contract L2ECO is L2ERC20Mintable {
     event NewInflationMultiplier(uint256 inflationMultiplier);
 
     /**
+     * @dev Modifier for checking if the sender is a minter
+     */
+    modifier onlyMinterRole() {
+        require(minters[msg.sender], "L2ECO: not authorized to mint");
+        _;
+    }
+
+    /**
+     * @dev Modifier for checking if the sender is allowed to burn
+     * both burners and the message sender can burn
+     * @param _from the address burning tokens
+     */
+    modifier onlyBurnerRoleOrSelf(address _from) {
+        require(
+            _from == msg.sender || burners[msg.sender],
+            "L2ECO: not authorized to burn"
+        );
+        _;
+    }
+
+    /**
      * @dev Modifier for checking if the sender is a rebaser
      */
     modifier onlyRebaserRole() {
         require(rebasers[msg.sender], "L2ECO: not authorized to rebase");
+        _;
+    }
+
+    /**
+     * @dev Modifier for checking if the sender is able to edit roles
+     */
+    modifier onlyTokenRoleAdmin() {
+        require(
+            msg.sender == tokenRoleAdmin,
+            "L2ECO: not authorized to edit roles"
+        );
         _;
     }
 
@@ -70,9 +147,16 @@ contract L2ECO is L2ERC20Mintable {
         address _l1Token,
         address _l2Bridge
     ) public initializer {
-        _initialize(_l1Token, _l2Bridge, "ECO", "ECO");
+        ERC20Upgradeable.__ERC20_init(
+            "ECO",
+            "ECO"
+        );
         linearInflationMultiplier = INITIAL_INFLATION_MULTIPLIER;
+        minters[_l2Bridge] = true;
+        burners[_l2Bridge] = true;
         rebasers[_l2Bridge] = true;
+        l1Token = _l1Token;
+        tokenRoleAdmin = _l2Bridge;
     }
 
     /** 
@@ -90,6 +174,32 @@ contract L2ECO is L2ERC20Mintable {
     }
 
     /**
+     * @dev change the minting permissions for an address
+     * only callable by tokenRoleAdmin
+     * @param _key the address to change permissions for
+     * @param _value the new permission. true = can mint, false = cannot mint
+     */
+    function updateMinters(address _key, bool _value)
+        public
+        onlyTokenRoleAdmin
+    {
+        minters[_key] = _value;
+    }
+
+    /**
+     * @dev change the burning permissions for an address
+     * only callable by tokenRoleAdmin
+     * @param _key the address to change permissions for
+     * @param _value the new permission. true = can burn, false = cannot burn
+     */
+    function updateBurners(address _key, bool _value)
+        public
+        onlyTokenRoleAdmin
+    {
+        burners[_key] = _value;
+    }
+
+    /**
      * @dev change the rebasing permissions for an address
      * only callable by tokenRoleAdmin
      * @param _key the address to change permissions for
@@ -103,6 +213,38 @@ contract L2ECO is L2ERC20Mintable {
     }
 
     /**
+     * @dev give the role admin privilege to another address
+     * only callable by tokenRoleAdmin
+     * @param _newAdmin the address to be the new admin
+     */
+    function updateTokenRoleAdmin(address _newAdmin) public onlyTokenRoleAdmin {
+        tokenRoleAdmin = _newAdmin;
+    }
+
+    /**
+     * @dev Mint tokens for an address. Only callable by minter role addresses
+     * @param _to the address to receive tokens
+     * @param _amount the amount of tokens to be created
+     */
+    function mint(address _to, uint256 _amount) external onlyMinterRole {
+        _mint(_to, _amount);
+        emit Mint(_to, _amount);
+    }
+
+    /**
+     * @dev Burn tokens for an address. Only callable by burner role addresses
+     * @param _from the address to lose tokens
+     * @param _amount the amount of tokens to be destroyed
+     */
+    function burn(address _from, uint256 _amount)
+        external
+        onlyBurnerRoleOrSelf(_from)
+    {
+        _burn(_from, _amount);
+        emit Burn(_from, _amount);
+    }
+
+    /**
      * @dev Rebase tokens for all addresses. Done by changing the inflation multiplier. Only callable by rebaser role addresses
      * @param _newLinearInflationMultiplier the new inflation multiplier to replace the current one
      */
@@ -112,6 +254,23 @@ contract L2ECO is L2ERC20Mintable {
     {
         _rebase(_newLinearInflationMultiplier);
         emit NewInflationMultiplier(_newLinearInflationMultiplier);
+    }
+
+    /**
+     * @dev function to utilize ERC165 to signal compliance to an Optimism network system
+     * IERC165 and IL2StandardERC20 are the supported interfaces
+     * @param _interfaceId the ID hash of the interface
+     */
+    function supportsInterface(bytes4 _interfaceId)
+        external
+        pure
+        returns (bool)
+    {
+        bytes4 firstSupportedInterface = type(IERC165).interfaceId; // ERC165
+        bytes4 secondSupportedInterface = type(IL2StandardERC20).interfaceId; // compliant to OP's IL2StandardERC20
+        return
+            _interfaceId == firstSupportedInterface ||
+            _interfaceId == secondSupportedInterface;
     }
 
     /**

@@ -56,7 +56,7 @@ describe('L2ECO tests', () => {
     it('reverts if unauthed', async () => {
       await expect(
         eco.connect(alice).mint(alice.address, mintAmount)
-      ).to.be.revertedWith(ERROR_STRINGS.L2ERC20Mintable.UNAUTHORIZED_MINTER)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_MINTER)
     })
 
     it('increases balance', async () => {
@@ -77,7 +77,7 @@ describe('L2ECO tests', () => {
     it('reverts if unauthed', async () => {
       await expect(
         eco.connect(bob).burn(alice.address, burnAmount)
-      ).to.be.revertedWith(ERROR_STRINGS.L2ERC20Mintable.UNAUTHORIZED_BURNER)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_BURNER)
     })
 
     describe('decreases balance', () => {
@@ -163,30 +163,26 @@ describe('L2ECO tests', () => {
     describe('reverts', () => {
       it('reverts on unauthed minter change', async () => {
         await expect(eco.updateMinters(alice.address, true)).to.be.revertedWith(
-          ERROR_STRINGS.L2ERC20Mintable.UNAUTHORIZED_TOKEN_ROLE_ADMIN
+          ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN
         )
       })
 
       it('reverts on unauthed burner change', async () => {
         await expect(eco.updateBurners(alice.address, true)).to.be.revertedWith(
-          ERROR_STRINGS.L2ERC20Mintable.UNAUTHORIZED_TOKEN_ROLE_ADMIN
+          ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN
         )
       })
 
       it('reverts on unauthed rebaser change', async () => {
         await expect(
           eco.updateRebasers(alice.address, true)
-        ).to.be.revertedWith(
-          ERROR_STRINGS.L2ERC20Mintable.UNAUTHORIZED_TOKEN_ROLE_ADMIN
-        )
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN)
       })
 
       it('reverts on unauthed role admin change', async () => {
         await expect(
           eco.updateTokenRoleAdmin(alice.address)
-        ).to.be.revertedWith(
-          ERROR_STRINGS.L2ERC20Mintable.UNAUTHORIZED_TOKEN_ROLE_ADMIN
-        )
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN)
       })
     })
 
@@ -198,7 +194,7 @@ describe('L2ECO tests', () => {
 
         await expect(
           eco.connect(alice).mint(alice.address, mintAmount)
-        ).to.be.revertedWith(ERROR_STRINGS.L2ERC20Mintable.UNAUTHORIZED_MINTER)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_MINTER)
 
         await eco
           .connect(l2BridgeImpersonator)
@@ -219,7 +215,7 @@ describe('L2ECO tests', () => {
 
         await expect(
           eco.connect(l2BridgeImpersonator).mint(alice.address, mintAmount)
-        ).to.be.revertedWith(ERROR_STRINGS.L2ERC20Mintable.UNAUTHORIZED_MINTER)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_MINTER)
       })
     })
 
@@ -234,7 +230,7 @@ describe('L2ECO tests', () => {
       it('can add permission', async () => {
         await expect(
           eco.connect(bob).burn(alice.address, burnAmount)
-        ).to.be.revertedWith(ERROR_STRINGS.L2ERC20Mintable.UNAUTHORIZED_BURNER)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_BURNER)
 
         await eco.connect(l2BridgeImpersonator).updateBurners(bob.address, true)
 
@@ -254,7 +250,7 @@ describe('L2ECO tests', () => {
 
         await expect(
           eco.connect(l2BridgeImpersonator).burn(alice.address, burnAmount)
-        ).to.be.revertedWith(ERROR_STRINGS.L2ERC20Mintable.UNAUTHORIZED_BURNER)
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_BURNER)
       })
     })
 
@@ -315,9 +311,7 @@ describe('L2ECO tests', () => {
         // can no longer edit roles
         await expect(
           eco.connect(l2BridgeImpersonator).updateMinters(alice.address, false)
-        ).to.be.revertedWith(
-          ERROR_STRINGS.L2ERC20Mintable.UNAUTHORIZED_TOKEN_ROLE_ADMIN
-        )
+        ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_TOKEN_ROLE_ADMIN)
       })
     })
   })
