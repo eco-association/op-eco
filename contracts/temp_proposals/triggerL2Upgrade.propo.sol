@@ -57,6 +57,6 @@ contract TriggerL2Upgrade is Policy, Proposal {
      * this function only accepts calls via governance by the root policy
      */
     function enacted(address) public override {
-        l1Bridge.upgradeECO(l2Impl, l2Gas);
+        l1Bridge.upgradeToken(l2Impl, l2Gas);
     }
 }

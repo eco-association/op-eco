@@ -390,7 +390,7 @@ describe('L1ECOBridge', () => {
   describe('upgrades to L2 Eco contract', () => {
     it("should revert if caller isn't upgrader", async () => {
       await expect(
-        L1ECOBridge.connect(bob).upgradeECO(
+        L1ECOBridge.connect(bob).upgradeToken(
           DUMMY_L2_ERC20_ADDRESS,
           FINALIZATION_GAS
         )
@@ -398,7 +398,7 @@ describe('L1ECOBridge', () => {
     })
 
     it('should succeed to send the correct argumnents', async () => {
-      await L1ECOBridge.connect(alice).upgradeECO(
+      await L1ECOBridge.connect(alice).upgradeToken(
         DUMMY_L2_ERC20_ADDRESS,
         FINALIZATION_GAS
       )
@@ -417,12 +417,12 @@ describe('L1ECOBridge', () => {
 
     it('should succeed and emit an event', async () => {
       await expect(
-        L1ECOBridge.connect(alice).upgradeECO(
+        L1ECOBridge.connect(alice).upgradeToken(
           DUMMY_L2_ERC20_ADDRESS,
           FINALIZATION_GAS
         )
       )
-        .to.emit(L1ECOBridge, 'UpgradeL2ECO')
+        .to.emit(L1ECOBridge, 'UpgradeL2ERC20')
         .withArgs(DUMMY_L2_ERC20_ADDRESS)
     })
   })

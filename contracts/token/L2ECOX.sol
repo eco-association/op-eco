@@ -32,6 +32,13 @@ contract L2ECOX is L2ERC20Mintable {
         address _l1Token,
         address _l2Bridge
     ) public initializer {
-      _initialize(_l1Token, _l2Bridge, "ECOX", "ECOX");
+        _initialize(_l1Token, _l2Bridge, "ECOX", "ECOX");
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[50] private __gap;
 }
