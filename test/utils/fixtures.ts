@@ -7,6 +7,7 @@ import {
   ProxyAdmin,
 } from '../../typechain-types'
 import { Address } from '@eth-optimism/core-utils'
+import { CrossChainMessenger } from '@eth-optimism/sdk'
 const { ethers, upgrades } = hre
 
 export async function deployL1Test(
@@ -228,4 +229,25 @@ export async function deployByName(name: string, ...args: any[]): Promise<any> {
   const contract = await Contract.deploy(...args)
   await contract.deployed()
   return contract
+}
+
+export async function setupOP(l1Network, l2Network): Promise<CrossChainMessenger> {
+  hre.changeNetwork(l2Network)
+  const l2ChainId = hre.network.config.chainId
+  const [l2Wallet] = await hre.ethers.getSigners()
+  hre.changeNetwork(l1Network)
+  const l1ChainId = hre.network.config.chainId
+  const [l1Wallet] = await hre.ethers.getSigners()
+
+  if (l2ChainId && l1ChainId) {
+    return new CrossChainMessenger({
+      l1ChainId,
+      l2ChainId,
+      l1SignerOrProvider: l1Wallet,
+      l2SignerOrProvider: l2Wallet,
+      bedrock: true,
+    })
+  } else {
+    throw new Error('need chain IDs to use CrossChainMessenger')
+  }
 }

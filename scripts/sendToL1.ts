@@ -8,6 +8,7 @@ import {
   l2BridgeProxyAddress,
   l2EcoProxyAddress,
 } from './constants'
+import { setupOP } from '../test/utils/fixtures'
 
 const bridgeAmount = '50' // in full ECO
 
@@ -17,7 +18,7 @@ async function main() {
   const { hash: withdrawalTxHash } = await initiateWithdrawal(bridgeAmount)
   console.log('withdrawal initiated, tx hash:')
   console.log(withdrawalTxHash)
-  const crossChainMessenger = await setupOP()
+  const crossChainMessenger = await setupOP(L1_NETWORK, L2_NETWORK)
   console.log('OP SDK initialized')
   // technically might need sleep here too, but proving takes forever anyway
   await proveWithdrawal(crossChainMessenger, withdrawalTxHash)
@@ -49,27 +50,6 @@ async function initiateWithdrawal(
   )
   await tx.wait()
   return tx
-}
-
-async function setupOP(): Promise<CrossChainMessenger> {
-  hre.changeNetwork(L2_NETWORK)
-  const l2ChainId = hre.network.config.chainId
-  const [l2Wallet] = await hre.ethers.getSigners()
-  hre.changeNetwork(L1_NETWORK)
-  const l1ChainId = hre.network.config.chainId
-  const [l1Wallet] = await hre.ethers.getSigners()
-
-  if (l2ChainId && l1ChainId) {
-    return new CrossChainMessenger({
-      l1ChainId,
-      l2ChainId,
-      l1SignerOrProvider: l1Wallet,
-      l2SignerOrProvider: l2Wallet,
-      bedrock: true,
-    })
-  } else {
-    throw new Error('need chain IDs to use CrossChainMessenger')
-  }
 }
 
 async function proveWithdrawal(
