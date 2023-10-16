@@ -1,6 +1,6 @@
 import hre from 'hardhat'
 import {
-  deployBridgeProxy,
+  deployProxy,
   deployTokenProxy,
   getProxyAdmin,
   upgradeBridgeL1,
@@ -19,7 +19,7 @@ import {
 async function main() {
   hre.changeNetwork(L1_NETWORK)
 
-  const l1BridgeProxyAddress = await deployBridgeProxy()
+  const l1BridgeProxyAddress = await deployProxy()
   console.log(`L1 Bridge deployed to: ${l1BridgeProxyAddress}`)
 
   const l1ProxyAdmin = await getProxyAdmin(true)
@@ -27,7 +27,7 @@ async function main() {
 
   hre.changeNetwork(L2_NETWORK)
 
-  const l2BridgeProxyAddress = await deployBridgeProxy()
+  const l2BridgeProxyAddress = await deployProxy()
   console.log(`L2 Bridge deployed to: ${l2BridgeProxyAddress}`)
 
   const l2EcoProxyAddress = await deployTokenProxy()

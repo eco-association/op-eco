@@ -16,7 +16,7 @@ export async function deployL1Test(
   upgrader: Address
 ): Promise<[L1ECOBridge, ProxyAdmin]> {
   // const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
-  const l1BridgeProxyAddress = await deployBridgeProxy()
+  const l1BridgeProxyAddress = await deployProxy()
   const proxyAdmin = await getProxyAdmin()
 
   const l1BridgeProxy = await upgradeBridgeL1(
@@ -38,7 +38,7 @@ export async function deployL2Test(
   l1Token: Address
   // opts: { adminBridge: boolean } = { adminBridge: true }
 ): Promise<[L2ECO, L2ECOBridge, ProxyAdmin]> {
-  const l2BridgeProxyAddress = await deployBridgeProxy()
+  const l2BridgeProxyAddress = await deployProxy()
   const l2EcoProxyAddress = await deployTokenProxy()
   const proxyAdmin = await getProxyAdmin()
 
@@ -137,12 +137,12 @@ export async function upgradeEcoL2(
   return l2EcoProxy as L2ECO
 }
 
-export async function deployBridgeProxy(): Promise<Address> {
-  const InitialBridgeContract = await ethers.getContractFactory('InitialBridge')
-  const proxyInitial = await upgrades.deployProxy(InitialBridgeContract, [], {
+export async function deployProxy(): Promise<Address> {
+  const InitialImplementationContract = await ethers.getContractFactory('InitialImplementation')
+  const proxyInitial = await upgrades.deployProxy(InitialImplementationContract, [], {
     initializer: 'initialize',
   })
-  // const proxyInitial = await upgrades.deployProxy(InitialBridgeContract, [])
+  // const proxyInitial = await upgrades.deployProxy(InitialImplementationContract, [])
 
   await proxyInitial.deployed()
 
