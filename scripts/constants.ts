@@ -11,6 +11,7 @@ const L2_NETWORK = 'goerliOptimism'
 const l1BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
 const l2BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
 const l2EcoProxyAddress = '0x54bBECeA38ff36D32323f8A754683C1F5433A89f'
+const l2EcoXProxyAddress = '0x583Ff521749691604b98D8361e7371059438d202'
 
 export {
   UPGRADER_ADDRESS,
@@ -25,4 +26,5 @@ export {
   l1BridgeProxyAddress,
   l2BridgeProxyAddress,
   l2EcoProxyAddress,
+  l2EcoXProxyAddress,
 }
