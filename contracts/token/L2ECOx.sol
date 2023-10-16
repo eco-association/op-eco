@@ -19,7 +19,7 @@ import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/crypt
  * These roles are stored on the contract instead of managed through ERC1820
  * Because of this there is no root policy address.
  */
-contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
+contract L2ECOx is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
     /**
      * @dev Address which has the ability to change permission roles
      */
