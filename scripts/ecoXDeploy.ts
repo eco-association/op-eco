@@ -12,13 +12,15 @@ import {
 } from './constants'
 
 async function main() {
-  hre.changeNetwork(L2_NETWORK)
+  // hre.changeNetwork(L2_NETWORK)
 
-  const l2ECOxProxyAddress = await deployProxy()
-  console.log(`L2 ECOx proxy deployed to: ${l2ECOxProxyAddress}`)
+  console.log(`on network ${hre.network.name}`)
 
   const l2ProxyAdmin = await getProxyAdmin(true)
   console.log(`Proxy Admin L2 deployed to: ${l2ProxyAdmin.address}`)
+
+  const l2ECOxProxyAddress = await deployProxy()
+  console.log(`L2 ECOx proxy deployed to: ${l2ECOxProxyAddress}`)
 
   await upgradeEcoXL2(l2ECOxProxyAddress, L1_ECOX_ADDRESS, L2_OP_STANDARD_BRIDGE, l2BridgeProxyAddress)
   console.log(`L2 ECOx initialized`)
