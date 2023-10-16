@@ -49,11 +49,6 @@ abstract contract L1ERC20MintableBridge is IL1ERC20MintableBridge, CrossDomainEn
      */
     address public upgrader;
 
-    // /**
-    //  * @dev Current inflation multiplier
-    //  */
-    // uint256 public inflationMultiplier;
-
     /**
      * @dev Modifier requiring sender to be EOA.  This check could be bypassed by a malicious
      * contract via initcode, but it takes care of the user error we want to avoid.
@@ -119,7 +114,7 @@ abstract contract L1ERC20MintableBridge is IL1ERC20MintableBridge, CrossDomainEn
         address _l2Token,
         address _l1ProxyAdmin,
         address _upgrader
-    ) internal virtual initializer {
+    ) internal virtual {
         CrossDomainEnabledUpgradeable.__CrossDomainEnabledUpgradeable_init(
             _l1messenger
         );
@@ -128,9 +123,6 @@ abstract contract L1ERC20MintableBridge is IL1ERC20MintableBridge, CrossDomainEn
         l2Token = _l2Token;
         l1ProxyAdmin = ProxyAdmin(_l1ProxyAdmin);
         upgrader = _upgrader;
-        // inflationMultiplier = IECO(_l1Token).getPastLinearInflation(
-        //     block.number
-        // );
     }
 
     /**
@@ -172,7 +164,7 @@ abstract contract L1ERC20MintableBridge is IL1ERC20MintableBridge, CrossDomainEn
      * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
     function upgradeSelf(address _newBridgeImpl) external virtual onlyUpgrader {
-        //cast to a payable address since l2EcoToken is the proxy address of a ITransparentUpgradeableProxy contract
+        //cast to a payable address since l2ERC20Token is the proxy address of a ITransparentUpgradeableProxy contract
         address payable proxyAddr = payable(address(this));
 
         ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
@@ -240,7 +232,7 @@ abstract contract L1ERC20MintableBridge is IL1ERC20MintableBridge, CrossDomainEn
         address _to,
         uint256 _amount,
         bytes calldata _data
-    ) external onlyFromCrossDomainAccount(l2TokenBridge) {
+    ) external virtual onlyFromCrossDomainAccount(l2TokenBridge) {
         // equivalent to IECO(_l1Token).transfer(_to, _amount); but is revert safe
         bytes memory _ecoTransferMessage = abi.encodeWithSelector(
             IERC20.transfer.selector,
@@ -308,7 +300,7 @@ abstract contract L1ERC20MintableBridge is IL1ERC20MintableBridge, CrossDomainEn
         uint256 _amount,
         uint32 _l2Gas,
         bytes calldata _data
-    ) internal {
+    ) internal virtual {
         // When a deposit is initiated on L1, the L1 Bridge transfers the funds to itself for future
         // withdrawals.
 

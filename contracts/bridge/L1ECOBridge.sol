@@ -12,6 +12,7 @@ import {IECO} from "@helix-foundation/currency/contracts/currency/IECO.sol";
 import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 /* Contract Imports */
+import {L1ERC20MintableBridge} from "./L1ERC20MintableBridge.sol";
 import {CrossDomainEnabledUpgradeable} from "./CrossDomainEnabledUpgradeable.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
@@ -24,81 +25,11 @@ import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.s
  * All governance related data and decisions are passed through this contract so that the
  * L2 contracts can maintain and trust a single source of L1 messages.
  */
-contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
-    /**
-     * @dev L2 side of the bridge
-     */
-    address public l2TokenBridge;
-
-    /**
-     * @dev L1 ECO address
-     */
-    address public l1Eco;
-
-    /**
-     * @dev L2 ECO address
-     */
-    address public l2Eco;
-
-    /**
-     * @dev L1 proxy admin that manages this proxy contract
-     */
-    ProxyAdmin public l1ProxyAdmin;
-
-    /**
-     * @dev L2 upgrader role
-     */
-    address public upgrader;
-
+contract L1ECOBridge is L1ERC20MintableBridge, IL1ECOBridge {
     /**
      * @dev Current inflation multiplier
      */
     uint256 public inflationMultiplier;
-
-    /**
-     * @dev Modifier requiring sender to be EOA.  This check could be bypassed by a malicious
-     * contract via initcode, but it takes care of the user error we want to avoid.
-     */
-    modifier onlyEOA() {
-        // Used to stop deposits from contracts (avoid accidentally lost tokens)
-        require(msg.sender.code.length == 0, "L1ECOBridge: Account not EOA");
-        _;
-    }
-
-    /**
-     * @dev Modifier to check that the L1 token is the same as the one set in the constructor
-     * @param _l1Token L1 token address to check
-     */
-    modifier isL1EcoToken(address _l1Token) {
-        require(
-            _l1Token == l1Eco,
-            "L1ECOBridge: invalid L2 token address"
-        );
-        _;
-    }
-
-    /**
-     * @dev Modifier to check that the L2 token is the same as the one set in the constructor
-     * @param _l2Token L2 token address to check
-     */
-    modifier isL2EcoToken(address _l2Token) {
-        require(
-            _l2Token == l2Eco,
-            "L1ECOBridge: invalid L2 token address"
-        );
-        _;
-    }
-
-    /**
-     * @dev Modifier for gating upgrade functionality behind an authorized ECO protocol governace contract
-     */
-    modifier onlyUpgrader() {
-        require(
-            msg.sender == upgrader,
-            "L1ECOBridge: caller not authorized to upgrade L2 contracts."
-        );
-        _;
-    }
 
     /**
      * Disable the implementation contract
@@ -119,113 +50,9 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         address _l1ProxyAdmin,
         address _upgrader
     ) public initializer {
-        CrossDomainEnabledUpgradeable.__CrossDomainEnabledUpgradeable_init(
-            _l1messenger
-        );
-        l2TokenBridge = _l2TokenBridge;
-        l1Eco = _l1Eco;
-        l2Eco = _l2Eco;
-        l1ProxyAdmin = ProxyAdmin(_l1ProxyAdmin);
-        upgrader = _upgrader;
+        _initialize(_l1messenger, _l2TokenBridge, _l1Eco, _l2Eco, _l1ProxyAdmin, _upgrader);
         inflationMultiplier = IECO(_l1Eco).getPastLinearInflation(
             block.number
-        );
-    }
-
-    /**
-     * @inheritdoc IL1ERC20MintableBridge
-     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
-     */
-    function upgradeToken(address _impl, uint32 _l2Gas)
-        external
-        virtual
-        onlyUpgrader
-    {
-        bytes memory message = abi.encodeWithSelector(
-            IL2ECOBridge.upgradeECO.selector,
-            _impl
-        );
-
-        sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
-        emit UpgradeL2ERC20(_impl);
-    }
-
-    /**
-     * @inheritdoc IL1ERC20MintableBridge
-     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
-     */
-    function upgradeL2Bridge(address _impl, uint32 _l2Gas)
-        external
-        virtual
-        onlyUpgrader
-    {
-        bytes memory message = abi.encodeWithSelector(
-            IL2ECOBridge.upgradeSelf.selector,
-            _impl
-        );
-
-        sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
-        emit UpgradeL2Bridge(_impl);
-    }
-
-     /**
-     * @inheritdoc IL1ERC20MintableBridge
-     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
-     */
-    function upgradeSelf(address _newBridgeImpl) external virtual onlyUpgrader {
-        //cast to a payable address since l2EcoToken is the proxy address of a ITransparentUpgradeableProxy contract
-        address payable proxyAddr = payable(address(this));
-
-        ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
-            proxyAddr
-        );
-        l1ProxyAdmin.upgrade(proxy, _newBridgeImpl);
-
-        emit UpgradeSelf(_newBridgeImpl);
-    }
-
-    /**
-     * @inheritdoc IL1ERC20Bridge
-     * @param _l1Token must be the ECO L1 token address.
-     */
-    function depositERC20(
-        address _l1Token,
-        address _l2Token,
-        uint256 _amount,
-        uint32 _l2Gas,
-        bytes calldata _data
-    ) external virtual onlyEOA isL1EcoToken(_l1Token) isL2EcoToken(_l2Token) {
-        _initiateERC20Deposit(
-            _l1Token,
-            _l2Token,
-            msg.sender,
-            msg.sender,
-            _amount,
-            _l2Gas,
-            _data
-        );
-    }
-
-    /**
-     * @inheritdoc IL1ERC20Bridge
-     * @param _l1Token must be the ECO L1 token address.
-     */
-    function depositERC20To(
-        address _l1Token,
-        address _l2Token,
-        address _to,
-        uint256 _amount,
-        uint32 _l2Gas,
-        bytes calldata _data
-    ) external virtual isL1EcoToken(_l1Token) isL2EcoToken(_l2Token) {
-        _initiateERC20Deposit(
-            _l1Token,
-            _l2Token,
-            msg.sender,
-            _to,
-            _amount,
-            _l2Gas,
-            _data
         );
     }
 
@@ -241,7 +68,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         address _to,
         uint256 _gonsAmount,
         bytes calldata _data
-    ) external onlyFromCrossDomainAccount(l2TokenBridge) {
+    ) external override virtual onlyFromCrossDomainAccount(l2TokenBridge) {
         uint256 _amount = _gonsAmount / inflationMultiplier;
 
         // equivalent to IECO(_l1Token).transfer(_to, _amount); but is revert safe
@@ -295,7 +122,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
      * @inheritdoc IL1ECOBridge
      */
     function rebase(uint32 _l2Gas) external {
-        inflationMultiplier = IECO(l1Eco).getPastLinearInflation(
+        inflationMultiplier = IECO(l1Token).getPastLinearInflation(
             block.number
         );
 
@@ -327,7 +154,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         uint256 _amount,
         uint32 _l2Gas,
         bytes calldata _data
-    ) internal {
+    ) internal override virtual {
         // When a deposit is initiated on L1, the L1 Bridge transfers the funds to itself for future
         // withdrawals.
 

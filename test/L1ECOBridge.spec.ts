@@ -44,7 +44,7 @@ describe('L1ECOBridge', () => {
   })
 
   let L1ERC20: MockContract<Contract>
-  let L1ECOBridge: Contract
+  let L1ECOBridge: MockContract<Contract>
   let Fake__L1CrossDomainMessenger: FakeContract
   beforeEach(async () => {
     // Get a new mock L1 messenger
@@ -185,7 +185,7 @@ describe('L1ECOBridge', () => {
           FINALIZATION_GAS,
           NON_NULL_BYTES32
         )
-      ).to.be.revertedWith('L1ECOBridge: Account not EOA')
+      ).to.be.revertedWith('L1ERC20MintableBridge: Account not EOA')
     })
   })
 
@@ -394,7 +394,7 @@ describe('L1ECOBridge', () => {
           DUMMY_L2_ERC20_ADDRESS,
           FINALIZATION_GAS
         )
-      ).to.be.revertedWith(ERROR_STRINGS.L1ECOBridge.UNAUTHORIZED_UPGRADER)
+      ).to.be.revertedWith(ERROR_STRINGS.L1ERC20MintableBridge.UNAUTHORIZED_UPGRADER)
     })
 
     it('should succeed to send the correct argumnents', async () => {
