@@ -96,11 +96,12 @@ contract L2ECO is ERC20Upgradeable, EIP712Upgradeable, IERC165 {
     /**
      * @dev Initializer that sets token information as well as the inital role values and the L1 Token address
      * @param _l1Token sets the L1 token address that is able to process withdrawals (available for convenience and interface compliance)
-     * @param _l2Bridge sets the bridge to give all permissions to
+     * @param _OPl2Bridge sets the bridge to give mint/burn permissions to
+     * @param _ECOl2Bridge sets the bridge to give role managing permissions to
      */
     function initialize(
         address _l1Token,
-        address _OPl2Bridge
+        address _OPl2Bridge,
         address _ECOl2Bridge
     ) public initializer {
         ERC20Upgradeable.__ERC20_init(
