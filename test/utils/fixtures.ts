@@ -139,22 +139,18 @@ export async function upgradeEcoL2(
   return l2EcoProxy as L2ECO
 }
 
-export async function upgradeEcoXL2(
-  l2EcoXProxyAddress: Address,
+export async function deployEcoXL2(
   l1EcoXToken: Address,
   l2OPBridgeAddress: Address,
   l2ECOBridgeAddress: Address
 ): Promise<L2ECOx> {
   const L2ECOxContract = await ethers.getContractFactory('L2ECOx')
 
-  const l2EcoXProxy = await upgrades.upgradeProxy(
-    l2EcoXProxyAddress,
+  const l2EcoXProxy = await upgrades.deployProxy(
     L2ECOxContract,
+    [l1EcoXToken, l2OPBridgeAddress, l2ECOBridgeAddress],
     {
-      call: {
-        fn: 'initialize',
-        args: [l1EcoXToken, l2OPBridgeAddress, l2ECOBridgeAddress],
-      },
+      initializer: 'initialize',
     }
   )
 

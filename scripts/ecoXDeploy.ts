@@ -1,8 +1,7 @@
 import hre from 'hardhat'
 import {
-  deployProxy,
+  deployEcoXL2,
   getProxyAdmin,
-  upgradeEcoXL2,
 } from '../test/utils/fixtures'
 import {
   L1_ECOX_ADDRESS,
@@ -19,10 +18,8 @@ async function main() {
   const l2ProxyAdmin = await getProxyAdmin(true)
   console.log(`Proxy Admin L2 deployed to: ${l2ProxyAdmin.address}`)
 
-  const l2ECOxProxyAddress = await deployProxy()
+  const l2ECOxProxyAddress = await deployEcoXL2(L1_ECOX_ADDRESS, L2_OP_STANDARD_BRIDGE, l2BridgeProxyAddress)
   console.log(`L2 ECOx proxy deployed to: ${l2ECOxProxyAddress}`)
-
-  await upgradeEcoXL2(l2ECOxProxyAddress, L1_ECOX_ADDRESS, L2_OP_STANDARD_BRIDGE, l2BridgeProxyAddress)
   console.log(`L2 ECOx initialized`)
 }
 
