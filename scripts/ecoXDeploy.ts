@@ -12,7 +12,7 @@ import {
 } from './constants'
 
 async function main() {
-  // hre.changeNetwork(L2_NETWORK)
+  hre.changeNetwork(L2_NETWORK)
 
   console.log(`on network ${hre.network.name}`)
 

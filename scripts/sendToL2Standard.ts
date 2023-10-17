@@ -17,7 +17,7 @@ const l2gas = '10'
 // commented out code will work once the bridges are updated on optimism's side
 
 async function main() {
-  // hre.changeNetwork(L1_NETWORK)
+  hre.changeNetwork(L1_NETWORK)
   
   const ecox = (await hre.ethers.getContractAt('ECOx', L1_ECOX_ADDRESS)) as ECOx
 
