@@ -21,9 +21,6 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log* 
 
-# OpenZeppelin
-.openzeppelin
-
 # Generated
 dist
 docs
