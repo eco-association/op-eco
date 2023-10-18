@@ -158,10 +158,16 @@ export async function deployEcoXL2(
 }
 
 export async function deployProxy(): Promise<Address> {
-  const InitialImplementationContract = await ethers.getContractFactory('InitialImplementation')
-  const proxyInitial = await upgrades.deployProxy(InitialImplementationContract, [], {
-    initializer: 'initialize',
-  })
+  const InitialImplementationContract = await ethers.getContractFactory(
+    'InitialImplementation'
+  )
+  const proxyInitial = await upgrades.deployProxy(
+    InitialImplementationContract,
+    [],
+    {
+      initializer: 'initialize',
+    }
+  )
   // const proxyInitial = await upgrades.deployProxy(InitialImplementationContract, [])
 
   await proxyInitial.deployed()
@@ -227,7 +233,10 @@ export async function deployByName(name: string, ...args: any[]): Promise<any> {
   return contract
 }
 
-export async function setupOP(l1Network, l2Network): Promise<CrossChainMessenger> {
+export async function setupOP(
+  l1Network,
+  l2Network
+): Promise<CrossChainMessenger> {
   hre.changeNetwork(l2Network)
   const l2ChainId = hre.network.config.chainId
   const [l2Wallet] = await hre.ethers.getSigners()

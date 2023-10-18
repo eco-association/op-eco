@@ -1,14 +1,14 @@
 import hre from 'hardhat'
 import { ECOx, IL1ERC20Bridge } from '../typechain-types'
-import { CrossChainMessenger, MessageStatus } from '@eth-optimism/sdk'
+// import { CrossChainMessenger, MessageStatus } from '@eth-optimism/sdk'
 import {
   L1_ECOX_ADDRESS,
   L1_NETWORK,
   L1_OP_STANDARD_BRIDGE,
-  L2_NETWORK,
+  // L2_NETWORK,
   l2EcoXProxyAddress,
 } from './constants'
-import { setupOP } from '../test/utils/fixtures'
+// import { setupOP } from '../test/utils/fixtures'
 
 const bridgeAmount = '5' // in full ECOx
 
@@ -18,7 +18,7 @@ const l2gas = '10'
 
 async function main() {
   hre.changeNetwork(L1_NETWORK)
-  
+
   const ecox = (await hre.ethers.getContractAt('ECOx', L1_ECOX_ADDRESS)) as ECOx
 
   const bridge = (await hre.ethers.getContractAt(
@@ -36,7 +36,7 @@ async function main() {
   // const depositTx = await crossChainMessenger.depositERC20(L1_ECOX_ADDRESS, l2EcoXProxyAddress, bridgeAmount)
   // await depositTx.wait()
 
-  console.log("deposit initiated")
+  console.log('deposit initiated')
 
   // await crossChainMessenger.waitForMessageStatus(depositTx.hash, MessageStatus.RELAYED)
 
@@ -49,7 +49,7 @@ async function main() {
   )
   await tx2.wait()
 
-  console.log("deposit successful")
+  console.log('deposit successful')
 }
 
 main().catch((error) => {

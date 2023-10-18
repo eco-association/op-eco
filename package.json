@@ -95,7 +95,8 @@
     "solhint-plugin-eco": "^0.1.0",
     "solidity-coverage": "0.8.2",
     "ts-node": "10.9.1",
-    "typechain": "8.1.0"
+    "typechain": "8.1.0",
+    "web3": "4.2.0"
   },
   "engines": {
     "node": ">=16.6.0"
