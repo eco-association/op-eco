@@ -66,6 +66,7 @@ const config: HardhatUserConfig = {
     goerliOptimism: {
       chainId: 420,
       url: process.env.OPTIMISM_GOERLI_URL || '',
+      gasPrice: 500000000,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
