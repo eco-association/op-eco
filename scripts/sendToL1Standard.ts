@@ -33,7 +33,7 @@ async function main() {
 async function initiateWithdrawal(
   _bridgeAmount: string
 ): Promise<ContractTransaction> {
-  // hre.changeNetwork(L2_NETWORK)
+  hre.changeNetwork(L2_NETWORK)
 
   const bridge = (await hre.ethers.getContractAt(
     'IL2ERC20Bridge',
