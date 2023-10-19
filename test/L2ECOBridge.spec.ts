@@ -152,7 +152,7 @@ describe('L2ECOBridge tests', () => {
           alice.address,
           bob.address,
           BigNumber.from(depositAmount).mul(
-            await L2ECOBridge.inflationMultiplier()
+            await MOCK_L2ECO.linearInflationMultiplier()
           ),
           NON_NULL_BYTES32,
           {
@@ -227,7 +227,7 @@ describe('L2ECOBridge tests', () => {
             alice.address,
             alice.address,
             BigNumber.from(withdrawAmount).mul(
-              await L2ECOBridge.inflationMultiplier()
+              await MOCK_L2ECO.linearInflationMultiplier()
             ),
             NON_NULL_BYTES32,
           ]
@@ -267,7 +267,7 @@ describe('L2ECOBridge tests', () => {
             alice.address,
             bob.address,
             BigNumber.from(withdrawAmount).mul(
-              await L2ECOBridge.inflationMultiplier()
+              await MOCK_L2ECO.linearInflationMultiplier()
             ),
             NON_NULL_BYTES32,
           ]
@@ -289,7 +289,7 @@ describe('L2ECOBridge tests', () => {
 
   describe('rebase', () => {
     it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L2 account', async () => {
-      await expect(L2ECOBridge.rebase(2)).to.be.revertedWith(
+      await expect(L2ECOBridge.rebase(2, 1)).to.be.revertedWith(
         ERROR_STRINGS.OVM.INVALID_MESSENGER
       )
     })
@@ -300,7 +300,7 @@ describe('L2ECOBridge tests', () => {
       )
 
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(2)
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(2, 1)
       ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
     })
 
@@ -313,7 +313,7 @@ describe('L2ECOBridge tests', () => {
         DUMMY_L1_BRIDGE_ADDRESS
       )
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(2)
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(2, 1)
       ).to.be.revertedWith(ERROR_STRINGS.L2ECO.UNAUTHORIZED_REBASER)
     })
 
@@ -322,7 +322,7 @@ describe('L2ECOBridge tests', () => {
         DUMMY_L1_BRIDGE_ADDRESS
       )
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(0)
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(0, 1)
       ).to.be.revertedWith(
         ERROR_STRINGS.L2ECOBridge.INVALID_INFLATION_MULTIPLIER
       )
@@ -335,7 +335,10 @@ describe('L2ECOBridge tests', () => {
       )
 
       await expect(
-        L2ECOBridge.connect(l2MessengerImpersonator).rebase(inflationMultiplier)
+        L2ECOBridge.connect(l2MessengerImpersonator).rebase(
+          inflationMultiplier,
+          1
+        )
       )
         .to.emit(L2ECOBridge, 'RebaseInitiated')
         .withArgs(inflationMultiplier)
@@ -345,7 +348,7 @@ describe('L2ECOBridge tests', () => {
   describe('upgradeEco', () => {
     let newEcoImpl: MockContract<Contract>
     let l2EcoBridge: L2ECOBridge
-
+    const upgradeBlock = 10
     beforeEach(async () => {
       ;[, l2EcoBridge] = await deployL2Test(
         Fake__L2CrossDomainMessenger.address,
@@ -357,7 +360,7 @@ describe('L2ECOBridge tests', () => {
 
     it('onlyFromCrossDomainAccount should revert on calls from a non-crossDomainMessenger L2 account', async () => {
       await expect(
-        l2EcoBridge.upgradeECO(newEcoImpl.address)
+        l2EcoBridge.upgradeECO(newEcoImpl.address, upgradeBlock)
       ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_MESSENGER)
     })
 
@@ -369,7 +372,7 @@ describe('L2ECOBridge tests', () => {
       await expect(
         l2EcoBridge
           .connect(l2MessengerImpersonator)
-          .upgradeECO(newEcoImpl.address)
+          .upgradeECO(newEcoImpl.address, upgradeBlock)
       ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
     })
 
@@ -381,7 +384,7 @@ describe('L2ECOBridge tests', () => {
       await expect(
         l2EcoBridge
           .connect(l2MessengerImpersonator)
-          .upgradeECO(newEcoImpl.address)
+          .upgradeECO(newEcoImpl.address, upgradeBlock)
       ).to.be.revertedWith(ERROR_STRINGS.OWNABLE.NOT_OWNER)
     })
 
@@ -395,16 +398,40 @@ describe('L2ECOBridge tests', () => {
       await expect(
         l2EcoBridge
           .connect(l2MessengerImpersonator)
-          .upgradeECO(newEcoImpl.address)
+          .upgradeECO(newEcoImpl.address, upgradeBlock)
       )
         .to.emit(l2EcoBridge, 'UpgradeECOImplementation')
         .withArgs(newEcoImpl.address)
+    })
+
+    it('should revert on upgrade with outdated block number', async () => {
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        DUMMY_L1_BRIDGE_ADDRESS
+      )
+
+      await transferOwnershipTest(l2EcoBridge.address)
+      // have it update the block number to the lastUpgradeBlock
+      await expect(
+        l2EcoBridge
+          .connect(l2MessengerImpersonator)
+          .upgradeECO(newEcoImpl.address, upgradeBlock)
+      )
+        .to.emit(l2EcoBridge, 'UpgradeECOImplementation')
+        .withArgs(newEcoImpl.address)
+
+      // try to upgrade with an outdated block number
+      await expect(
+        l2EcoBridge
+          .connect(l2MessengerImpersonator)
+          .upgradeECO(newEcoImpl.address, upgradeBlock)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_UPGRADE_ECO_BLOCK)
     })
   })
 
   describe('upgradeSelf', () => {
     let newBridgeImpl: MockContract<Contract>
     let proxyAdmin: ProxyAdmin, l2Eco: L2ECO, l2EcoBridge: L2ECOBridge
+    const upgradeBlock = 10
     beforeEach(async () => {
       ;[l2Eco, l2EcoBridge, proxyAdmin] = await deployL2Test(
         Fake__L2CrossDomainMessenger.address,
@@ -417,7 +444,7 @@ describe('L2ECOBridge tests', () => {
 
     it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L2 account', async () => {
       await expect(
-        L2ECOBridge.upgradeSelf(newBridgeImpl.address)
+        L2ECOBridge.upgradeSelf(newBridgeImpl.address, upgradeBlock)
       ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_MESSENGER)
     })
 
@@ -428,7 +455,8 @@ describe('L2ECOBridge tests', () => {
 
       await expect(
         L2ECOBridge.connect(l2MessengerImpersonator).upgradeSelf(
-          newBridgeImpl.address
+          newBridgeImpl.address,
+          upgradeBlock
         )
       ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
     })
@@ -441,7 +469,7 @@ describe('L2ECOBridge tests', () => {
       await expect(
         l2EcoBridge
           .connect(l2MessengerImpersonator)
-          .upgradeSelf(newBridgeImpl.address)
+          .upgradeSelf(newBridgeImpl.address, upgradeBlock)
       ).to.be.revertedWith(ERROR_STRINGS.OWNABLE.NOT_OWNER)
     })
 
@@ -458,7 +486,7 @@ describe('L2ECOBridge tests', () => {
       await expect(
         l2EcoBridge
           .connect(l2MessengerImpersonator)
-          .upgradeSelf(newBridgeImpl.address)
+          .upgradeSelf(newBridgeImpl.address, upgradeBlock)
       )
         .to.emit(l2EcoBridge, 'UpgradeSelf')
         .withArgs(newBridgeImpl.address)
@@ -470,6 +498,29 @@ describe('L2ECOBridge tests', () => {
       expect(
         await proxyAdmin.getProxyImplementation(l2EcoBridge.address)
       ).to.eq(newBridgeImpl.address)
+    })
+
+    it('should revert on upgrade with outdated block number', async () => {
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        DUMMY_L1_BRIDGE_ADDRESS
+      )
+
+      await transferOwnershipTest(l2EcoBridge.address)
+
+      await expect(
+        l2EcoBridge
+          .connect(l2MessengerImpersonator)
+          .upgradeSelf(newBridgeImpl.address, upgradeBlock)
+      )
+        .to.emit(l2EcoBridge, 'UpgradeSelf')
+        .withArgs(newBridgeImpl.address)
+
+      // try to upgrade with an outdated block number
+      await expect(
+        l2EcoBridge
+          .connect(l2MessengerImpersonator)
+          .upgradeSelf(newBridgeImpl.address, upgradeBlock)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_UPGRADE_SELF_BLOCK)
     })
   })
 })
