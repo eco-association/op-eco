@@ -1,4 +1,5 @@
-const UPGRADER_ADDRESS = '0x71D536c7d9E65AF36AFAA28016618a8C3Ea32952'
+// change these for different networks
+// GOERLI address
 const L1_OP_MESSANGER_ADDRESS = '0x5086d1eEF304eb5284A0f6720f79403b4e9bE294'
 const L1_OP_STANDARD_BRIDGE = '0x636Af16bf2f682dD3109e60102b8E1A089FedAa8'
 const L2_OP_MESSANGER_ADDRESS = '0x4200000000000000000000000000000000000007'
@@ -8,13 +9,20 @@ const L1_ECOX_ADDRESS = '0x9BF228552f5a9eB626529Cd5F96DFEcdDE5cA5a9'
 const L1_NETWORK = 'goerli'
 const L2_NETWORK = 'goerliOptimism'
 
+// goerli values
 const l1BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
 const l2BridgeProxyAddress = '0x7a01E277B8fDb8CDB2A2258508514716359f44A0'
 const l2EcoProxyAddress = '0x54bBECeA38ff36D32323f8A754683C1F5433A89f'
 const l2EcoXProxyAddress = '0x583Ff521749691604b98D8361e7371059438d202'
+const upgraderAddress = '' // bridge owns proxyAdmin now
+
+// mainnet values
+// const l1BridgeProxyAddress = '0xBa8be7D566c1C57aEbe0f9a077146619186ad062'
+// const l2BridgeProxyAddress = '0x8F854068Fd6E3a1c2ae175B33F703775Fe04CCf2'
+// const l2EcoProxyAddress = '0xe6Ac2D9e9FEb17020721127777eb78afCdf47f00'
+// const upgraderAddress = '0xafcE51A3bFEd22490343E25f66b10bD8677E22B9'
 
 export {
-  UPGRADER_ADDRESS,
   L1_ECO_ADDRESS,
   L1_ECOX_ADDRESS,
   L1_OP_MESSANGER_ADDRESS,
@@ -27,4 +35,5 @@ export {
   l2BridgeProxyAddress,
   l2EcoProxyAddress,
   l2EcoXProxyAddress,
+  upgraderAddress,
 }
