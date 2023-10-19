@@ -1,16 +1,16 @@
 import hre from 'hardhat'
-import { L2ECOBridge } from '../typechain-types'
+import { IL2ERC20Bridge } from '../typechain-types'
 import { CrossChainMessenger, MessageStatus } from '@eth-optimism/sdk'
 import { ContractTransaction } from 'ethers'
 import {
   L1_NETWORK,
   L2_NETWORK,
-  l2BridgeProxyAddress,
-  l2EcoProxyAddress,
+  L2_OP_STANDARD_BRIDGE,
+  l2EcoXProxyAddress,
 } from './constants'
 import { setupOP } from '../test/utils/fixtures'
 
-const bridgeAmount = '50' // in full ECO
+const bridgeAmount = '5' // in full ECOx
 
 const l1gas = '1000'
 
@@ -33,17 +33,17 @@ async function main() {
 async function initiateWithdrawal(
   _bridgeAmount: string
 ): Promise<ContractTransaction> {
-  hre.changeNetwork(L2_NETWORK)
+  // hre.changeNetwork(L2_NETWORK)
 
   const bridge = (await hre.ethers.getContractAt(
-    'L2ECOBridge',
-    l2BridgeProxyAddress
-  )) as L2ECOBridge
+    'IL2ERC20Bridge',
+    L2_OP_STANDARD_BRIDGE
+  )) as IL2ERC20Bridge
 
   const weiAmount = hre.ethers.utils.parseEther(_bridgeAmount)
 
   const tx = await bridge.withdraw(
-    l2EcoProxyAddress,
+    l2EcoXProxyAddress,
     weiAmount,
     l1gas,
     hre.ethers.utils.arrayify('0x1234')
