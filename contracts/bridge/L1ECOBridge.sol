@@ -50,11 +50,6 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     address public upgrader;
 
     /**
-     * @dev Current inflation multiplier
-     */
-    uint256 public inflationMultiplier;
-
-    /**
      * @dev Modifier requiring sender to be EOA.  This check could be bypassed by a malicious
      * contract via initcode, but it takes care of the user error we want to avoid.
      */
@@ -126,9 +121,6 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         l2Eco = _l2Eco;
         l1ProxyAdmin = ProxyAdmin(_l1ProxyAdmin);
         upgrader = _upgrader;
-        inflationMultiplier = IECO(_l1Eco).getPastLinearInflation(
-            block.number
-        );
     }
 
     /**
@@ -142,7 +134,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     {
         bytes memory message = abi.encodeWithSelector(
             IL2ECOBridge.upgradeECO.selector,
-            _impl
+            _impl,
+            block.number
         );
 
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
@@ -160,7 +153,8 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     {
         bytes memory message = abi.encodeWithSelector(
             IL2ECOBridge.upgradeSelf.selector,
-            _impl
+            _impl,
+            block.number
         );
 
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
@@ -186,6 +180,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     /**
      * @inheritdoc IL1ERC20Bridge
      * @param _l1Token must be the ECO L1 token address.
+     * @param _l2Gas The minimum gas limit required for an L2 address finalizing the transation
      */
     function depositERC20(
         address _l1Token,
@@ -208,6 +203,7 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
     /**
      * @inheritdoc IL1ERC20Bridge
      * @param _l1Token must be the ECO L1 token address.
+     * @param _l2Gas The minimum gas limit required for an L2 address finalizing the transation
      */
     function depositERC20To(
         address _l1Token,
@@ -241,7 +237,9 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
         uint256 _gonsAmount,
         bytes calldata _data
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
-        uint256 _amount = _gonsAmount / inflationMultiplier;
+        uint256 _amount = _gonsAmount / IECO(l1Eco).getPastLinearInflation(
+            block.number
+        );
 
         // equivalent to IECO(_l1Token).transfer(_to, _amount); but is revert safe
         bytes memory _ecoTransferMessage = abi.encodeWithSelector(
@@ -294,13 +292,12 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
      * @inheritdoc IL1ECOBridge
      */
     function rebase(uint32 _l2Gas) external {
-        inflationMultiplier = IECO(l1Eco).getPastLinearInflation(
-            block.number
-        );
-
         bytes memory message = abi.encodeWithSelector(
             IL2ECOBridge.rebase.selector,
-            inflationMultiplier
+            IECO(l1Eco).getPastLinearInflation(
+                block.number
+            ),
+            block.number
         );
 
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
@@ -332,7 +329,9 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
 
         IECO(_l1Token).transferFrom(_from, address(this), _amount);
         // gons move across the bridge, with inflation multipliers on either side to correctly scale balances
-        _amount = _amount * inflationMultiplier;
+        _amount = _amount * IECO(l1Eco).getPastLinearInflation(
+            block.number
+        );
 
         // Construct calldata for _l2Token.finalizeDeposit(_to, _amount)
         bytes memory message = abi.encodeWithSelector(

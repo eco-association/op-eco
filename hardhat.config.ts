@@ -26,6 +26,7 @@ const config: HardhatUserConfig = {
         },
       },
     ],
+
     settings: {
       metadata: {
         bytecodeHash: 'none',
@@ -44,8 +45,11 @@ const config: HardhatUserConfig = {
       tags: ['local'],
     },
     optimism: {
-      url: 'http://127.0.0.1:8545',
-      saveDeployments: false,
+      chainId: 10,
+      url: process.env.OPTIMISM_MAINNET_URL || '',
+      gasPrice: 35000000000,
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     'optimism-kovan': {
       chainId: 69,
@@ -56,12 +60,13 @@ const config: HardhatUserConfig = {
     'optimism-mainnet': {
       chainId: 10,
       url: 'https://mainnet.optimism.io',
-      deploy,
+      // deploy,
       accounts: [privateKey],
     },
     goerliOptimism: {
       chainId: 420,
       url: process.env.OPTIMISM_GOERLI_URL || '',
+      gasPrice: 500000000,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
@@ -107,13 +112,22 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY || '',
-      goerliOptimism: process.env.OPTIMISM_ETHERSCAN_API_KEY || '',
       goerli: process.env.ETHERSCAN_API_KEY || '',
+      optimism: process.env.OPTIMISM_ETHERSCAN_API_KEY || '',
+      goerliOptimism: process.env.OPTIMISM_ETHERSCAN_API_KEY || '',
       // Basescan doesn't require an API key, however
       // Hardhat still expects an arbitrary string to be provided.
       'base-goerli': 'PLACEHOLDER_STRING',
     },
     customChains: [
+      {
+        network: 'optimism',
+        chainId: 10,
+        urls: {
+          apiURL: 'https://api-optimistic.etherscan.io/api',
+          browserURL: 'https://optimism.etherscan.io',
+        },
+      },
       {
         network: 'goerliOptimism',
         chainId: 420,

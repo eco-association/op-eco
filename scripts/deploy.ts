@@ -1,6 +1,6 @@
 import hre from 'hardhat'
 import {
-  deployBridgeProxy,
+  deployProxy,
   deployTokenProxy,
   getProxyAdmin,
   upgradeBridgeL1,
@@ -13,13 +13,13 @@ import {
   L1_OP_MESSANGER_ADDRESS,
   L2_NETWORK,
   L2_OP_MESSANGER_ADDRESS,
-  UPGRADER_ADDRESS,
+  upgraderAddress,
 } from './constants'
 
 async function main() {
   hre.changeNetwork(L1_NETWORK)
 
-  const l1BridgeProxyAddress = await deployBridgeProxy()
+  const l1BridgeProxyAddress = await deployProxy()
   console.log(`L1 Bridge deployed to: ${l1BridgeProxyAddress}`)
 
   const l1ProxyAdmin = await getProxyAdmin(true)
@@ -27,11 +27,11 @@ async function main() {
 
   hre.changeNetwork(L2_NETWORK)
 
-  const l2BridgeProxyAddress = await deployBridgeProxy()
+  const l2BridgeProxyAddress = await deployProxy()
   console.log(`L2 Bridge deployed to: ${l2BridgeProxyAddress}`)
 
   const l2EcoProxyAddress = await deployTokenProxy()
-  console.log(`L2ECO deployed to: ${l2EcoProxyAddress}`)
+  console.log(`L2ECO proxy deployed to: ${l2EcoProxyAddress}`)
 
   const l2ProxyAdmin = await getProxyAdmin(true)
   console.log(`Proxy Admin L2 deployed to: ${l2ProxyAdmin.address}`)
@@ -58,7 +58,7 @@ async function main() {
     L1_ECO_ADDRESS,
     l2EcoProxyAddress,
     l1ProxyAdmin.address,
-    UPGRADER_ADDRESS
+    upgraderAddress
   )
   console.log(`L1 Bridge initialized`)
 }

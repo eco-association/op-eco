@@ -1,11 +1,13 @@
 import hre from 'hardhat'
 import {
   L2ECO,
+  L2ECOx,
   L1ECOBridge,
   L2ECOBridge,
   ProxyAdmin,
 } from '../../typechain-types'
 import { Address } from '@eth-optimism/core-utils'
+import { CrossChainMessenger } from '@eth-optimism/sdk'
 const { ethers, upgrades } = hre
 
 export async function deployL1Test(
@@ -16,7 +18,7 @@ export async function deployL1Test(
   upgrader: Address
 ): Promise<[L1ECOBridge, ProxyAdmin]> {
   // const proxyAdmin = (await upgrades.admin.getInstance()) as ProxyAdmin
-  const l1BridgeProxyAddress = await deployBridgeProxy()
+  const l1BridgeProxyAddress = await deployProxy()
   const proxyAdmin = await getProxyAdmin()
 
   const l1BridgeProxy = await upgradeBridgeL1(
@@ -38,7 +40,7 @@ export async function deployL2Test(
   l1Token: Address
   // opts: { adminBridge: boolean } = { adminBridge: true }
 ): Promise<[L2ECO, L2ECOBridge, ProxyAdmin]> {
-  const l2BridgeProxyAddress = await deployBridgeProxy()
+  const l2BridgeProxyAddress = await deployProxy()
   const l2EcoProxyAddress = await deployTokenProxy()
   const proxyAdmin = await getProxyAdmin()
 
@@ -137,12 +139,36 @@ export async function upgradeEcoL2(
   return l2EcoProxy as L2ECO
 }
 
-export async function deployBridgeProxy(): Promise<Address> {
-  const InitialBridgeContract = await ethers.getContractFactory('InitialBridge')
-  const proxyInitial = await upgrades.deployProxy(InitialBridgeContract, [], {
-    initializer: 'initialize',
-  })
-  // const proxyInitial = await upgrades.deployProxy(InitialBridgeContract, [])
+export async function deployEcoXL2(
+  l1EcoXToken: Address,
+  l2OPBridgeAddress: Address,
+  l2ECOBridgeAddress: Address
+): Promise<L2ECOx> {
+  const L2ECOxContract = await ethers.getContractFactory('L2ECOx')
+
+  const l2EcoXProxy = await upgrades.deployProxy(
+    L2ECOxContract,
+    [l1EcoXToken, l2OPBridgeAddress, l2ECOBridgeAddress],
+    {
+      initializer: 'initialize',
+    }
+  )
+
+  return l2EcoXProxy as L2ECOx
+}
+
+export async function deployProxy(): Promise<Address> {
+  const InitialImplementationContract = await ethers.getContractFactory(
+    'InitialImplementation'
+  )
+  const proxyInitial = await upgrades.deployProxy(
+    InitialImplementationContract,
+    [],
+    {
+      initializer: 'initialize',
+    }
+  )
+  // const proxyInitial = await upgrades.deployProxy(InitialImplementationContract, [])
 
   await proxyInitial.deployed()
 
@@ -205,4 +231,28 @@ export async function deployByName(name: string, ...args: any[]): Promise<any> {
   const contract = await Contract.deploy(...args)
   await contract.deployed()
   return contract
+}
+
+export async function setupOP(
+  l1Network,
+  l2Network
+): Promise<CrossChainMessenger> {
+  hre.changeNetwork(l2Network)
+  const l2ChainId = hre.network.config.chainId
+  const [l2Wallet] = await hre.ethers.getSigners()
+  hre.changeNetwork(l1Network)
+  const l1ChainId = hre.network.config.chainId
+  const [l1Wallet] = await hre.ethers.getSigners()
+
+  if (l2ChainId && l1ChainId) {
+    return new CrossChainMessenger({
+      l1ChainId,
+      l2ChainId,
+      l1SignerOrProvider: l1Wallet,
+      l2SignerOrProvider: l2Wallet,
+      bedrock: true,
+    })
+  } else {
+    throw new Error('need chain IDs to use CrossChainMessenger')
+  }
 }

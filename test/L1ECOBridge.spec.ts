@@ -177,8 +177,8 @@ describe('L1ECOBridge', () => {
     })
 
     it('cannot depositERC20 from a contract account', async () => {
-      expect(
-        L1ECOBridge.depositERC20(
+      await expect(
+        L1ECOBridge.connect(l1MessengerImpersonator).depositERC20(
           L1ERC20.address,
           DUMMY_L2_ERC20_ADDRESS,
           depositAmount,
@@ -402,6 +402,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_ERC20_ADDRESS,
         FINALIZATION_GAS
       )
+      const blockNumber = await ethers.provider.getBlockNumber()
 
       expect(
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
@@ -409,7 +410,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS,
         (await getContractInterface('L2ECOBridge')).encodeFunctionData(
           'upgradeECO',
-          [DUMMY_L2_ERC20_ADDRESS]
+          [DUMMY_L2_ERC20_ADDRESS, blockNumber]
         ),
         FINALIZATION_GAS,
       ])
@@ -442,6 +443,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS,
         FINALIZATION_GAS
       )
+      const blockNumber = await ethers.provider.getBlockNumber()
 
       expect(
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
@@ -449,7 +451,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS,
         (await getContractInterface('L2ECOBridge')).encodeFunctionData(
           'upgradeSelf',
-          [DUMMY_L2_BRIDGE_ADDRESS]
+          [DUMMY_L2_BRIDGE_ADDRESS, blockNumber]
         ),
         FINALIZATION_GAS,
       ])
@@ -469,10 +471,6 @@ describe('L1ECOBridge', () => {
 
   describe('does a rebase', () => {
     it('should fetch the inflation multiplier', async () => {
-      expect(await L1ECOBridge.inflationMultiplier()).to.eq(
-        INITIAL_INFLATION_MULTIPLIER
-      )
-
       const newInflationMultiplier = INITIAL_INFLATION_MULTIPLIER.div(2)
 
       if (alice.provider) {
@@ -483,10 +481,7 @@ describe('L1ECOBridge', () => {
           },
         ])
       }
-      await L1ECOBridge.connect(alice).rebase(FINALIZATION_GAS)
-      expect(await L1ECOBridge.inflationMultiplier()).to.eq(
-        newInflationMultiplier
-      )
+      const tx = await L1ECOBridge.connect(alice).rebase(FINALIZATION_GAS)
 
       expect(
         Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
@@ -494,7 +489,7 @@ describe('L1ECOBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS,
         (await getContractInterface('L2ECOBridge')).encodeFunctionData(
           'rebase',
-          [newInflationMultiplier]
+          [newInflationMultiplier, tx.blockNumber]
         ),
         FINALIZATION_GAS,
       ])

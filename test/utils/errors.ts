@@ -1,3 +1,6 @@
+import { HashZero } from '@ethersproject/constants'
+import { concat, hexlify, toUtf8Bytes } from 'ethers/lib/utils'
+
 /**
  * @notice Contains all error strings used in the contracts.
  * Should be exported in package
@@ -18,6 +21,11 @@ export const ERROR_STRINGS = {
     INVALID_L2_ADDRESS: 'L2ECOBridge: invalid L2 token address',
     INVALID_L1_ADDRESS: 'L2ECOBridge: invalid L1 token address',
     INVALID_INFLATION_MULTIPLIER: 'L2ECOBridge: invalid inflation multiplier',
+    INVALID_EOA_ONLY: 'L2ECOBridge: Account not EOA',
+    INVALID_UPGRADE_ECO_BLOCK:
+      'L2ECOBridge: upgradeEco block number must be greater than last',
+    INVALID_UPGRADE_SELF_BLOCK:
+      'L2ECOBridge: upgradeSelf block number must be greater than last upgrade block',
   },
   L2ECO: {
     UNAUTHORIZED_MINTER: 'L2ECO: not authorized to mint',
@@ -31,4 +39,27 @@ export const ERROR_STRINGS = {
   OWNABLE: {
     NOT_OWNER: 'Ownable: caller is not the owner',
   },
+  FAUCET: {
+    INVALID_OPERATOR: 'Not approved operator',
+    INVALID_PARAM_SIZE: 'Addresses and amounts must be of same size',
+    INVALID_ALLOWANCE: formatBytesToString(
+      'Faucet contract is not approved to transfer tokens'
+    ),
+    FAILED_TRANSFER: formatBytesToString(
+      'Tokens failed to transfer to recipient'
+    ),
+  },
+}
+
+/**
+ * Converts a string into bytes
+ * @param text the text to convert
+ * @returns
+ */
+export function formatBytesToString(text: string): string {
+  // Get the bytes
+  const bytes = toUtf8Bytes(text)
+
+  // Zero-pad (implicitly null-terminates)
+  return hexlify(concat([bytes, HashZero]).slice(0, bytes.length))
 }
