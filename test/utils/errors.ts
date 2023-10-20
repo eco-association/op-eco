@@ -24,6 +24,8 @@ export const ERROR_STRINGS = {
     INVALID_EOA_ONLY: 'L2ECOBridge: Account not EOA',
     INVALID_UPGRADE_ECO_BLOCK:
       'L2ECOBridge: upgradeEco block number must be greater than last',
+    INVALID_UPGRADE_ECOX_BLOCK:
+      'L2ECOBridge: upgradeEcoX block number must be greater than last',
     INVALID_UPGRADE_SELF_BLOCK:
       'L2ECOBridge: upgradeSelf block number must be greater than last upgrade block',
   },

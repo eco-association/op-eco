@@ -59,6 +59,49 @@ export async function deployL2Test(
     proxyAdmin.address
   )
 
+  const l2EcoXProxyAddress = await (l2BridgeProxy as L2ECOBridge).L2ECOX()
+  
+  const dummyEcoXProxyAddress = await deployEcoXL2(
+    l1Token,
+    '0x4200000000000000000000000000000000000010', // standard bridge address
+    l2BridgeProxyAddress
+  )
+
+  const ecoXimplAddress =
+    await hre.network.provider.send("eth_getStorageAt", [
+      dummyEcoXProxyAddress.address,
+      '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc',
+      'latest',
+    ])
+  const storageProxyAdminAddress =
+    await hre.network.provider.send("eth_getStorageAt", [
+      dummyEcoXProxyAddress.address,
+      '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103',
+      'latest',
+    ])
+
+  const result = await hre.network.provider.send("eth_getCode", [
+    dummyEcoXProxyAddress.address,
+    'latest',
+  ])
+
+  await hre.network.provider.send("hardhat_setCode", [
+    l2EcoXProxyAddress,
+    result,
+  ])
+
+  await hre.network.provider.send("hardhat_setStorageAt", [
+    l2EcoXProxyAddress,
+    '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc',
+    ecoXimplAddress,
+  ])
+
+  await hre.network.provider.send("hardhat_setStorageAt", [
+    l2EcoXProxyAddress,
+    '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103',
+    storageProxyAdminAddress,
+  ])
+
   return [l2EcoProxy as L2ECO, l2BridgeProxy as L2ECOBridge, proxyAdmin]
 }
 

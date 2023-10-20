@@ -12,7 +12,7 @@ import { getContractInterface } from './utils/contracts'
 import { expect } from 'chai'
 import { ERROR_STRINGS } from './utils/errors'
 import { deployL2Test, transferOwnershipTest } from './utils/fixtures'
-import { L2ECO, L2ECOBridge, ProxyAdmin } from '../typechain-types'
+import { L2ECO, L2ECOBridge, L2ECOx, PoodleL2ECOx, ProxyAdmin } from '../typechain-types'
 const hre = require('hardhat')
 
 const DUMMY_L1_ERC20_ADDRESS = NON_ZERO_ADDRESS
@@ -425,6 +425,105 @@ describe('L2ECOBridge tests', () => {
           .connect(l2MessengerImpersonator)
           .upgradeECO(newEcoImpl.address, upgradeBlock)
       ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_UPGRADE_ECO_BLOCK)
+    })
+  })
+
+  describe.only('upgradeEcoX', () => {
+    let newEcoXImpl: MockContract<Contract>
+    let l2EcoBridge: L2ECOBridge
+    const upgradeBlock = 10
+    beforeEach(async () => {
+      ;[, l2EcoBridge,] = await deployL2Test(
+        Fake__L2CrossDomainMessenger.address,
+        DUMMY_L1_BRIDGE_ADDRESS,
+        DUMMY_L1_ERC20_ADDRESS
+      )
+      newEcoXImpl = await (await smock.mock('PoodleL2ECOx')).deploy()
+    })
+
+    it('onlyFromCrossDomainAccount should revert on calls from a non-crossDomainMessenger L2 account', async () => {
+      await expect(
+        l2EcoBridge.upgradeECOx(newEcoXImpl.address, upgradeBlock)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_MESSENGER)
+    })
+
+    it('onlyFromCrossDomainAccount: should revert on calls from the right crossDomainMessenger, but wrong xDomainMessageSender (ie. not the L1ECOBridge)', async () => {
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        NON_ZERO_ADDRESS
+      )
+
+      await expect(
+        l2EcoBridge
+          .connect(l2MessengerImpersonator)
+          .upgradeECOx(newEcoXImpl.address, upgradeBlock)
+      ).to.be.revertedWith(ERROR_STRINGS.OVM.INVALID_X_DOMAIN_MSG_SENDER)
+    })
+
+    it("should revert when bridge isn't owner of ProxyAdmin", async () => {
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        DUMMY_L1_BRIDGE_ADDRESS
+      )
+
+      await expect(
+        l2EcoBridge
+          .connect(l2MessengerImpersonator)
+          .upgradeECOx(newEcoXImpl.address, upgradeBlock)
+      ).to.be.revertedWith(ERROR_STRINGS.OWNABLE.NOT_OWNER)
+    })
+
+    it.only('should upgrade the implementation and emit an event', async () => {
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        DUMMY_L1_BRIDGE_ADDRESS
+      )
+
+      await transferOwnershipTest(l2EcoBridge.address)
+
+      const l2EcoXaddress = await l2EcoBridge.L2ECOX()
+
+      const l2EcoX = (await hre.ethers.getContractAt(
+        'PoodleL2ECOx',
+        l2EcoXaddress
+      )) as PoodleL2ECOx
+
+      expect(l2EcoX.NUM_POODLES()).to.be.reverted
+
+      await expect(
+        l2EcoBridge
+          .connect(l2MessengerImpersonator)
+          .upgradeECOx(newEcoXImpl.address, upgradeBlock)
+      )
+        .to.emit(l2EcoBridge, 'UpgradeECOxImplementation')
+        .withArgs(newEcoXImpl.address)
+
+      const l2EcoXUpgraded = (await hre.ethers.getContractAt(
+        'PoodleL2ECOx',
+        l2EcoXaddress
+      )) as PoodleL2ECOx
+
+      expect(await l2EcoXUpgraded.NUM_POODLES()).to.eq(1)
+    })
+
+    it('should revert on upgrade with outdated block number', async () => {
+      Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
+        DUMMY_L1_BRIDGE_ADDRESS
+      )
+
+      await transferOwnershipTest(l2EcoBridge.address)
+      // have it update the block number to the lastUpgradeBlock
+      await expect(
+        l2EcoBridge
+          .connect(l2MessengerImpersonator)
+          .upgradeECOx(newEcoXImpl.address, upgradeBlock)
+      )
+        .to.emit(l2EcoBridge, 'UpgradeECOxImplementation')
+        .withArgs(newEcoXImpl.address)
+
+      // try to upgrade with an outdated block number
+      await expect(
+        l2EcoBridge
+          .connect(l2MessengerImpersonator)
+          .upgradeECOx(newEcoXImpl.address, upgradeBlock)
+      ).to.be.revertedWith(ERROR_STRINGS.L2ECOBridge.INVALID_UPGRADE_ECOX_BLOCK)
     })
   })
 

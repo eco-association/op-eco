@@ -428,6 +428,47 @@ describe('L1ECOBridge', () => {
     })
   })
 
+  describe('upgrades to L2 EcoX contract', () => {
+    it("should revert if caller isn't upgrader", async () => {
+      await expect(
+        L1ECOBridge.connect(bob).upgradeECOx(
+          DUMMY_L2_ERC20_ADDRESS,
+          FINALIZATION_GAS
+        )
+      ).to.be.revertedWith(ERROR_STRINGS.L1ECOBridge.UNAUTHORIZED_UPGRADER)
+    })
+
+    it('should succeed to send the correct argumnents', async () => {
+      await L1ECOBridge.connect(alice).upgradeECOx(
+        DUMMY_L2_ERC20_ADDRESS,
+        FINALIZATION_GAS
+      )
+      const blockNumber = await ethers.provider.getBlockNumber()
+
+      expect(
+        Fake__L1CrossDomainMessenger.sendMessage.getCall(0).args
+      ).to.deep.equal([
+        DUMMY_L2_BRIDGE_ADDRESS,
+        (await getContractInterface('L2ECOBridge')).encodeFunctionData(
+          'upgradeECOx',
+          [DUMMY_L2_ERC20_ADDRESS, blockNumber]
+        ),
+        FINALIZATION_GAS,
+      ])
+    })
+
+    it('should succeed and emit an event', async () => {
+      await expect(
+        L1ECOBridge.connect(alice).upgradeECOx(
+          DUMMY_L2_ERC20_ADDRESS,
+          FINALIZATION_GAS
+        )
+      )
+        .to.emit(L1ECOBridge, 'UpgradeL2ECOx')
+        .withArgs(DUMMY_L2_ERC20_ADDRESS)
+    })
+  })
+
   describe('upgrades to L2 Bridge contract', () => {
     it("should revert if caller isn't upgrader", async () => {
       await expect(
