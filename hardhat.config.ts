@@ -44,13 +44,6 @@ const config: HardhatUserConfig = {
       saveDeployments: false,
       tags: ['local'],
     },
-    optimism: {
-      chainId: 10,
-      url: process.env.OPTIMISM_MAINNET_URL || '',
-      gasPrice: 35000000000,
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
     'optimism-kovan': {
       chainId: 69,
       url: 'https://kovan.optimism.io',
@@ -59,9 +52,10 @@ const config: HardhatUserConfig = {
     },
     'optimism-mainnet': {
       chainId: 10,
-      url: 'https://mainnet.optimism.io',
-      // deploy,
-      accounts: [privateKey],
+      url: process.env.OPTIMISM_MAINNET_URL || '',
+      gasPrice: 100000000,
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     goerliOptimism: {
       chainId: 420,
