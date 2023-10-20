@@ -61,6 +61,16 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
     ProxyAdmin public l2ProxyAdmin;
 
     /**
+     * @dev The block number on L1 of the most recent upgradeEcoX call, used to prevent replay attacks on failed upgrade calls
+     */
+    uint256 public upgradeEcoXBlock;
+
+    /**
+     * @dev The address of the proxy for L2ECOx, encoded as a constant as the value is added via upgrade and so is already known
+     */
+    address public constant L2ECOX = 0xf805B07ee64f03f0aeb963883f70D0Ac0D0fE242;
+
+    /**
      * @dev Modifier to check that the L1 token is the same as the predefined L2 token's L1 token address
      * @param _l1Token L1 token address to check
      */
@@ -113,6 +123,19 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
             "L2ECOBridge: upgradeEco block number must be greater than last"
         );
         upgradeEcoBlock = _blockNumber;
+        _;
+    }
+
+    /**
+     * @dev Modifier to check that the upgradeEcoX call has the correct L1 block number in order to
+     * prevent replay attacks on failed upgrade calls
+     */
+    modifier validUpgradeEcoXBlock(uint256 _blockNumber) {
+        require(
+            _blockNumber > upgradeEcoXBlock,
+            "L2ECOBridge: upgradeEcoX block number must be greater than last"
+        );
+        upgradeEcoXBlock = _blockNumber;
         _;
     }
 
@@ -260,6 +283,30 @@ contract L2ECOBridge is IL2ECOBridge, CrossDomainEnabledUpgradeable {
         l2ProxyAdmin.upgrade(proxy, _newEcoImpl);
 
         emit UpgradeECOImplementation(_newEcoImpl);
+    }
+
+    /**
+     * @inheritdoc IL2ECOBridge
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
+     */
+    function upgradeECOx(
+        address _newEcoXImpl,
+        uint256 _blockNumber
+    )
+        external
+        virtual
+        onlyFromCrossDomainAccount(l1TokenBridge)
+        validUpgradeEcoXBlock(_blockNumber)
+    {
+        //cast to a payable address since L2ECOX is the proxy address of a ITransparentUpgradeableProxy contract
+        address payable proxyAddr = payable(L2ECOX);
+
+        ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
+            proxyAddr
+        );
+        l2ProxyAdmin.upgrade(proxy, _newEcoXImpl);
+
+        emit UpgradeECOxImplementation(_newEcoXImpl);
     }
 
     /**

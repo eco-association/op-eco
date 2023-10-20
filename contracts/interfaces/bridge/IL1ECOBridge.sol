@@ -9,6 +9,9 @@ import {IL1ERC20Bridge} from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridg
 interface IL1ECOBridge is IL1ERC20Bridge {
     // Event for when the L2ECO token implementation is upgraded
     event UpgradeL2ECO(address _newEcoImpl);
+    
+    // Event for when the L2ECOx token implementation is upgraded
+    event UpgradeL2ECOx(address _newEcoXImpl);
 
     // Event for when the L2ECOBridge token implementation is upgraded
     event UpgradeL2Bridge(address _newBridgeImpl);
@@ -50,6 +53,14 @@ interface IL1ECOBridge is IL1ERC20Bridge {
      * @param _l2Gas The minimum gas limit required for an L2 address finalizing the transation
      */
     function upgradeECO(address _impl, uint32 _l2Gas) external;
+
+    /**
+     * @dev Upgrades the L2ECOx token implementation address by sending
+     *      a cross domain message to the L2 Bridge via the L1 Messenger
+     * @param _impl L2 contract address.
+     * @param _l2Gas The minimum gas limit required for an L2 address finalizing the transation
+     */
+    function upgradeECOx(address _impl, uint32 _l2Gas) external;
 
     /**
      * @dev Upgrades the L2ECOBridge implementation address by sending

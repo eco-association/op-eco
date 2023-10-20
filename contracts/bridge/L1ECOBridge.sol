@@ -146,6 +146,25 @@ contract L1ECOBridge is IL1ECOBridge, CrossDomainEnabledUpgradeable {
      * @inheritdoc IL1ECOBridge
      * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
      */
+    function upgradeECOx(address _impl, uint32 _l2Gas)
+        external
+        virtual
+        onlyUpgrader
+    {
+        bytes memory message = abi.encodeWithSelector(
+            IL2ECOBridge.upgradeECOx.selector,
+            _impl,
+            block.number
+        );
+
+        sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
+        emit UpgradeL2ECOx(_impl);
+    }
+
+    /**
+     * @inheritdoc IL1ECOBridge
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
+     */
     function upgradeL2Bridge(address _impl, uint32 _l2Gas)
         external
         virtual
