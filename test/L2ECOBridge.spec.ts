@@ -12,7 +12,12 @@ import { getContractInterface } from './utils/contracts'
 import { expect } from 'chai'
 import { ERROR_STRINGS } from './utils/errors'
 import { deployL2Test, transferOwnershipTest } from './utils/fixtures'
-import { L2ECO, L2ECOBridge, L2ECOx, PoodleL2ECOx, ProxyAdmin } from '../typechain-types'
+import {
+  L2ECO,
+  L2ECOBridge,
+  PoodleL2ECOx,
+  ProxyAdmin,
+} from '../typechain-types'
 const hre = require('hardhat')
 
 const DUMMY_L1_ERC20_ADDRESS = NON_ZERO_ADDRESS
@@ -428,12 +433,12 @@ describe('L2ECOBridge tests', () => {
     })
   })
 
-  describe.only('upgradeEcoX', () => {
+  describe('upgradeEcoX', () => {
     let newEcoXImpl: MockContract<Contract>
     let l2EcoBridge: L2ECOBridge
     const upgradeBlock = 10
     beforeEach(async () => {
-      ;[, l2EcoBridge,] = await deployL2Test(
+      ;[, l2EcoBridge] = await deployL2Test(
         Fake__L2CrossDomainMessenger.address,
         DUMMY_L1_BRIDGE_ADDRESS,
         DUMMY_L1_ERC20_ADDRESS
@@ -471,7 +476,7 @@ describe('L2ECOBridge tests', () => {
       ).to.be.revertedWith(ERROR_STRINGS.OWNABLE.NOT_OWNER)
     })
 
-    it.only('should upgrade the implementation and emit an event', async () => {
+    it('should upgrade the implementation and emit an event', async () => {
       Fake__L2CrossDomainMessenger.xDomainMessageSender.returns(
         DUMMY_L1_BRIDGE_ADDRESS
       )
