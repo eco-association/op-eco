@@ -7,7 +7,7 @@ import { Faucet } from '../typechain-types/contracts/token/Faucet'
 import { ERROR_STRINGS } from './utils/errors'
 import { Address } from '@eth-optimism/core-utils'
 
-describe('L2ECO tests', () => {
+describe('Faucet tests', () => {
   let alice: SignerWithAddress
   let bob: SignerWithAddress
   let charlie: SignerWithAddress
@@ -104,6 +104,18 @@ describe('L2ECO tests', () => {
       expect(await eco.balanceOf(faucet.address)).to.eq(
         4 * DRIP_VERIFIED - DRIP_UNVERIFIED
       )
+    })
+
+    it('should reject multiple drips to the same user id hash', async () => {
+      await expect(faucet.connect(bob).drip(hash1, alice.address, true))
+        .to.emit(faucet, 'FaucetDripped')
+        .withArgs(alice.address)
+      expect(await eco.balanceOf(alice.address)).to.eq(DRIP_VERIFIED)
+
+      await expect(
+        faucet.connect(bob).drip(hash1, alice.address, true)
+      ).to.be.revertedWith('the owner of this social ID has already minted.')
+      expect(await eco.balanceOf(alice.address)).to.eq(DRIP_VERIFIED)
     })
   })
 

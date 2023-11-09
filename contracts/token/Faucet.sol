@@ -48,6 +48,15 @@ contract Faucet {
         _;
     }
 
+    /// @notice Requires drip to be valid for the social hash
+    modifier validDrip(string memory _socialHash) virtual {
+         require(
+            !hasMinted[_socialHash],
+            "the owner of this social ID has already minted."
+        );
+        _;
+    }
+
     /// ============ Events ============
 
     /// @notice Emitted after faucet drips to a recipient
@@ -110,12 +119,7 @@ contract Faucet {
         string memory _socialHash,
         address _recipient,
         bool _verified
-    ) external isApprovedOperator {
-        require(
-            !hasMinted[_socialHash],
-            "the owner of this social ID has already minted."
-        );
-
+    ) external isApprovedOperator validDrip(_socialHash) {
         uint256 dripAmount = _verified ? DRIP_VERIFIED : DRIP_UNVERIFIED;
         // Drip ECO
         require(ECO.transfer(_recipient, dripAmount), "Failed dripping ECO");
@@ -125,6 +129,7 @@ contract Faucet {
         emit FaucetDripped(_recipient);
     }
     
+
     /**
      * @notice Drip ERC20 tokens to a list of addresses as a batch to decrease gas costs.
      * There is no check to see if the addresses have already been dripped to. Use with caution.
@@ -142,7 +147,10 @@ contract Faucet {
         uint256 _totalAmount
     ) external payable isApprovedOperator {
         // Check that the number of addresses matches the number of amounts
-        require(_addresses.length == _amounts.length, "Addresses and amounts must be of same size");
+        require(
+            _addresses.length == _amounts.length,
+            "Addresses and amounts must be of same size"
+        );
         emit BatchDrip(_addresses.length, _totalAmount);
         string
             memory invalidAllowance = "Faucet contract is not approved to transfer tokens";
