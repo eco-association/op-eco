@@ -22,6 +22,10 @@ contract Faucet {
     /// @notice ECO to disperse (verified)
     uint256 public DRIP_VERIFIED;
 
+    /// @notice Whether or not multi drip is enabled. When true the same
+    /// social ID can be dripped to multiple times.
+    bool public isMultiDrip;
+
     /// @notice Addresses of approved operators
     mapping(address => bool) public approvedOperators;
     /// @notice Addresses of super operators
@@ -76,6 +80,12 @@ contract Faucet {
         uint256 newVerifiedDrip
     );
 
+    /// @notice Emitted when multi drip is updated
+    /// @param isMultiDrip new multi drip setting
+    event MultiDripUpdated(
+        bool isMultiDrip
+    );
+
     /// @notice Emitted after the air batch drip function is called
     /// @param recipients number of recipients
     /// @param totalAmount total amount dripped
@@ -112,7 +122,7 @@ contract Faucet {
         bool _verified
     ) external isApprovedOperator {
         require(
-            !hasMinted[_socialHash],
+            !hasMinted[_socialHash] || isMultiDrip,
             "the owner of this social ID has already minted."
         );
 
@@ -124,7 +134,7 @@ contract Faucet {
 
         emit FaucetDripped(_recipient);
     }
-    
+
     /**
      * @notice Drip ERC20 tokens to a list of addresses as a batch to decrease gas costs.
      * There is no check to see if the addresses have already been dripped to. Use with caution.
@@ -142,7 +152,10 @@ contract Faucet {
         uint256 _totalAmount
     ) external payable isApprovedOperator {
         // Check that the number of addresses matches the number of amounts
-        require(_addresses.length == _amounts.length, "Addresses and amounts must be of same size");
+        require(
+            _addresses.length == _amounts.length,
+            "Addresses and amounts must be of same size"
+        );
         emit BatchDrip(_addresses.length, _totalAmount);
         string
             memory invalidAllowance = "Faucet contract is not approved to transfer tokens";
@@ -234,5 +247,14 @@ contract Faucet {
         DRIP_UNVERIFIED = unverifiedDrip;
         DRIP_VERIFIED = verifiedDrip;
         emit DripAmountsUpdated(DRIP_UNVERIFIED, DRIP_VERIFIED);
+    }
+
+    /**
+     * @notice Allows super operator to update multi drip status
+     * @param _enabled whether or not multi drip is enabled
+     */
+    function updateMultiDrip(bool _enabled) external isSuperOperator {
+        isMultiDrip = _enabled;
+        emit MultiDripUpdated(isMultiDrip);
     }
 }

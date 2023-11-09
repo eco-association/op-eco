@@ -12,7 +12,8 @@ async function main() {
     '0xDD1834f5116c4E2DCE952220dE5641cc775FdaaD',
     ['0xDD1834f5116c4E2DCE952220dE5641cc775FdaaD']
   )
-
+  // enable multiDrip for staging contract only, NOT-PRODUCTION
+  // await faucet.updateMultiDrip(true)
   console.log('Faucet deployed to:', faucet.address)
 }
 

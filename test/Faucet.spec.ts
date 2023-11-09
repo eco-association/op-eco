@@ -105,6 +105,45 @@ describe('L2ECO tests', () => {
         4 * DRIP_VERIFIED - DRIP_UNVERIFIED
       )
     })
+
+    it('should reject multiple drips to the same user id hash', async () => {
+      await expect(faucet.connect(bob).drip(hash1, alice.address, true))
+        .to.emit(faucet, 'FaucetDripped')
+        .withArgs(alice.address)
+      expect(await eco.balanceOf(alice.address)).to.eq(DRIP_VERIFIED)
+
+      await expect(
+        faucet.connect(bob).drip(hash1, alice.address, true)
+      ).to.be.revertedWith('the owner of this social ID has already minted.')
+      expect(await eco.balanceOf(alice.address)).to.eq(DRIP_VERIFIED)
+    })
+
+    it('should allow multiple drips to the same user id hash when multiDrip is enabled', async () => {
+      await expect(faucet.connect(bob).drip(hash1, alice.address, true))
+        .to.emit(faucet, 'FaucetDripped')
+        .withArgs(alice.address)
+      expect(await eco.balanceOf(alice.address)).to.eq(DRIP_VERIFIED)
+
+      const multiDripEnabled = true
+      expect(await faucet.isMultiDrip()).to.eq(false)
+      await expect(faucet.connect(alice).updateMultiDrip(multiDripEnabled))
+        .to.emit(faucet, 'MultiDripUpdated')
+        .withArgs(multiDripEnabled)
+      expect(await faucet.isMultiDrip()).to.eq(multiDripEnabled)
+
+      await expect(faucet.connect(bob).drip(hash1, alice.address, true))
+        .to.emit(faucet, 'FaucetDripped')
+        .withArgs(alice.address)
+      expect(await eco.balanceOf(alice.address)).to.eq(DRIP_VERIFIED * 2)
+
+      // check if we disable again
+      await faucet.connect(alice).updateMultiDrip(false)
+
+      await expect(
+        faucet.connect(bob).drip(hash1, alice.address, true)
+      ).to.be.revertedWith('the owner of this social ID has already minted.')
+      expect(await eco.balanceOf(alice.address)).to.eq(DRIP_VERIFIED * 2)
+    })
   })
 
   describe('batchDrip', async () => {
@@ -255,6 +294,21 @@ describe('L2ECO tests', () => {
 
       expect(await faucet.DRIP_UNVERIFIED()).to.eq(newUnverifiedDrip)
       expect(await faucet.DRIP_VERIFIED()).to.eq(newVerifiedDrip)
+    })
+
+    it('should gate updating multi drip setting to super oparators', async () => {
+      expect(await faucet.isMultiDrip()).to.eq(false)
+      const multiDripEnabled = true
+
+      await expect(
+        faucet.connect(bob).updateMultiDrip(multiDripEnabled)
+      ).to.be.revertedWith('Not super operator')
+      expect(await faucet.isMultiDrip()).to.eq(false)
+
+      await expect(faucet.connect(alice).updateMultiDrip(multiDripEnabled))
+        .to.emit(faucet, 'MultiDripUpdated')
+        .withArgs(multiDripEnabled)
+      expect(await faucet.isMultiDrip()).to.eq(multiDripEnabled)
     })
   })
 })
