@@ -38,8 +38,9 @@
     "lint": "yarn format",
     "deploy": "hardhat run scripts/deploy.ts",
     "faucet": "hardhat run scripts/faucetDeploy.ts --network optimism",
+    "faucetStaging": "hardhat run scripts/faucetStagingDeploy.ts --network goerliOptimism",
     "getImpl": "hardhat run scripts/getImpl.ts --network goerliOptimism",
-    "verifyFaucetEtherscan": "npx hardhat verify --network optimism --constructor-args arguments.js 0x1A5150F7f86EF1E84B54BCF85c7c44D893DBb3Ba"
+    "verifyFaucetEtherscan": "npx hardhat verify --network goerliOptimism --constructor-args arguments.js 0x1A5150F7f86EF1E84B54BCF85c7c44D893DBb3Ba"
   },
   "dependencies": {
     "@eth-optimism/contracts": "^0.5.40",
